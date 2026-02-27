@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tradeauto
+      POSTGRES_PASSWORD: tradeauto
+      POSTGRES_DB: tradeauto
+    ports:
+      - "5432:5432"
+    volumes:
+      - tradeauto_pgdata:/var/lib/postgresql/data
+
+volumes:
+  tradeauto_pgdata:
