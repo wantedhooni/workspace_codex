@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: curd-filter-server
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/curd_filter}
+    username: ${DB_USERNAME:curd}
+    password: ${DB_PASSWORD:curd}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: 200
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+logging:
+  level:
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: WARN
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
