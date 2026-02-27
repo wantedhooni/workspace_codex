@@ -1,0 +1,46 @@
+:root {
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  color: #1a1a1a;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fb;
+}
+
+.list-filter-panel {
+  margin-bottom: 12px;
+  padding: 14px 16px 8px;
+  border: 1px solid #d6dbe6;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.list-filter-panel-subtitle {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #4f5f7c;
+}
+
+.list-filter-form {
+  row-gap: 8px;
+}
+
+.list-filter-field-item {
+  margin-bottom: 8px !important;
+}
+
+.list-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list-filter-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #384455;
+}

@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:55433/portal_admin
+    driverClassName: org.postgresql.Driver
+    username: portal
+    password: portal1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+
+jwt:
+  secret: "change-me-super-secret-key-please-change-32bytes"
+  expiration-seconds: 86400
+
+app:
+  security:
+    cors:
+      allowed-origins:
+        - http://localhost:5173
+        - http://127.0.0.1:5173
+    cookie:
+      same-site: Lax
+      secure: false
