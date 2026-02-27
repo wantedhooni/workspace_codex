@@ -1,0 +1,458 @@
+# Agents Task Log
+
+## 2026-02-11
+- `.gitignore`에 Java / Node.js / Gradle / VS Code / IntelliJ IDEA 관련 제외 패턴을 추가함.
+- 기존 기본 제외 항목(`.DS_Store`, `.idea`, `.gradle`, `build`)을 유지하면서 범용 개발 산출물 제외를 확장함.
+- 백엔드 1차 기반 구축 착수: `Audit User` 표준 베이스 엔티티(`BaseAuditEntity`, `BaseAuditUserEntity`)를 추가함.
+- `@EnableJpaAuditing` + `AuditorAware<String>`(`CurrentAuditorAware`)를 구성해 인증 사용자 기반 감사 주체 주입 골격을 추가함.
+- Security/RBAC 골격을 추가함: HTTP Basic 기반 `ADMIN/USER` 인메모리 계정, 공개/보호/관리자 경로 권한 분리.
+- API 공통 응답/오류 포맷 골격을 추가함: `ApiSingleResponse`, 전역 예외 처리(`GlobalExceptionHandler`), `X-Trace-Id` 필터.
+- 검증용 시스템 엔드포인트(`/api/v1/public/ping`, `/api/v1/users/me`, `/api/v1/admin/ping`)와 보안/감사 단위 테스트를 추가함.
+- Portfolio 도메인 1차 구현: `Portfolio`, `Instrument`, `Holding`, `PortfolioTransaction` 엔티티 및 enum(`CurrencyCode`, `MarketCode`, `TransactionType`)을 추가함.
+- 거래 코어 로직 구현: `TransactionCommandService`에서 `BUY/SELL/DEPOSIT/WITHDRAW/DIVIDEND/FEE_ADJUST` 처리, 현금 음수 방지, 가중평균 원가, 실현손익 계산을 반영함.
+- API 확장: 포트폴리오/종목 생성·조회, 거래 등록·목록, 보유수량 목록 엔드포인트를 추가함.
+- 정렬 화이트리스트 기반 `PageableFactory`를 추가해 거래 목록 정렬 필드 검증을 적용함.
+- LazyInitialization 이슈 방지를 위해 `HoldingRepository`, `PortfolioTransactionRepository` 조회에 `@EntityGraph`를 적용함.
+- 테스트 보강: `application-test.yml`(H2 MariaDB 모드) 추가, 서비스 통합 테스트/컨트롤러 플로우 테스트를 추가하고 `gradle build` 통과를 확인함.
+- Querydsl 표준 적용: `PortfolioTransactionQueryRepository` / `PortfolioTransactionQueryRepositoryImpl` 패턴으로 거래 목록 조회를 전환함.
+- Querydsl 공통 유틸 추가: `QuerydslSortMapper`, `QuerydslPredicateBuilder`를 도입해 정렬 화이트리스트와 동적 조건 조합을 분리함.
+- 거래 조회 필터 확장: `transactionType`, `instrumentId`, `fromDate`, `toDate` 조건을 API에서 받아 Querydsl 조건으로 조회하도록 반영함.
+- Querydsl Q 클래스 생성 설정을 `libs/common`, `libs/domain`에 추가하고 `apps/api`에 Querydsl JPA 의존성을 반영함.
+- 검증 보강: 거래 목록 필터 동작 및 미허용 정렬 필드 요청(`unsupported,DESC`)의 400 응답을 컨트롤러 테스트에 추가함.
+- Holding/Instrument 조회를 Querydsl 커스텀 리포지토리 패턴(`HoldingQueryRepository`, `InstrumentQueryRepository`)으로 전환함.
+- Holding/Instrument 리스트 API에 `page`, `perPage`, `sort`와 필터(`keyword`, `instrumentId`, `marketCode`, `currencyCode`)를 추가해 react-admin 목록 규격에 맞춤.
+- `PageableFactory`를 확장해 리소스별 기본 정렬(`transaction`, `instrument`, `holding`)을 제공하도록 변경함.
+- 검증 보강: `TransactionFlowControllerTest`에 Instrument 목록 필터 조회, Holding 미허용 정렬 필드 400 응답 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Portfolio 조회를 Querydsl 커스텀 리포지토리 패턴(`PortfolioQueryRepository`)으로 확장함.
+- Portfolio 리스트 API에 `page`, `perPage`, `sort`와 필터(`keyword`, `baseCurrency`)를 추가해 목록 규격을 통일함.
+- `PageableFactory`에 `portfolioPageable`을 추가해 기본 정렬(`createdAt,DESC`)을 반영함.
+- 검증 보강: `TransactionFlowControllerTest`에 Portfolio 목록 필터 조회, Portfolio 미허용 정렬 필드 400 응답 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Portfolio 리소스 명령 API 확장: `PUT /api/v1/portfolios/{id}`, `DELETE /api/v1/portfolios/{id}`를 추가함.
+- 삭제 보호 규칙 추가: 거래/보유가 존재하는 Portfolio 삭제를 `409 CONFLICT`로 차단하도록 서비스 제약을 반영함.
+- 도메인 보강: `Portfolio.rename` 의도 메서드를 추가해 `@Setter` 없이 상태 변경을 처리함.
+- 검증 보강: `TransactionFlowControllerTest`에 Portfolio 수정 성공, 거래 존재 포트폴리오 삭제 충돌, 빈 포트폴리오 삭제 성공(204) 및 삭제 후 조회 404 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Instrument 리소스 명령 API 확장: `PUT /api/v1/instruments/{id}`, `DELETE /api/v1/instruments/{id}`를 추가함.
+- 삭제 보호 규칙 추가: 거래/보유가 존재하는 Instrument 삭제를 `409 CONFLICT`로 차단하도록 서비스 제약을 반영함.
+- 도메인 보강: `Instrument.rename` 의도 메서드를 추가해 `@Setter` 없이 상태 변경을 처리함.
+- 검증 보강: `TransactionFlowControllerTest`에 Instrument 수정 성공, 거래 존재 종목 삭제 충돌, 빈 종목 삭제 성공(204) 및 삭제 후 조회 404 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Transaction 리소스 API 확장: `GET /api/v1/transactions/{id}`, `DELETE /api/v1/transactions/{id}`를 추가함.
+- 거래 삭제 정합성 규칙 추가: 최신 거래(`tradeDate DESC, id DESC`)만 삭제 허용하고, 거래 유형별 역처리(BUY/SELL/DEPOSIT/WITHDRAW/DIVIDEND/FEE_ADJUST)로 현금/보유수량을 롤백하도록 구현함.
+- 삭제 안전성 강화: 최신 거래가 아니면 `409 CONFLICT`로 차단하도록 제약을 반영함.
+- 검증 보강: `TransactionFlowControllerTest`에 거래 단건 조회, 비최신 거래 삭제 충돌, 최신 거래 삭제 성공 및 삭제 후 holdings/transactions 정합성 검증 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Transaction 리소스 API 확장: `PUT /api/v1/transactions/{id}`를 추가함.
+- 거래 수정 정합성 규칙 추가: 최신 거래만 수정 허용하고, 기존 거래를 롤백한 뒤 수정값을 재적용해 현금/보유수량 정합성을 유지하도록 구현함.
+- 엔티티 보강: `PortfolioTransaction.update(...)` 의도 메서드를 추가해 거래 상세값 갱신을 `@Setter` 없이 처리함.
+- 검증 보강: `TransactionFlowControllerTest`에 비최신 거래 수정 충돌, 최신 BUY 거래 수정 성공, 수정 후 holdings 수량/portfolio 현금 정합성 검증 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- Audit 통합 테스트 추가: 인증 사용자 컨텍스트에서 Portfolio 생성/수정 시 `createdBy`, `updatedBy`, `createdAt`, `updatedAt`가 자동 주입되는지 검증함.
+- 감사 필드 변경 검증 보강: 생성자(`createdBy`)는 유지되고 수정자(`updatedBy`)가 수정 사용자로 변경되는 시나리오를 테스트에 반영함.
+- 검증 보강: `AuditIntegrationTest` 추가 후 `gradle build` 통과를 확인함.
+- 거래 Audit 통합 테스트 보강: `TransactionCommandServiceIntegrationTest`에 거래 생성/수정 시 `PortfolioTransaction`의 `createdBy`, `updatedBy`, `createdAt`, `updatedAt` 자동 주입/갱신 검증을 추가함.
+- 감사 컨텍스트 테스트 유틸 추가: 테스트 내 인증 사용자 전환(`audit-user` → `audit-admin`) 후 수정 감사자 변경을 검증하도록 반영함.
+- 검증 보강: 거래 Audit 시나리오 추가 후 `gradle build` 통과를 확인함.
+- Audit 통합 테스트 확장: 보안 컨텍스트가 없는 `batch-*` 스레드명 환경에서 Portfolio 생성 시 `createdBy`, `updatedBy`가 `"system"`으로 저장되는 시나리오를 추가함.
+- 스레드명 기반 감사자 분기 검증: 테스트 중 스레드명을 임시 변경 후 원복하는 방식으로 JPA Auditing 연동을 검증함.
+- 검증 보강: `system` 감사자 통합 시나리오 추가 후 `gradle build` 통과를 확인함.
+- Audit 통합 테스트 확장: 보안 컨텍스트가 없는 일반 스레드명 환경에서 Portfolio 생성 시 `createdBy`, `updatedBy`가 `"anonymous"`로 저장되는 시나리오를 추가함.
+- 감사자 분기 커버리지 보강: `authenticated`/`system`/`anonymous` 3개 분기 중 `anonymous`의 JPA Auditing 저장 결과를 통합 테스트로 검증함.
+- 검증 보강: `anonymous` 감사자 통합 시나리오 추가 후 `gradle build` 통과를 확인함.
+- API 경유 감사 통합 테스트 추가: `AuditApiIntegrationTest`를 추가해 HTTP Basic 인증(`user`/`admin`)으로 Portfolio 생성/수정 시 `createdBy`/`updatedBy`가 요청 사용자 기준으로 저장되는지 검증함.
+- 거래 API 감사 검증 보강: Transaction 생성/수정 API 호출 후 `PortfolioTransaction`의 `createdBy`/`updatedBy` 변경을 검증함.
+- 테스트 안정화: API 요청 단위 트랜잭션 커밋 기준으로 감사값을 검증하도록 테스트를 조정하고 `gradle build` 통과를 확인함.
+- Instrument API 감사 검증 보강: `AuditApiIntegrationTest`에 Instrument 생성(`user`) / 수정(`admin`) 시 `createdBy`/`updatedBy`가 요청 사용자 기준으로 저장/갱신되는 시나리오를 추가함.
+- 감사 커버리지 확장: API 경유 감사 검증 범위를 Portfolio + Instrument + Transaction으로 확장함.
+- 검증 보강: Instrument API 감사 시나리오 추가 후 `gradle build` 통과를 확인함.
+- react-admin 호환성 보강: 목록 API(`portfolios`, `instruments`, `holdings`, `transactions`)에 `filter` JSON 파라미터 파싱을 추가하고 기존 개별 쿼리 파라미터와 병행 지원하도록 확장함.
+- 공통 유틸 추가: `FilterParamParser`를 도입해 filter JSON 파싱/타입 변환(String/Long/Enum/LocalDate)과 잘못된 filter JSON에 대한 `400 BAD_REQUEST` 처리를 공통화함.
+- 검증 보강: `TransactionFlowControllerTest`에 리소스별 filter JSON 조회 성공 및 invalid filter JSON 400 응답 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- react-admin 호환성 추가 보강: `PageableFactory`에 `sort` JSON 배열(`["field","ASC|DESC"]`) 및 `range` JSON 배열(`[start,end]`) 파싱을 추가함.
+- 목록 API 확장: `portfolios`, `instruments`, `holdings`, `transactions` 목록 엔드포인트에 `range` 파라미터를 추가하고 기존 `page`/`perPage`와 병행 지원하도록 반영함.
+- 검증 보강: `TransactionFlowControllerTest`에 `sort`/`range` JSON 조회 성공, invalid `range` 400 응답 시나리오를 추가하고 `gradle build` 통과를 확인함.
+- holdings 조회 확장: `GET /api/v1/holdings/{id}` 단건 조회 API를 추가하고 `HoldingRepository.findById`에 `@EntityGraph(portfolio, instrument)`를 적용해 LazyInitialization 오류를 방지함.
+- 목록 조회 유연화: `holdings`, `transactions` 목록 API에서 `portfolioId`를 필수값에서 선택 필터로 완화해 전체 포트폴리오 통합 조회를 지원함.
+- 프론트 리소스 확장: `frontend-admin`에서 `portfolios`, `instruments`에 명시적 Create/Edit/List 폼을 적용하고 `transactions`, `holdings` 리소스를 추가함.
+- 인증 UX 보강: `authProvider` 로그인 시 `/users/me` 검증을 수행하도록 변경하고 `getIdentity/getPermissions/checkAuth`에서 사용자 정보 실조회 기반으로 동작하도록 보강함.
+- 검증 보강: `TransactionFlowControllerTest`에 global holdings/transactions 목록 시나리오와 `holdings/{id}` 조회 시나리오를 추가하고 `gradle :apps:api:test --rerun-tasks`, `gradle build`, `npm run build` 통과를 확인함.
+- 거래 입력 안정성 보강: `TransactionCommandService`에서 `fee`, `tax`를 공통 비즈니스 규칙으로 `0 이상`만 허용하도록 검증을 추가함.
+- 백엔드 회귀 테스트 보강: `TransactionCommandServiceIntegrationTest`에 음수 `fee` 등록 거부, 음수 `tax` 수정 거부 시나리오를 추가함.
+- 프론트 자동 테스트 도입: `frontend-admin`에 `vitest`/`jsdom` 기반 테스트 환경(`vitest.config.ts`)과 `npm test`, `npm test:watch` 스크립트를 추가함.
+- 프론트 유닛 테스트 추가: `authProvider` 로그인/인증오류/토큰정리, `dataProvider` 쿼리 파라미터/에러 매핑/204 삭제 응답 동작을 검증하는 테스트를 추가함.
+- 문서 갱신: 루트 `README.md`에 frontend 테스트 실행(`npm test`) 절차를 추가함.
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`, `npm run build`, `gradle build`를 모두 통과함.
+- 거래 페이로드 규칙 강화: `TransactionCommandService`에서 거래유형별 필드 정합성 검증을 추가함.
+  - `BUY`/`SELL`: `amount` 입력 금지(`null` 필수)
+  - `DEPOSIT`/`WITHDRAW`/`DIVIDEND`/`FEE_ADJUST`: `instrumentId`/`quantity`/`unitPrice` 입력 금지(`null` 필수)
+- 백엔드 테스트 보강: `TransactionCommandServiceIntegrationTest`에
+  - `BUY` 등록 시 `amount` 포함 요청 거부
+  - `DEPOSIT` 수정 시 `instrumentId` 포함 요청 거부
+  시나리오를 추가함.
+- 프론트 거래 폼 고도화: `AdminApp`의 거래 생성/수정 폼을 거래유형 조건부 렌더링으로 변경함.
+  - `BUY`/`SELL`: `instrumentId`/`quantity`/`unitPrice` 필수
+  - 현금성 거래: `amount` 필수
+- 프론트 payload 정규화 유틸 추가: `transactionForm.ts`에서 생성/수정 요청 시 거래유형에 맞지 않는 필드를 자동 정리하도록 구현함.
+- 프론트 테스트 확장: `transactionForm.test.ts`를 추가해 거래유형 판별/정규화 로직을 검증함.
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`(3 files, 10 tests), `npm run build`, `gradle build` 통과를 확인함.
+- 프론트 입력 검증 유틸 추가: `formValidators.ts`를 추가해 양수(`positiveNumber`)와 0 이상(`nonNegativeNumber`) 검증 로직을 공통화함.
+- 프론트 거래 폼 검증 강화: `AdminApp` 거래 생성/수정 폼에서 `quantity`/`unitPrice`/`amount`는 양수, `fee`/`tax`는 0 이상 검증을 적용함.
+- 프론트 테스트 보강: `formValidators.test.ts`를 추가해 숫자 검증 유틸의 정상/실패/빈값 허용 케이스를 검증함.
+- 백엔드 API 검증 테스트 추가: `TransactionValidationControllerTest`를 추가해 거래유형별 필드 제약 위반 시 `400 BAD_REQUEST`와 에러 메시지가 반환되는지 검증함.
+  - `BUY` 생성 시 `amount` 포함 거부
+  - `DEPOSIT` 생성 시 `instrumentId` 포함 거부
+  - `DEPOSIT` 수정 시 `instrumentId` 포함 거부
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`(4 files, 13 tests), `npm run build`, `gradle build` 통과를 확인함.
+- 백엔드 에러 포맷 보강: `TransactionCommandService`의 필드 검증 예외(`requirePositive`, `requireNonNegative`, `ensureNull`, `ensureInstrumentExists`)에서 `ApiException.details`에 `{field: message}` 형태를 포함하도록 개선함.
+- 백엔드 테스트 보강:
+  - `TransactionValidationControllerTest`에서 에러 메시지뿐 아니라 `$.error.details.<field>`까지 검증하도록 확장함.
+  - `TransactionCommandServiceIntegrationTest`에서 음수 `fee/tax` 예외 발생 시 `details` 맵 값을 검증하도록 보강함.
+- 프론트 에러 매핑 개선: `dataProvider`에서 백엔드 `error.details`(객체)를 `error.body.errors`로 변환해 react-admin 폼 필드 에러 바인딩이 가능하도록 변경함.
+- 프론트 테스트 보강: `dataProvider.test.ts`에 필드 에러 매핑(`body.errors`) 시나리오를 추가함.
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`(4 files, 14 tests), `npm run build`, `gradle build` 통과를 확인함.
+- DTO 숫자 검증 강화: `TransactionCreateRequest`, `TransactionUpdateRequest`에 `@Positive`, `@PositiveOrZero`를 적용해 컨트롤러 레벨에서 비정상 숫자 입력을 선차단함.
+- 백엔드 API 검증 테스트 확장: `TransactionValidationControllerTest`에
+  - `BUY` 생성 시 `quantity=0` 거부
+  - 생성 시 `fee<0` 거부
+  시나리오를 추가함.
+- 프론트 숫자 파싱 유틸 추가: `numberParsers.ts`의 `parseNullableNumber`를 도입해 NumberInput 값이 `number | null`로 일관되게 전송되도록 개선함.
+- 프론트 거래 폼 반영: `AdminApp`의 거래 생성/수정 NumberInput에 `parseNullableNumber`를 적용함.
+- 프론트 테스트 확장: `numberParsers.test.ts`를 추가해 숫자/빈값/비정상 문자열 파싱을 검증함.
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`(5 files, 17 tests), `npm run build`, `gradle build` 통과를 확인함.
+- DTO ID 검증 강화: `TransactionCreateRequest`의 `portfolioId`, `instrumentId`와 `TransactionUpdateRequest`의 `instrumentId`에 `@Positive`를 추가함.
+- 백엔드 API 검증 테스트 확장: `TransactionValidationControllerTest`에
+  - 생성 시 `portfolioId=0` 거부
+  - 수정 시 `instrumentId<0` 거부
+  시나리오를 추가함.
+- 프론트 에러 호환성 개선: `dataProvider`에서 에러를 generic `Error` 대신 `react-admin`의 `HttpError`로 반환하도록 변경함.
+- 프론트 테스트 보강: `dataProvider.test.ts`의 에러 매핑 검증을 `HttpError` 구조(`status`, `body`) 기준으로 보강함.
+- 최종 검증: `gradle :apps:api:test --rerun-tasks`, `npm test`(5 files, 17 tests), `npm run build`, `gradle build` 통과를 확인함.
+
+## 2026-02-13
+- 실데이터 기반 샘플 포트폴리오 시드 스크립트 `scripts/local/seed-famous-portfolios.sh`를 추가함.
+- 샘플 대상 3종을 자동 삽입하도록 구현함.
+  - `Warren Buffett (Dataroma)`
+  - `Cathie Wood - ARKK (StockAnalysis)`
+  - `Nancy Pelosi (QuiverQuant Live)`
+- 데이터 소스(실조회)와 매핑 기준:
+  - Buffett: Dataroma BRK 보유비중 상위 10개 (`https://www.dataroma.com/m/holdings.php?m=BRK`)
+  - Cathie Wood: StockAnalysis ARKK holdings 상위 10개 (`https://stockanalysis.com/etf/arkk/holdings/`)
+  - Pelosi: QuiverQuant live stock portfolio 상위 10개 (`https://www.quiverquant.com/get_politician_page_tab_data/P000197`)
+  - 매수 단가: Stooq 최신 종가 (`https://stooq.com/q/l/?s={ticker}.us&i=d`)
+- 시드 규칙:
+  - 포트폴리오별 초기 입금 `DEPOSIT` 1,000,000 USD
+  - 소스 비중(%) 기반으로 매수 수량 계산 후 `BUY` 생성
+  - 거래가 이미 존재하는 포트폴리오는 재삽입 방지를 위해 skip (idempotent)
+- 실행/검증:
+  - 실행: `scripts/local/seed-famous-portfolios.sh`
+  - 결과: 3개 포트폴리오 각각 `DEPOSIT 1 + BUY 10` 총 11건 거래 삽입 확인
+    - `portfolio 2: transactions=11`
+    - `portfolio 3: transactions=11`
+    - `portfolio 4: transactions=11`
+  - holdings 조회에서 각 포트폴리오 상위 10개 ticker 보유 확인.
+- 프론트 상세 화면 개선: `frontend-admin/src/app/AdminApp.tsx`의 `PortfolioEdit`에 `PortfolioRelatedDomains` 패널을 추가함.
+  - 동일 화면에서 연결 도메인(holdings / transactions)을 한눈에 확인 가능하도록 구성함.
+  - 요약 카드: `Cash Balance`, `Holdings`, `Transactions`, `Latest Trade Date`.
+  - 연관 리스트:
+    - `Holdings (Top Quantity)` 10건
+    - `Recent Transactions` 10건 (행 클릭 시 거래 수정 화면 이동)
+- 프론트 검증:
+  - `npm test` 통과 (5 files, 17 tests)
+  - `npm run build` 통과 (Next.js production build 성공)
+- `퀀트/알고리즘/매크로` 도메인 MVP 리소스를 신규 구현함.
+  - Domain(`libs/domain`) 추가:
+    - `QuantStrategy` / `QuantSignal` / `MacroIndicator` 엔티티
+    - enum: `QuantStyle`, `StrategyStatus`, `SignalType`, `MacroRegionCode`
+  - API(`apps/api`) 추가:
+    - Repository + Querydsl 인터페이스/구현:
+      - `QuantStrategyRepository`, `QuantSignalRepository`, `MacroIndicatorRepository`
+      - `XxxQueryRepository`, `XxxQueryRepositoryImpl`
+    - Service/Controller/DTO/Mapper:
+      - `QuantStrategyController`, `QuantSignalController`, `MacroIndicatorController`
+      - CRUD + List(filter/range/sort) 지원
+    - Query/Pageable 확장:
+      - `QuantStrategySearchCondition`, `QuantSignalSearchCondition`, `MacroIndicatorSearchCondition`
+      - `PageableFactory`에 `quantStrategyPageable`, `quantSignalPageable`, `macroIndicatorPageable` 추가
+  - Frontend(`frontend-admin`) 확장:
+    - react-admin Resource 추가:
+      - `quant-strategies`
+      - `quant-signals`
+      - `macro-indicators`
+    - 목록/생성/수정 화면 및 메뉴 항목 추가
+    - Dashboard 카드에 신규 리소스 카운트 반영
+- 통합 테스트 추가:
+  - `QuantMacroControllerTest`를 추가해 생성/조회/목록(filter/sort/range)/수정/삭제/삭제 제약(CONFLICT) 및 미허용 정렬(400) 시나리오를 검증함.
+- 최종 검증:
+  - `gradle :apps:api:test --rerun-tasks` 통과
+  - `frontend-admin npm test` 통과 (5 files, 17 tests)
+  - `frontend-admin npm run build` 통과
+- 로컬 시드 자동화 구조 추가:
+  - `scripts/local/seed-all.sh`를 추가해 `scripts/local/seeds/*.sh`를 순차 실행하도록 구성함.
+  - 시드 모듈 분리:
+    - `scripts/local/seeds/10-famous-portfolios.sh` (기존 유명 포트폴리오 시드 래퍼)
+    - `scripts/local/seeds/20-quant-macro.sh` (퀀트/알고리즘/매크로 샘플 데이터 시드)
+  - `run-all.sh`에 자동 시드 연결:
+    - 기본값 `AUTO_SEED_LOCAL=true`로 backend 준비 후 `seed-all.sh` 자동 실행
+    - backend 프로세스 조기 종료 시 즉시 실패 처리하도록 안전장치 추가
+- 퀀트/매크로 샘플 데이터 시드 추가 내용:
+  - 전략 샘플 3개:
+    - `Buffett Value Concentration`
+    - `Cathie Disruptive Growth Momentum`
+    - `Pelosi Congressional Flow Tracker`
+  - 시그널 샘플 9개(전략당 3개): `AAPL/BAC/KO`, `TSLA/COIN/ROKU`, `NVDA/MSFT/PANW`
+  - 매크로 지표 샘플 5개: `US_CPI_YOY`, `US_FED_FUNDS`, `US10Y_YIELD`, `KR_BASE_RATE`, `KRW_USD`
+  - 신규 엔드포인트 미지원 서버에 대한 방어 로직 추가:
+    - `20-quant-macro.sh` 시작 시 `quant-strategies`, `macro-indicators` 엔드포인트 가용성 검사
+    - 빈 `strategyId/instrumentId` 사용 시 조기 방어
+- 실삽입/검증 실행:
+  - 실행: `API_BASE_URL=http://127.0.0.1:18080/api/v1 ./scripts/local/seed-all.sh`
+  - 결과:
+    - `quant-strategies total=3`
+    - `quant-signals total=9`
+    - `macro-indicators total=5`
+- Admin/권한/메뉴 권한 관리 기능을 backend/frontend에 추가함.
+  - Domain(`libs/domain`) 추가:
+    - `MenuPermission` 엔티티(`roleCode`, `menuKey`, `canList/canCreate/canEdit/canDelete`)
+    - `(role_code, menu_key)` 유니크 제약 추가
+  - API(`apps/api`) 추가:
+    - Repository + Querydsl:
+      - `MenuPermissionRepository`
+      - `MenuPermissionQueryRepository`, `MenuPermissionQueryRepositoryImpl`
+    - Service/Controller/DTO/Mapper:
+      - `MenuPermissionService`, `UserMenuPermissionService`
+      - `MenuPermissionAdminController` (`/api/v1/admin/menu-permissions`)
+      - `UserMenuPermissionController` (`/api/v1/users/me/menu-permissions`)
+    - Pageable 확장:
+      - `PageableFactory.menuPermissionPageable(...)`
+  - 권한 로직 보강:
+    - `ROLE_ADMIN` 사용자의 메뉴 권한은 기본 메뉴 키에 대해 항상 full access로 보정되도록 `UserMenuPermissionService`를 보강함.
+- Frontend(`frontend-admin`) 권한 연동을 추가함.
+  - `authProvider` 확장:
+    - `getPermissions()`가 `{ roles, menuPermissions }`를 반환하도록 변경
+    - `/users/me/menu-permissions` 조회 추가
+    - `hasMenuPermission(...)` 유틸 추가 (`ROLE_ADMIN` full access 처리)
+  - `dataProvider` 확장:
+    - `menu-permissions` 리소스를 `/admin/menu-permissions` 경로로 매핑
+  - UI 리소스/메뉴:
+    - `Menu Permissions` 리소스(List/Create/Edit) 추가
+    - `AppMenu`를 메뉴 권한 기반 렌더링으로 전환
+    - `AdminApp`에 `AppResources`를 연결해 리소스별 list/create/edit 권한 제어 적용
+- 테스트 보강:
+  - Backend:
+    - `MenuPermissionControllerTest` 추가
+      - 관리자 CRUD
+      - 일반 사용자 관리자 경로 접근 차단(403)
+      - `/users/me/menu-permissions` 조회 및 admin/user 권한 해석 검증
+  - Frontend:
+    - `authProvider.test.ts` 확장
+      - 메뉴 권한 로딩 검증
+      - `hasMenuPermission` 케이스 검증
+    - `dataProvider.test.ts` 확장
+      - `menu-permissions` 경로 매핑(`/api/v1/admin/menu-permissions`) 검증
+- 최종 검증:
+  - `gradle :apps:api:test --rerun-tasks` 통과
+  - `frontend-admin npm test` 통과 (5 files, 21 tests)
+  - `frontend-admin npm run build` 통과
+  - `gradle build` 통과
+- 로컬 E2E 안정화:
+  - 증상: `frontend-admin` Playwright E2E 실행 시 로그인 화면 대신 react-admin 기본 "Welcome to React-admin" 화면이 나타나며 `Username` 필드 탐색 실패.
+  - 원인: `AdminApp` 리소스 등록을 `usePermissions` 기반 컴포넌트(`AppResources`)로 처리하면서 초기 렌더 타이밍에 리소스가 비어 기본 안내 화면으로 렌더링됨.
+  - 조치:
+    - `frontend-admin/src/app/AdminApp.tsx`에서 리소스 구성을 Admin children function 방식으로 전환.
+    - `renderResources(permissions)` 함수로 리소스 등록을 통합하고 권한 판별(`hasMenuPermission`)은 유지.
+  - 검증:
+    - `frontend-admin npm test` 통과 (5 files, 21 tests)
+    - `frontend-admin npm run test:e2e` 통과 (2 passed)
+- Admin 사용자 관리 기능(backend/frontend) 추가:
+  - Backend(`apps/api`, `libs/domain`)
+    - 엔티티: `AdminUser` + `admin_user_roles`(`@ElementCollection`) 추가
+    - Repository/Querydsl:
+      - `AdminUserRepository`
+      - `AdminUserQueryRepository`, `AdminUserQueryRepositoryImpl`
+      - 역할별 관리자 수 집계(`countByRoleCode`) 및 키워드/역할 필터 검색 지원
+    - Service/Controller/DTO/Mapper:
+      - `AdminUserService`
+      - `AdminUserController` (`/api/v1/admin/users`)
+      - DTO: `AdminUserCreateRequest`, `AdminUserUpdateRequest`, `AdminUserResponse`
+      - mapper: `AdminUserMapper`
+    - `PageableFactory.adminUserPageable(...)` 추가
+  - Security 연동:
+    - `DatabaseUserDetailsService` 추가로 인증 사용자 소스를 DB로 전환
+    - `SecurityUserBootstrap` 추가로 기본 계정(admin/demo)을 기동 시 upsert
+    - `SystemControllerSecurityTest`는 `@WebMvcTest` 환경에서 인메모리 `UserDetailsService` 테스트 설정을 주입하도록 보강
+  - 권한 UX 보강:
+    - `/api/v1/admin/menu-permissions`는 `demo` 계정에서 `403`이 정상이며, `admin` 계정에서 `200` 응답 확인
+    - 프론트 `hasMenuPermission` 기본 동작을 보완해 명시 권한이 없을 때 `users`, `menu-permissions` 같은 관리자 메뉴는 일반 사용자에게 숨김
+    - `UserMenuPermissionService` 기본 메뉴 키에 `users` 추가
+  - Frontend(`frontend-admin`)
+    - `users` 리소스 추가(List/Create/Edit)
+    - 사이드 메뉴에 `Users` 추가(권한 기반 노출)
+    - `dataProvider` 경로 매핑 추가: `users -> /admin/users`
+    - menu permission 선택키에 `users` 추가
+  - 테스트:
+    - Backend: `AdminUserControllerTest` 추가(관리자 CRUD + 생성 사용자 인증 + 일반 사용자 접근 차단)
+    - Frontend unit:
+      - `authProvider.test.ts`에 관리자 메뉴 기본 차단 케이스 추가
+      - `dataProvider.test.ts`에 `/api/v1/admin/users` 경로 매핑 검증 추가
+    - E2E:
+      - `frontend-admin/e2e/admin-users.spec.ts` 추가(관리자 로그인 후 Users 관리화면 접근 검증)
+  - 검증 결과:
+    - `gradle :apps:api:test --rerun-tasks` 통과
+    - `frontend-admin npm test` 통과 (5 files, 23 tests)
+    - `frontend-admin npm run build` 통과
+    - `frontend-admin npm run test:e2e` 통과 (3 passed)
+- 로컬 종료 스크립트 추가:
+  - `scripts/local/stop-all.sh`를 추가해 backend/frontend 프로세스를 포트(`8080`, `3000`) 기준으로 종료하고 MariaDB 컨테이너를 정지하도록 구성함.
+  - 환경변수로 포트 오버라이드 가능:
+    - `BACKEND_PORT` (기본 `8080`)
+    - `FRONTEND_PORT` (기본 `3000`)
+  - 문서 반영: `README.md` Local Helper Scripts에 `./scripts/local/stop-all.sh` 사용 예시를 추가함.
+  - 검증:
+    - `bash -n scripts/local/stop-all.sh` 문법 확인
+    - `./scripts/local/stop-all.sh` 실행으로 frontend/backend listener 및 `quant-portal-mariadb` 정지 확인
+- 알고리즘 시그널 매수/매도 실행 기능(backend/frontend)을 추가함.
+  - Backend(`apps/api`) 확장:
+    - `POST /api/v1/quant-signals/{id}/execute` 엔드포인트 추가
+    - 요청 DTO `QuantSignalExecuteRequest` 추가 (`portfolioId`, `quantity`, `unitPrice`, `tradeDate`, `fee`, `tax`, `currencyCode`, `memo`)
+    - `QuantSignalService.execute(...)` 추가:
+      - `SignalType.BUY` → `TransactionType.BUY`
+      - `SignalType.SELL` → `TransactionType.SELL`
+      - `HOLD/OVERWEIGHT/UNDERWEIGHT`는 `400 BAD_REQUEST`로 차단
+      - 실행 시 기존 `TransactionCommandService.register(...)`를 재사용해 현금/보유/손익 정합성 규칙을 동일 적용
+      - 거래 메모에 `signal#{id} {signalType}` 프리픽스를 자동 추가
+  - Backend 테스트:
+    - `QuantSignalExecutionControllerTest` 추가
+      - BUY 시그널 실행 성공 및 거래 생성 검증
+      - SELL 시그널 실행 성공 및 실현손익/메모 검증
+      - HOLD 시그널 실행 거부(`BAD_REQUEST`, details.signalType) 검증
+  - Frontend(`frontend-admin`) 확장:
+    - `quant-signal` 수정 화면(`QuantSignalEdit`)에 `Execute Signal` 섹션 추가
+      - 입력: `executionPortfolioId`, `executionQuantity`, `executionUnitPrice`, `executionTradeDate`, `executionFee`, `executionTax`, `executionCurrencyCode`, `executionMemo`
+      - 액션: `Execute Buy/Sell` 버튼으로 실행 API 호출
+    - 실행 API 유틸 `src/lib/quantSignalExecution.ts` 추가
+    - 실행 유틸 테스트 `src/lib/quantSignalExecution.test.ts` 추가
+  - E2E 안정화:
+    - 로그인 버튼 라벨 변경(`Sign in` → `Log in`) 대응을 위해 Playwright 셀렉터를 `/sign in|log in/i`로 보강
+    - 수정 파일: `frontend-admin/e2e/auth-dashboard.spec.ts`, `frontend-admin/e2e/admin-users.spec.ts`
+- 최종 검증:
+  - `gradle :apps:api:test --tests com.quant.portal.api.presentation.controller.QuantSignalExecutionControllerTest --rerun-tasks` 통과
+  - `gradle :apps:api:test --rerun-tasks` 통과
+  - `frontend-admin npm test` 통과 (6 files, 25 tests)
+  - `frontend-admin npm run build` 통과
+  - `frontend-admin npm run test:e2e` 통과 (3 passed)
+  - `gradle build` 통과
+- 알고리즘 시그널 실행 안정화(중복 실행 방지)를 추가함.
+  - Domain(`libs/domain`) 추가:
+    - `QuantSignalExecution` 엔티티 추가
+      - `signal_id` 유니크 제약으로 시그널 1회 실행 정책 강제
+      - 실행된 거래(`PortfolioTransaction`)와 시그널 연결 이력 저장
+  - API(`apps/api`) 확장:
+    - `QuantSignalExecutionRepository` 추가
+    - `QuantSignalService.execute(...)` 보강:
+      - 실행 전 `existsBySignal_Id(...)` 체크
+      - 이미 실행된 시그널이면 `409 CONFLICT` + `details.signalId` 반환
+      - 실행 성공 시 `QuantSignalExecution` 이력 저장
+  - 테스트 보강:
+    - `QuantSignalExecutionControllerTest`에 중복 실행 거부 시나리오 추가
+      - 1회차 실행 성공
+      - 2회차 실행 `409 CONFLICT`, `details.signalId = "Signal can only be executed once"` 검증
+- 검증(백그라운드 실행 원칙 적용):
+  - `gradle :apps:api:test --tests com.quant.portal.api.presentation.controller.QuantSignalExecutionControllerTest --rerun-tasks` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-api-quant-exec-live-20260215-155917.log`
+  - `gradle :apps:api:test --rerun-tasks` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-api-all-live-20260215-155941.log`
+  - `gradle build` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-gradle-build-live-20260215-160009.log`
+- 시그널 실행 이력 조회(거래ID/실행자/실행시각) 기능을 추가함.
+  - Backend(`apps/api`) 확장:
+    - 엔드포인트: `GET /api/v1/quant-signals/{id}/execution`
+    - DTO: `QuantSignalExecutionResponse` 추가
+    - `QuantSignalMapper.toExecutionDto(...)` 추가
+    - `QuantSignalService.getExecution(...)` 추가(없으면 `data: null`)
+    - `QuantSignalExecutionRepository.findBySignal_Id(...)` 추가(`@EntityGraph(transaction)` 적용)
+  - Frontend(`frontend-admin`) 확장:
+    - `quant-signal` 수정 화면에 `Execution History` 패널 추가
+      - 미실행: `Not executed yet`
+      - 실행됨: `Transaction ID`, `Executed By`, `Executed At` 표시
+    - 실행 성공 시 이력 패널 즉시 갱신되도록 refresh key 연동
+    - 실행 이력 조회 API 유틸 `getQuantSignalExecution(...)` 추가
+  - 테스트 보강:
+    - Backend: `QuantSignalExecutionControllerTest`
+      - 실행 전 `GET /execution`은 `data = null`
+      - 실행 후 `signalId`, `transactionId`, `executedBy`, `executedAt` 반환 검증
+    - Frontend: `quantSignalExecution.test.ts`에 실행 이력 조회 유틸 테스트 추가
+- 검증(백그라운드 실행 원칙 적용):
+  - `gradle :apps:api:test --rerun-tasks` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-api-all-live-20260215-175049.log`
+  - `frontend-admin npm test` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-unit-live-20260215-175117.log`
+  - `frontend-admin npm run build` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-build-live-20260215-175126.log`
+  - `frontend-admin npm run test:e2e` 통과
+    - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-e2e-live-20260215-175154.log`
+- 퀀트/매크로 실데이터 시드로 전환함.
+  - 수정 파일: `scripts/local/seeds/20-quant-macro.sh`
+  - 변경 내용:
+    - 정적 신호 샘플 하드코딩 제거
+    - 실보유 기반 신호 생성:
+      - 포트폴리오(`Warren Buffett (Dataroma)`, `Cathie Wood - ARKK (StockAnalysis)`, `Nancy Pelosi (QuiverQuant Live)`)의 상위 보유 종목을 조회
+      - Stooq 일봉(`q/d/l`)에서 20D/60D 수익률, 20일 평균 거래량을 계산해 `signalType/score/confidence/rationale` 자동 산출
+    - 실매크로 지표 반영:
+      - `US_CPI_YOY`: FRED `CPIAUCSL`의 YoY 계산값
+      - `US_FED_FUNDS`: FRED `FEDFUNDS`
+      - `US10Y_YIELD`: FRED `DGS10`
+      - `KR_BASE_RATE`: FRED `IRSTCI01KRM156N`(proxy)
+      - `KRW_USD`: Stooq `USDKRW`
+    - 시드 재실행 시 실데이터로 교체되도록 보강:
+      - `SEED_REPLACE_SIGNALS=true`(기본): 동일 전략/일자 시그널 삭제 후 재삽입
+      - `SEED_REPLACE_MACRO_INDICATORS=true`(기본): 동일 코드/지역/일자 매크로 삭제 후 재삽입
+  - 검증:
+    - `bash -n scripts/local/seeds/20-quant-macro.sh` 통과
+    - 백그라운드 실행:
+      - `(./scripts/local/seeds/20-quant-macro.sh > logs/bg-seed-quant-real-live-20260215-180610.log 2>&1) &` 후 `wait`
+      - 결과: 3개 전략 시그널(각 3건) 교체 및 5개 매크로 지표 교체/삽입 완료
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-seed-quant-real-live-20260215-180610.log`
+- 포트폴리오 일 종가(EOD) 기준 수익률 기능을 추가함.
+  - Backend(`apps/api`)
+    - `PortfolioResponse` 확장:
+      - `investedAmount`, `marketValue`, `eodValuationAmount`, `eodProfitLoss`, `eodReturnRate`, `eodPriceDate`, `pricedHoldings`, `totalHoldings`
+    - 신규 서비스 추가:
+      - `PortfolioPerformanceService`: 보유수량/평균단가 + 일 종가 기반 평가손익/수익률 계산
+      - `StooqEodPriceClient`: Stooq 최신 일 종가 조회(`q/l`) 파싱
+      - `PortfolioPerformanceSnapshot` record 추가
+    - `PortfolioController` 연동:
+      - `GET /api/v1/portfolios`
+      - `GET /api/v1/portfolios/{id}`
+      - `POST /api/v1/portfolios`
+      - `PUT /api/v1/portfolios/{id}`
+      응답에 EOD 수익률 지표 포함
+    - `HoldingRepository` 확장:
+      - `findAllByPortfolioId(...)` + `@EntityGraph(instrument)`로 계산 시 N+1 완화
+    - 설정 추가:
+      - `app.market-data.stooq-enabled` (local 기본 `true`, test 기본 `false`)
+  - Frontend(`frontend-admin`)
+    - Portfolio 목록에 EOD 지표 컬럼 추가:
+      - `EOD Valuation`, `EOD P/L`, `EOD Return (%)`, `EOD Price Date`
+    - Portfolio 상세 Related Domains 카드 확장:
+      - `EOD Return`, `EOD Profit/Loss`, `EOD Price Date`, `Pricing Coverage`
+  - 테스트 추가/보강:
+    - `PortfolioPerformanceControllerTest` 추가:
+      - `@MockBean StooqEodPriceClient`로 일 종가 고정 주입
+      - EOD 평가값/수익률 계산 검증
+    - 기존 전체 테스트 안정화:
+      - `TransactionFlowControllerTest`의 고정 ticker 충돌 가능성 제거(`AAPL_FLOW`, `TSLA_FLOW`)
+  - 검증(백그라운드 실행 원칙 적용):
+    - API 신규 테스트:
+      - `gradle :apps:api:test --tests com.quant.portal.api.presentation.controller.PortfolioPerformanceControllerTest --rerun-tasks`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-api-portfolio-return-live-20260215-181224.log`
+    - API 전체 테스트:
+      - `gradle :apps:api:test --rerun-tasks`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-api-all-live-20260215-181517.log`
+    - Frontend unit:
+      - `frontend-admin npm test`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-unit-live-20260215-181549.log`
+    - Frontend build:
+      - `frontend-admin npm run build`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-build-live-20260215-181549.log`
+    - Frontend e2e:
+      - `frontend-admin npm run test:e2e`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-frontend-e2e-live-20260215-181611.log`
+    - 전체 빌드:
+      - `gradle build`
+      - log: `/Users/revy/workspace_codex/invest/logs/bg-gradle-build-live-20260215-181630.log`

@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: quant-portal-batch
+
+server:
+  port: 8081
