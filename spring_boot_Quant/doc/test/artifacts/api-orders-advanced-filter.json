@@ -1,0 +1,1 @@
+{"items":[{"orderId":1019,"portfolioId":1,"symbol":"ADVF","side":"BUY","orderType":"LIMIT","timeInForce":"DAY","limitPrice":140.25,"quantity":5,"filledQuantity":2,"remainingQuantity":3.000000,"fillRate":40.00,"status":"PARTIAL","createdAt":"2026-02-10T08:09:44.065145Z","decisionReason":null,"decidedAt":null}]}

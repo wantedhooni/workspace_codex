@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quant Admin - 로그인</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SUIT:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-a:#08121f;
+      --bg-b:#102842;
+      --panel:#ffffff;
+      --line:#d9e4f3;
+      --text:#0f2238;
+      --muted:#5f738b;
+      --primary:#0b84ff;
+      --primary-2:#0a66c2;
+      --ok:#00a76f;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'SUIT',sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:radial-gradient(1300px 700px at 20% -10%, #236cb4 0%, transparent 50%),
+                 radial-gradient(1000px 500px at 120% 20%, #0d3f76 0%, transparent 50%),
+                 linear-gradient(145deg,var(--bg-a),var(--bg-b));
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .wrap{width:min(980px,100%);display:grid;grid-template-columns:1.1fr .9fr;border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(2,9,18,.35)}
+    .hero{padding:48px;background:linear-gradient(160deg,#0f3d6b,#0b2745);color:#e9f4ff;position:relative}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);padding:6px 12px;border-radius:999px;font-size:13px}
+    .hero h1{font-size:40px;line-height:1.2;margin:18px 0 10px;font-weight:800}
+    .hero p{margin:0;color:#c6d9ee;font-size:15px;line-height:1.6}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+    .stat{background:rgba(255,255,255,.12);padding:12px;border-radius:12px}
+    .stat b{display:block;font-size:18px}
+    .stat span{font-size:12px;color:#d8e8f8}
+    .form{background:var(--panel);padding:42px}
+    .form h2{margin:0 0 8px;font-size:28px}
+    .sub{margin:0 0 24px;color:var(--muted);font-size:14px}
+    label{display:block;font-size:13px;font-weight:600;margin:14px 0 7px}
+    input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:14px 0 18px;font-size:13px;color:var(--muted)}
+    .btn{width:100%;padding:12px 14px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;font-weight:700;font-size:15px}
+    .otp{margin-top:12px;width:100%;padding:11px;border:1px solid #b8cef0;background:#f2f8ff;border-radius:10px;color:#124b84;font-weight:600}
+    .foot{margin-top:14px;font-size:12px;color:#6f8298;text-align:center}
+    @media (max-width:860px){.wrap{grid-template-columns:1fr}.hero{padding:28px}.form{padding:28px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="badge">미국 증시 퀀트 운용 · 관리자 콘솔</div>
+      <h1>Quant Control<br/>Admin Portal</h1>
+      <p>전략별 성과, 리밸런싱 배치, 주문 상태를 한 화면에서 추적합니다.<br/>백테스트와 모의투자를 안전하게 분리 운영합니다.</p>
+      <div class="stats">
+        <div class="stat"><b>+14.2%</b><span>YTD 수익률</span></div>
+        <div class="stat"><b>-8.7%</b><span>최대낙폭(MDD)</span></div>
+        <div class="stat"><b>1.21</b><span>Sharpe</span></div>
+      </div>
+    </section>
+    <section class="form">
+      <h2>로그인</h2>
+      <p class="sub">JWT 인증 기반 관리자 시스템</p>
+      <label>이메일</label>
+      <input placeholder="admin@quant.io" />
+      <label>비밀번호</label>
+      <input type="password" placeholder="••••••••" />
+      <div class="row"><span><input type="checkbox" checked /> 로그인 유지</span><span>비밀번호 찾기</span></div>
+      <button class="btn">로그인</button>
+      <button class="otp">OTP 인증으로 로그인</button>
+      <div class="foot">접속 권한: ADMIN / QUANT / VIEWER</div>
+    </section>
+  </main>
+</body>
+</html>

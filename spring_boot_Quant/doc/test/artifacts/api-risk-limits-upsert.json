@@ -1,0 +1,1 @@
+{"items":[{"portfolioId":1,"maxOrderNotional":2000000.000000,"maxPositionNotionalPerSymbol":5000000.000000,"maxDailyTurnover":8000000.000000,"maxOpenOrdersPerSymbol":30,"commissionBps":2.000000,"slippageBps":1.000000,"tradingEnabled":true,"killSwitchReason":null,"killSwitchUpdatedAt":"2026-02-10T08:09:41.544374Z","killSwitchUpdatedBy":"system@quant.local"}]}

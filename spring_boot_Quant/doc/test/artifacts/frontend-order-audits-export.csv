@@ -1,0 +1,7 @@
+auditId,orderId,portfolioId,symbol,action,fromStatus,toStatus,reason,actor,actedAt,id
+8001,1001,1,AAPL,CREATE,,NEW,order created,system@quant.local,2026-02-10T08:08:16.042493Z,8001
+8003,1002,1,MSFT,CREATE,,NEW,order created,system@quant.local,2026-02-10T08:08:16.043487Z,8003
+8005,1003,1,NVDA,CREATE,,NEW,order created,system@quant.local,2026-02-10T08:08:16.043573Z,8005
+8007,1004,1,AAPL,CREATE,,NEW,order created,system@quant.local,2026-02-10T08:08:16.043901Z,8007
+8015,1008,1,E2E6402,CREATE,,NEW,order created,admin@quant.io,2026-02-10T08:08:36.433715Z,8015
+8017,1009,1,EMUI,CREATE,,NEW,order created,admin@quant.io,2026-02-10T08:08:41.169311Z,8017

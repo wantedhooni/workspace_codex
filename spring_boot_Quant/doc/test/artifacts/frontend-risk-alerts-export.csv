@@ -1,0 +1,2 @@
+alertKey,portfolioId,severity,code,message,metricName,metricValue,thresholdValue,occurredAt,acknowledged,acknowledgementNote,acknowledgedBy,acknowledgedAt,workflowStatus,assignee,resolvedBy,resolvedAt,workflowUpdatedBy,workflowUpdatedAt,ageMinutes,slaTargetMinutes,slaBreached,priorityScore,id
+RISK_OK_1,1,INFO,RISK_NORMAL,현재 임계치 기반 리스크 경보가 없습니다.,riskStatus,0,0,2026-02-10T08:08:58.328814Z,false,,,,OPEN,,,,,,0,240,false,50,RISK_OK_1

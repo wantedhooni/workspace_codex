@@ -1,0 +1,314 @@
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE ledger_entries;
+TRUNCATE TABLE journal_entries;
+TRUNCATE TABLE journal_vouchers;
+TRUNCATE TABLE positions;
+TRUNCATE TABLE trades;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE portfolios;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- =========================================================
+-- users
+-- =========================================================
+INSERT INTO users (id, email, name, status, created_at, updated_at) VALUES
+(1, 'admin@quant.io', 'System Admin', 'ACTIVE', NOW(6), NOW(6)),
+(2, 'quant.pm@quant.io', 'Quant PM', 'ACTIVE', NOW(6), NOW(6)),
+(3, 'trader@quant.io', 'Execution Trader', 'ACTIVE', NOW(6), NOW(6)),
+(4, 'risk@quant.io', 'Risk Officer', 'ACTIVE', NOW(6), NOW(6)),
+(5, 'viewer@quant.io', 'Read Only User', 'ACTIVE', NOW(6), NOW(6)),
+(6, 'ops@quant.io', 'Ops Manager', 'ACTIVE', NOW(6), NOW(6));
+
+-- =========================================================
+-- portfolios
+-- =========================================================
+INSERT INTO portfolios (id, code, name, currency, created_at) VALUES
+(1, 'US_MOM_A', 'US Momentum Core', 'USD', NOW(6)),
+(2, 'US_VAL_B', 'US Value Quality', 'USD', NOW(6)),
+(3, 'US_IDX_H', 'US Index Hedge', 'USD', NOW(6)),
+(4, 'US_SEMI_X', 'US Semiconductor Alpha', 'USD', NOW(6)),
+(5, 'US_DIV_L', 'US Dividend Low-Vol', 'USD', NOW(6)),
+(6, 'US_AI_G', 'US AI Growth', 'USD', NOW(6));
+
+-- =========================================================
+-- orders (실전 운용 형태: FILLED/PARTIAL/NEW/SENT/CANCELED/REJECTED)
+-- =========================================================
+INSERT INTO orders (
+    id, portfolio_id, symbol, side, order_type, quantity, limit_price, status, broker_order_id, trade_date, created_at, updated_at
+) VALUES
+-- Portfolio 1: Momentum Core
+(1001, 1, 'AAPL',  'BUY',  'MARKET', 120.000000, NULL,        'FILLED',   'BRK-ORD-1001', DATE_SUB(CURDATE(), INTERVAL 7 DAY), NOW(6), NOW(6)),
+(1002, 1, 'MSFT',  'BUY',  'LIMIT',   80.000000, 418.000000,  'PARTIAL',  'BRK-ORD-1002', DATE_SUB(CURDATE(), INTERVAL 7 DAY), NOW(6), NOW(6)),
+(1003, 1, 'NVDA',  'BUY',  'LIMIT',   40.000000, 742.000000,  'FILLED',   'BRK-ORD-1003', DATE_SUB(CURDATE(), INTERVAL 6 DAY), NOW(6), NOW(6)),
+(1004, 1, 'META',  'BUY',  'LIMIT',   50.000000, 526.000000,  'CANCELED', 'BRK-ORD-1004', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NOW(6), NOW(6)),
+(1005, 1, 'AMZN',  'BUY',  'MARKET',  30.000000, NULL,        'FILLED',   'BRK-ORD-1005', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NOW(6), NOW(6)),
+(1006, 1, 'GOOGL', 'BUY',  'LIMIT',   25.000000, 191.000000,  'NEW',      'BRK-ORD-1006', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1007, 1, 'AVGO',  'BUY',  'LIMIT',   18.000000, 1260.000000, 'SENT',     'BRK-ORD-1007', CURDATE(), NOW(6), NOW(6)),
+(1008, 1, 'TSLA',  'SELL', 'LIMIT',   20.000000, 245.000000,  'REJECTED', 'BRK-ORD-1008', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1009, 1, 'AMD',   'BUY',  'MARKET',  65.000000, NULL,        'FILLED',   'BRK-ORD-1009', DATE_SUB(CURDATE(), INTERVAL 3 DAY), NOW(6), NOW(6)),
+(1010, 1, 'QQQ',   'BUY',  'LIMIT',   50.000000, 462.000000,  'PARTIAL',  'BRK-ORD-1010', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+
+-- Portfolio 2: Value Quality
+(1101, 2, 'JNJ',   'BUY',  'MARKET', 100.000000, NULL,        'FILLED',   'BRK-ORD-1101', DATE_SUB(CURDATE(), INTERVAL 7 DAY), NOW(6), NOW(6)),
+(1102, 2, 'PG',    'BUY',  'LIMIT',   90.000000, 167.500000,  'FILLED',   'BRK-ORD-1102', DATE_SUB(CURDATE(), INTERVAL 6 DAY), NOW(6), NOW(6)),
+(1103, 2, 'XOM',   'BUY',  'LIMIT',  120.000000, 112.000000,  'PARTIAL',  'BRK-ORD-1103', DATE_SUB(CURDATE(), INTERVAL 4 DAY), NOW(6), NOW(6)),
+(1104, 2, 'CVX',   'BUY',  'MARKET',  70.000000, NULL,        'FILLED',   'BRK-ORD-1104', DATE_SUB(CURDATE(), INTERVAL 4 DAY), NOW(6), NOW(6)),
+(1105, 2, 'KO',    'BUY',  'LIMIT',  150.000000, 62.100000,   'NEW',      'BRK-ORD-1105', CURDATE(), NOW(6), NOW(6)),
+(1106, 2, 'PEP',   'BUY',  'LIMIT',   80.000000, 170.500000,  'CANCELED', 'BRK-ORD-1106', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1107, 2, 'BRK.B', 'BUY',  'MARKET',  25.000000, NULL,        'FILLED',   'BRK-ORD-1107', DATE_SUB(CURDATE(), INTERVAL 3 DAY), NOW(6), NOW(6)),
+(1108, 2, 'HD',    'SELL', 'LIMIT',   30.000000, 372.000000,  'REJECTED', 'BRK-ORD-1108', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+
+-- Portfolio 3: Index Hedge
+(1201, 3, 'SPY',   'SELL', 'MARKET', 300.000000, NULL,        'FILLED',   'BRK-ORD-1201', DATE_SUB(CURDATE(), INTERVAL 3 DAY), NOW(6), NOW(6)),
+(1202, 3, 'QQQ',   'SELL', 'MARKET', 150.000000, NULL,        'FILLED',   'BRK-ORD-1202', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1203, 3, 'IWM',   'BUY',  'LIMIT',  120.000000, 219.200000,  'PARTIAL',  'BRK-ORD-1203', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1204, 3, 'VIXY',  'BUY',  'MARKET', 1000.000000, NULL,       'FILLED',   'BRK-ORD-1204', CURDATE(), NOW(6), NOW(6)),
+(1205, 3, 'TLT',   'BUY',  'LIMIT',  200.000000, 92.400000,   'NEW',      'BRK-ORD-1205', CURDATE(), NOW(6), NOW(6)),
+(1206, 3, 'XLU',   'BUY',  'LIMIT',  140.000000, 68.300000,   'SENT',     'BRK-ORD-1206', CURDATE(), NOW(6), NOW(6)),
+
+-- Portfolio 4: Semiconductor Alpha
+(1301, 4, 'NVDA',  'BUY',  'MARKET',  35.000000, NULL,        'FILLED',   'BRK-ORD-1301', DATE_SUB(CURDATE(), INTERVAL 6 DAY), NOW(6), NOW(6)),
+(1302, 4, 'AMD',   'BUY',  'LIMIT',  120.000000, 184.500000,  'PARTIAL',  'BRK-ORD-1302', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NOW(6), NOW(6)),
+(1303, 4, 'TSM',   'BUY',  'MARKET', 180.000000, NULL,        'FILLED',   'BRK-ORD-1303', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NOW(6), NOW(6)),
+(1304, 4, 'ASML',  'BUY',  'LIMIT',   15.000000, 965.000000,  'NEW',      'BRK-ORD-1304', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1305, 4, 'MU',    'BUY',  'LIMIT',  220.000000, 104.000000,  'CANCELED', 'BRK-ORD-1305', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1306, 4, 'AMAT',  'BUY',  'MARKET',  95.000000, NULL,        'FILLED',   'BRK-ORD-1306', DATE_SUB(CURDATE(), INTERVAL 3 DAY), NOW(6), NOW(6)),
+(1307, 4, 'QCOM',  'BUY',  'LIMIT',  130.000000, 174.400000,  'PARTIAL',  'BRK-ORD-1307', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1308, 4, 'INTC',  'BUY',  'LIMIT',  250.000000, 43.700000,   'SENT',     'BRK-ORD-1308', CURDATE(), NOW(6), NOW(6)),
+
+-- Portfolio 5: Dividend Low-Vol
+(1401, 5, 'VYM',   'BUY',  'MARKET', 400.000000, NULL,        'FILLED',   'BRK-ORD-1401', DATE_SUB(CURDATE(), INTERVAL 6 DAY), NOW(6), NOW(6)),
+(1402, 5, 'SCHD',  'BUY',  'MARKET', 300.000000, NULL,        'FILLED',   'BRK-ORD-1402', DATE_SUB(CURDATE(), INTERVAL 5 DAY), NOW(6), NOW(6)),
+(1403, 5, 'XLV',   'BUY',  'LIMIT',  180.000000, 149.200000,  'PARTIAL',  'BRK-ORD-1403', DATE_SUB(CURDATE(), INTERVAL 4 DAY), NOW(6), NOW(6)),
+(1404, 5, 'XLP',   'BUY',  'LIMIT',  210.000000, 77.100000,   'NEW',      'BRK-ORD-1404', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1405, 5, 'NEE',   'BUY',  'MARKET',  75.000000, NULL,        'FILLED',   'BRK-ORD-1405', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1406, 5, 'SO',    'BUY',  'LIMIT',  130.000000, 71.500000,   'CANCELED', 'BRK-ORD-1406', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1407, 5, 'DUK',   'BUY',  'LIMIT',  115.000000, 108.400000,  'SENT',     'BRK-ORD-1407', CURDATE(), NOW(6), NOW(6)),
+(1408, 5, 'ED',    'BUY',  'LIMIT',   90.000000, 93.200000,   'REJECTED', 'BRK-ORD-1408', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+
+-- Portfolio 6: AI Growth
+(1501, 6, 'MSFT',  'BUY',  'MARKET',  60.000000, NULL,        'FILLED',   'BRK-ORD-1501', DATE_SUB(CURDATE(), INTERVAL 4 DAY), NOW(6), NOW(6)),
+(1502, 6, 'NVDA',  'BUY',  'MARKET',  55.000000, NULL,        'FILLED',   'BRK-ORD-1502', DATE_SUB(CURDATE(), INTERVAL 3 DAY), NOW(6), NOW(6)),
+(1503, 6, 'AAPL',  'BUY',  'LIMIT',   90.000000, 183.400000,  'PARTIAL',  'BRK-ORD-1503', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1504, 6, 'CRM',   'BUY',  'LIMIT',   70.000000, 278.200000,  'NEW',      'BRK-ORD-1504', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1505, 6, 'NOW',   'BUY',  'LIMIT',   30.000000, 769.500000,  'SENT',     'BRK-ORD-1505', CURDATE(), NOW(6), NOW(6)),
+(1506, 6, 'ORCL',  'BUY',  'MARKET',  85.000000, NULL,        'FILLED',   'BRK-ORD-1506', DATE_SUB(CURDATE(), INTERVAL 2 DAY), NOW(6), NOW(6)),
+(1507, 6, 'SNOW',  'BUY',  'LIMIT',   45.000000, 196.800000,  'CANCELED', 'BRK-ORD-1507', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1508, 6, 'PLTR',  'BUY',  'LIMIT',  260.000000, 24.800000,   'PARTIAL',  'BRK-ORD-1508', CURDATE(), NOW(6), NOW(6)),
+(1509, 6, 'PANW',  'BUY',  'MARKET',  40.000000, NULL,        'FILLED',   'BRK-ORD-1509', DATE_SUB(CURDATE(), INTERVAL 1 DAY), NOW(6), NOW(6)),
+(1510, 6, 'DDOG',  'BUY',  'LIMIT',   52.000000, 128.400000,  'REJECTED', 'BRK-ORD-1510', CURDATE(), NOW(6), NOW(6));
+
+-- =========================================================
+-- trades
+-- =========================================================
+INSERT INTO trades (
+    id, order_id, broker_trade_id, symbol, side, trade_price, trade_qty, fee_amount, trade_status, traded_at, created_at
+) VALUES
+-- Portfolio 1
+(5001, 1001, 'BRK-TRD-5001', 'AAPL',  'BUY', 181.950000, 120.000000, 4.200000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 7 DAY), NOW(6)),
+(5002, 1002, 'BRK-TRD-5002', 'MSFT',  'BUY', 417.800000,  35.000000, 1.700000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 7 DAY), NOW(6)),
+(5003, 1002, 'BRK-TRD-5003', 'MSFT',  'BUY', 418.050000,  20.000000, 1.050000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(6)),
+(5004, 1003, 'BRK-TRD-5004', 'NVDA',  'BUY', 741.900000,  40.000000, 3.100000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(6)),
+(5005, 1005, 'BRK-TRD-5005', 'AMZN',  'BUY', 201.750000,  30.000000, 1.350000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 5 DAY), NOW(6)),
+(5006, 1009, 'BRK-TRD-5006', 'AMD',   'BUY', 183.950000,  65.000000, 1.900000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5007, 1010, 'BRK-TRD-5007', 'QQQ',   'BUY', 461.800000,  20.000000, 1.200000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(6)),
+(5008, 1010, 'BRK-TRD-5008', 'QQQ',   'BUY', 462.100000,  10.000000, 0.720000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 20 HOUR), NOW(6)),
+
+-- Portfolio 2
+(5101, 1101, 'BRK-TRD-5101', 'JNJ',   'BUY', 159.200000, 100.000000, 2.300000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 7 DAY), NOW(6)),
+(5102, 1102, 'BRK-TRD-5102', 'PG',    'BUY', 167.350000,  90.000000, 2.050000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(6)),
+(5103, 1103, 'BRK-TRD-5103', 'XOM',   'BUY', 111.800000,  60.000000, 1.850000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 DAY), NOW(6)),
+(5104, 1103, 'BRK-TRD-5104', 'XOM',   'BUY', 111.950000,  25.000000, 0.950000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5105, 1104, 'BRK-TRD-5105', 'CVX',   'BUY', 153.400000,  70.000000, 1.750000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 DAY), NOW(6)),
+(5106, 1107, 'BRK-TRD-5106', 'BRK.B', 'BUY', 431.600000,  25.000000, 1.200000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+
+-- Portfolio 3
+(5201, 1201, 'BRK-TRD-5201', 'SPY',   'SELL', 534.900000, 300.000000, 5.800000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5202, 1202, 'BRK-TRD-5202', 'QQQ',   'SELL', 456.800000, 150.000000, 3.200000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(6)),
+(5203, 1203, 'BRK-TRD-5203', 'IWM',   'BUY',  219.000000,  40.000000, 1.300000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(6)),
+(5204, 1203, 'BRK-TRD-5204', 'IWM',   'BUY',  219.150000,  30.000000, 1.000000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 18 HOUR), NOW(6)),
+(5205, 1204, 'BRK-TRD-5205', 'VIXY',  'BUY',   22.250000, 1000.000000, 4.600000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 HOUR), NOW(6)),
+
+-- Portfolio 4
+(5301, 1301, 'BRK-TRD-5301', 'NVDA',  'BUY', 742.600000,  35.000000, 2.650000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(6)),
+(5302, 1302, 'BRK-TRD-5302', 'AMD',   'BUY', 184.300000,  50.000000, 1.450000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 5 DAY), NOW(6)),
+(5303, 1302, 'BRK-TRD-5303', 'AMD',   'BUY', 184.550000,  30.000000, 1.050000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 DAY), NOW(6)),
+(5304, 1303, 'BRK-TRD-5304', 'TSM',   'BUY', 193.400000, 180.000000, 3.900000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 5 DAY), NOW(6)),
+(5305, 1306, 'BRK-TRD-5305', 'AMAT',  'BUY', 198.100000,  95.000000, 2.350000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5306, 1307, 'BRK-TRD-5306', 'QCOM',  'BUY', 174.200000,  40.000000, 1.100000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(6)),
+(5307, 1307, 'BRK-TRD-5307', 'QCOM',  'BUY', 174.450000,  35.000000, 0.950000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 12 HOUR), NOW(6)),
+
+-- Portfolio 5
+(5401, 1401, 'BRK-TRD-5401', 'VYM',   'BUY', 121.350000, 400.000000, 4.100000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 6 DAY), NOW(6)),
+(5402, 1402, 'BRK-TRD-5402', 'SCHD',  'BUY',  79.200000, 300.000000, 3.000000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 5 DAY), NOW(6)),
+(5403, 1403, 'BRK-TRD-5403', 'XLV',   'BUY', 149.050000,  70.000000, 1.500000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 DAY), NOW(6)),
+(5404, 1403, 'BRK-TRD-5404', 'XLV',   'BUY', 149.150000,  40.000000, 1.050000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5405, 1405, 'BRK-TRD-5405', 'NEE',   'BUY',  63.450000,  75.000000, 1.200000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(6)),
+
+-- Portfolio 6
+(5501, 1501, 'BRK-TRD-5501', 'MSFT',  'BUY', 418.200000,  60.000000, 1.950000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 DAY), NOW(6)),
+(5502, 1502, 'BRK-TRD-5502', 'NVDA',  'BUY', 743.100000,  55.000000, 3.250000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 3 DAY), NOW(6)),
+(5503, 1503, 'BRK-TRD-5503', 'AAPL',  'BUY', 182.950000,  30.000000, 1.100000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(6)),
+(5504, 1503, 'BRK-TRD-5504', 'AAPL',  'BUY', 183.200000,  20.000000, 0.850000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(6)),
+(5505, 1506, 'BRK-TRD-5505', 'ORCL',  'BUY', 127.400000,  85.000000, 1.400000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 2 DAY), NOW(6)),
+(5506, 1508, 'BRK-TRD-5506', 'PLTR',  'BUY',  24.720000,  90.000000, 1.000000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 8 HOUR), NOW(6)),
+(5507, 1508, 'BRK-TRD-5507', 'PLTR',  'BUY',  24.780000,  60.000000, 0.780000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 4 HOUR), NOW(6)),
+(5508, 1509, 'BRK-TRD-5508', 'PANW',  'BUY', 378.600000,  40.000000, 1.900000, 'EXECUTED', DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(6));
+
+-- =========================================================
+-- positions (당일 스냅샷)
+-- =========================================================
+INSERT INTO positions (
+    id, portfolio_id, symbol, quantity, avg_price, realized_pnl, unrealized_pnl, as_of_date, created_at
+) VALUES
+-- Portfolio 1
+(7001, 1, 'AAPL', 120.000000, 181.950000,   0.000000,  210.000000, CURDATE(), NOW(6)),
+(7002, 1, 'MSFT',  55.000000, 417.890000,   0.000000,  -95.000000, CURDATE(), NOW(6)),
+(7003, 1, 'NVDA',  40.000000, 741.900000,   0.000000,  260.000000, CURDATE(), NOW(6)),
+(7004, 1, 'AMZN',  30.000000, 201.750000,   0.000000,   48.000000, CURDATE(), NOW(6)),
+(7005, 1, 'AMD',   65.000000, 183.950000,   0.000000,  135.000000, CURDATE(), NOW(6)),
+(7006, 1, 'QQQ',   30.000000, 461.900000,   0.000000,   72.000000, CURDATE(), NOW(6)),
+
+-- Portfolio 2
+(7007, 2, 'JNJ',  100.000000, 159.200000,   0.000000, -120.000000, CURDATE(), NOW(6)),
+(7008, 2, 'PG',    90.000000, 167.350000,   0.000000,   95.000000, CURDATE(), NOW(6)),
+(7009, 2, 'XOM',   85.000000, 111.844000,   0.000000,  180.000000, CURDATE(), NOW(6)),
+(7010, 2, 'CVX',   70.000000, 153.400000,   0.000000,  -60.000000, CURDATE(), NOW(6)),
+(7011, 2, 'BRK.B', 25.000000, 431.600000,   0.000000,  140.000000, CURDATE(), NOW(6)),
+
+-- Portfolio 3 (헤지용 숏 포함)
+(7012, 3, 'SPY', -300.000000, 534.900000, 320.000000,  420.000000, CURDATE(), NOW(6)),
+(7013, 3, 'QQQ', -150.000000, 456.800000, 180.000000, -180.000000, CURDATE(), NOW(6)),
+(7014, 3, 'IWM',   70.000000, 219.064000,   0.000000,   35.000000, CURDATE(), NOW(6)),
+(7015, 3, 'VIXY', 1000.000000, 22.250000,   0.000000,  160.000000, CURDATE(), NOW(6)),
+
+-- Portfolio 4
+(7016, 4, 'NVDA',  35.000000, 742.600000,   0.000000,   98.000000, CURDATE(), NOW(6)),
+(7017, 4, 'AMD',   80.000000, 184.394000,   0.000000,  -70.000000, CURDATE(), NOW(6)),
+(7018, 4, 'TSM',  180.000000, 193.400000,   0.000000,  220.000000, CURDATE(), NOW(6)),
+(7019, 4, 'AMAT',  95.000000, 198.100000,   0.000000,   85.000000, CURDATE(), NOW(6)),
+(7020, 4, 'QCOM',  75.000000, 174.317000,   0.000000,  -45.000000, CURDATE(), NOW(6)),
+
+-- Portfolio 5
+(7021, 5, 'VYM',  400.000000, 121.350000,   0.000000,  150.000000, CURDATE(), NOW(6)),
+(7022, 5, 'SCHD', 300.000000,  79.200000,   0.000000,  120.000000, CURDATE(), NOW(6)),
+(7023, 5, 'XLV',  110.000000, 149.086000,   0.000000,  -30.000000, CURDATE(), NOW(6)),
+(7024, 5, 'NEE',   75.000000,  63.450000,   0.000000,   40.000000, CURDATE(), NOW(6)),
+
+-- Portfolio 6
+(7025, 6, 'MSFT',  60.000000, 418.200000,   0.000000,   88.000000, CURDATE(), NOW(6)),
+(7026, 6, 'NVDA',  55.000000, 743.100000,   0.000000,  140.000000, CURDATE(), NOW(6)),
+(7027, 6, 'AAPL',  50.000000, 183.050000,   0.000000,   65.000000, CURDATE(), NOW(6)),
+(7028, 6, 'ORCL',  85.000000, 127.400000,   0.000000,  110.000000, CURDATE(), NOW(6)),
+(7029, 6, 'PLTR', 150.000000,  24.744000,   0.000000,  210.000000, CURDATE(), NOW(6)),
+(7030, 6, 'PANW',  40.000000, 378.600000,   0.000000,  -55.000000, CURDATE(), NOW(6));
+
+-- =========================================================
+-- journal vouchers
+-- =========================================================
+INSERT INTO journal_vouchers (
+    id, voucher_no, portfolio_id, voucher_date, status, approved_by, approved_at, posted_at, description, created_at
+) VALUES
+(2001, 'JV-20260210-2001', 1, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'POSTED',   2, DATE_SUB(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY), 'AAPL momentum buy posting', NOW(6)),
+(2002, 'JV-20260210-2002', 1, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'POSTED',   2, DATE_SUB(NOW(), INTERVAL 6 DAY), DATE_SUB(NOW(), INTERVAL 6 DAY), 'NVDA momentum add posting', NOW(6)),
+(2003, 'JV-20260210-2003', 1, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'APPROVED', 4, DATE_SUB(NOW(), INTERVAL 5 DAY), NULL,                          'MSFT partial fill waiting post', NOW(6)),
+(2004, 'JV-20260210-2004', 1, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'DRAFT',    NULL, NULL, NULL,                                                  'manual fee accrual draft', NOW(6)),
+
+(2005, 'JV-20260210-2005', 2, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'POSTED',   2, DATE_SUB(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 7 DAY), 'JNJ value buy posting', NOW(6)),
+(2006, 'JV-20260210-2006', 2, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'POSTED',   4, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), 'XOM add-on posting', NOW(6)),
+(2007, 'JV-20260210-2007', 2, DATE_SUB(CURDATE(), INTERVAL 2 DAY), 'APPROVED', 4, DATE_SUB(NOW(), INTERVAL 2 DAY), NULL,                          'BRK.B buy waiting post', NOW(6)),
+
+(2008, 'JV-20260210-2008', 3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'POSTED',   4, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), 'SPY hedge sell posting', NOW(6)),
+(2009, 'JV-20260210-2009', 3, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'POSTED',   4, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), 'VIXY hedge buy posting', NOW(6)),
+(2010, 'JV-20260210-2010', 3, CURDATE(),                           'DRAFT',    NULL, NULL, NULL,                                                  'intraday hedge accrual draft', NOW(6)),
+
+(2011, 'JV-20260210-2011', 4, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'POSTED',   2, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), 'TSM core position posting', NOW(6)),
+(2012, 'JV-20260210-2012', 4, DATE_SUB(CURDATE(), INTERVAL 4 DAY), 'APPROVED', 2, DATE_SUB(NOW(), INTERVAL 4 DAY), NULL,                          'AMD partial fill waiting post', NOW(6)),
+
+(2013, 'JV-20260210-2013', 5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'POSTED',   6, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 5 DAY), 'SCHD dividend sleeve posting', NOW(6)),
+(2014, 'JV-20260210-2014', 6, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'CANCELED', 6, DATE_SUB(NOW(), INTERVAL 1 DAY), NULL,                          'ops canceled manual voucher', NOW(6));
+
+-- =========================================================
+-- journal entries
+-- =========================================================
+INSERT INTO journal_entries (
+    id, voucher_id, line_no, account_code, dr_cr, amount, symbol, trade_id, description, created_at
+) VALUES
+-- 2001
+(3001, 2001, 1, 'STOCK_ASSET', 'DR',  21834.000000, 'AAPL', 5001, 'AAPL inventory increase', NOW(6)),
+(3002, 2001, 2, 'CASH',        'CR',  21834.000000, NULL,   5001, 'AAPL cash outflow', NOW(6)),
+-- 2002
+(3003, 2002, 1, 'STOCK_ASSET', 'DR',  29676.000000, 'NVDA', 5004, 'NVDA inventory increase', NOW(6)),
+(3004, 2002, 2, 'CASH',        'CR',  29676.000000, NULL,   5004, 'NVDA cash outflow', NOW(6)),
+-- 2003
+(3005, 2003, 1, 'STOCK_ASSET', 'DR',   8361.000000, 'MSFT', 5003, 'MSFT partial fill accrual', NOW(6)),
+(3006, 2003, 2, 'CASH',        'CR',   8361.000000, NULL,   5003, 'MSFT partial cash accrual', NOW(6)),
+-- 2004
+(3007, 2004, 1, 'FEE_EXPENSE', 'DR',    250.000000, NULL,   NULL, 'draft commission accrual', NOW(6)),
+(3008, 2004, 2, 'CASH',        'CR',    250.000000, NULL,   NULL, 'draft accrual offset', NOW(6)),
+-- 2005
+(3009, 2005, 1, 'STOCK_ASSET', 'DR',  15920.000000, 'JNJ',  5101, 'JNJ inventory increase', NOW(6)),
+(3010, 2005, 2, 'CASH',        'CR',  15920.000000, NULL,   5101, 'JNJ cash outflow', NOW(6)),
+-- 2006
+(3011, 2006, 1, 'STOCK_ASSET', 'DR',   2798.750000, 'XOM',  5104, 'XOM add-on inventory increase', NOW(6)),
+(3012, 2006, 2, 'CASH',        'CR',   2798.750000, NULL,   5104, 'XOM add-on cash outflow', NOW(6)),
+-- 2007
+(3013, 2007, 1, 'STOCK_ASSET', 'DR',  10790.000000, 'BRK.B',5106, 'BRK.B buy waiting posting', NOW(6)),
+(3014, 2007, 2, 'CASH',        'CR',  10790.000000, NULL,   5106, 'BRK.B cash reserve', NOW(6)),
+-- 2008 (sell)
+(3015, 2008, 1, 'CASH',        'DR', 160470.000000, NULL,   5201, 'SPY hedge sell cash inflow', NOW(6)),
+(3016, 2008, 2, 'STOCK_ASSET', 'CR', 160470.000000, 'SPY',  5201, 'SPY inventory decrease', NOW(6)),
+-- 2009
+(3017, 2009, 1, 'STOCK_ASSET', 'DR',  22250.000000, 'VIXY', 5205, 'VIXY hedge inventory increase', NOW(6)),
+(3018, 2009, 2, 'CASH',        'CR',  22250.000000, NULL,   5205, 'VIXY hedge cash outflow', NOW(6)),
+-- 2010
+(3019, 2010, 1, 'HEDGE_EXPENSE','DR',   480.000000, NULL,   NULL, 'intraday hedge estimate', NOW(6)),
+(3020, 2010, 2, 'CASH',         'CR',   480.000000, NULL,   NULL, 'intraday hedge accrual offset', NOW(6)),
+-- 2011
+(3021, 2011, 1, 'STOCK_ASSET', 'DR',  34812.000000, 'TSM',  5304, 'TSM inventory increase', NOW(6)),
+(3022, 2011, 2, 'CASH',        'CR',  34812.000000, NULL,   5304, 'TSM cash outflow', NOW(6)),
+-- 2012
+(3023, 2012, 1, 'STOCK_ASSET', 'DR',   5536.500000, 'AMD',  5303, 'AMD partial fill waiting posting', NOW(6)),
+(3024, 2012, 2, 'CASH',        'CR',   5536.500000, NULL,   5303, 'AMD partial cash reserve', NOW(6)),
+-- 2013
+(3025, 2013, 1, 'STOCK_ASSET', 'DR',  23760.000000, 'SCHD', 5402, 'SCHD inventory increase', NOW(6)),
+(3026, 2013, 2, 'CASH',        'CR',  23760.000000, NULL,   5402, 'SCHD cash outflow', NOW(6)),
+-- 2014
+(3027, 2014, 1, 'STOCK_ASSET', 'DR',   1500.000000, 'PLTR', NULL, 'canceled ops voucher sample', NOW(6)),
+(3028, 2014, 2, 'CASH',        'CR',   1500.000000, NULL,   NULL, 'canceled ops voucher offset', NOW(6));
+
+-- =========================================================
+-- ledger entries (POSTED 전표만 반영)
+-- =========================================================
+INSERT INTO ledger_entries (
+    id, account_code, portfolio_id, entry_date, dr_cr, amount, voucher_id, entry_ref, created_at
+) VALUES
+(9001,  'STOCK_ASSET', 1, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'DR',  21834.000000, 2001, 'LED-2001-1', NOW(6)),
+(9002,  'CASH',        1, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'CR',  21834.000000, 2001, 'LED-2001-2', NOW(6)),
+(9003,  'STOCK_ASSET', 1, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'DR',  29676.000000, 2002, 'LED-2002-1', NOW(6)),
+(9004,  'CASH',        1, DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'CR',  29676.000000, 2002, 'LED-2002-2', NOW(6)),
+(9005,  'STOCK_ASSET', 2, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'DR',  15920.000000, 2005, 'LED-2005-1', NOW(6)),
+(9006,  'CASH',        2, DATE_SUB(CURDATE(), INTERVAL 7 DAY), 'CR',  15920.000000, 2005, 'LED-2005-2', NOW(6)),
+(9007,  'STOCK_ASSET', 2, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'DR',   2798.750000, 2006, 'LED-2006-1', NOW(6)),
+(9008,  'CASH',        2, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'CR',   2798.750000, 2006, 'LED-2006-2', NOW(6)),
+(9009,  'CASH',        3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'DR', 160470.000000, 2008, 'LED-2008-1', NOW(6)),
+(9010,  'STOCK_ASSET', 3, DATE_SUB(CURDATE(), INTERVAL 3 DAY), 'CR', 160470.000000, 2008, 'LED-2008-2', NOW(6)),
+(9011,  'STOCK_ASSET', 3, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'DR',  22250.000000, 2009, 'LED-2009-1', NOW(6)),
+(9012,  'CASH',        3, DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'CR',  22250.000000, 2009, 'LED-2009-2', NOW(6)),
+(9013,  'STOCK_ASSET', 4, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'DR',  34812.000000, 2011, 'LED-2011-1', NOW(6)),
+(9014,  'CASH',        4, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'CR',  34812.000000, 2011, 'LED-2011-2', NOW(6)),
+(9015,  'STOCK_ASSET', 5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'DR',  23760.000000, 2013, 'LED-2013-1', NOW(6)),
+(9016,  'CASH',        5, DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'CR',  23760.000000, 2013, 'LED-2013-2', NOW(6));
+
+-- =========================================================
+-- auto increment
+-- =========================================================
+ALTER TABLE users AUTO_INCREMENT = 100;
+ALTER TABLE portfolios AUTO_INCREMENT = 100;
+ALTER TABLE orders AUTO_INCREMENT = 5000;
+ALTER TABLE trades AUTO_INCREMENT = 9000;
+ALTER TABLE positions AUTO_INCREMENT = 10000;
+ALTER TABLE journal_vouchers AUTO_INCREMENT = 4000;
+ALTER TABLE journal_entries AUTO_INCREMENT = 5000;
+ALTER TABLE ledger_entries AUTO_INCREMENT = 12000;

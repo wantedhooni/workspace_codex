@@ -1,0 +1,15 @@
+menuId,parentMenuId,menuKey,menuLabel,path,icon,sortOrder,enabled,createdAt,updatedAt,id
+1,,dashboard,Dashboard,/#/,dashboard,10,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,1
+2,,orders,주문,/#/orders,receipt,20,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,2
+3,,trades,체결,/#/trades,paid,30,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,3
+4,,positions,포지션,/#/positions,analytics,40,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,4
+5,,portfolioSummaries,포트폴리오 요약,/#/portfolioSummaries,insights,50,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,5
+6,,riskLimits,리스크 한도,/#/riskLimits,shield,60,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,6
+7,,journalVouchers,전표,/#/journalVouchers,description,70,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,7
+8,,ledgerEntries,원장,/#/ledgerEntries,book,80,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,8
+9,,users,사용자,/#/users,people,90,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,9
+10,,roles,권한,/#/roles,security,100,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,10
+11,,menus,메뉴,/#/menus,menu,110,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,11
+12,,menuPermissions,메뉴권한,/#/menuPermissions,rule,120,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,12
+13,,accountProfile,내 계정,/#/accountProfile,person,130,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,13
+14,,accountSessions,내 세션,/#/accountSessions,devices,140,true,2026-02-09T21:27:52.816555Z,2026-02-09T21:27:52.816555Z,14

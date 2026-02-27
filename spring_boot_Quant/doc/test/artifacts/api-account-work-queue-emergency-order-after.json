@@ -1,0 +1,1 @@
+{"items":[{"orderId":1018,"portfolioId":1,"symbol":"EMRX","side":"BUY","orderType":"LIMIT","timeInForce":"DAY","limitPrice":120.1,"quantity":2,"filledQuantity":0,"remainingQuantity":2.000000,"fillRate":0.00,"status":"CANCELED","createdAt":"2026-02-10T08:09:43.433384Z","decisionReason":"[EMERGENCY] openapi emergency action","decidedAt":"2026-02-10T08:09:43.452122Z"}]}

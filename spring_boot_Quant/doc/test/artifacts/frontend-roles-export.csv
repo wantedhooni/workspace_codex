@@ -1,0 +1,5 @@
+roleId,roleCode,roleName,description,systemRole,createdAt,id
+1,ADMIN,Administrator,Full admin permission,true,2026-02-09T21:27:52.816555Z,1
+2,QUANT,Quant Trader,Quant and execution operator,true,2026-02-09T21:27:52.816555Z,2
+3,VIEWER,Viewer,Read only user,true,2026-02-09T21:27:52.816555Z,3
+4,RISK,Risk Officer,Risk control user,true,2026-02-09T21:27:52.816555Z,4

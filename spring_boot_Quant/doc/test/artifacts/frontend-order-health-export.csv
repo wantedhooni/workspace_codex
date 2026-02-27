@@ -1,0 +1,6 @@
+healthKey,portfolioId,symbol,openOrderCount,staleOrderCount,staleThresholdMinutes,openOrderUsagePct,averageOpenAgeMinutes,maxOpenAgeMinutes,oldestOpenOrderId,healthStatus,healthNote,updatedAt,id
+1_AAPL,1,AAPL,0,0,30,0,0,0,,HEALTHY,현재 주문 건전성 상태가 정상입니다.,2026-02-10T08:08:52.451403Z,1_AAPL
+1_E2E6402,1,E2E6402,0,0,30,0,0,0,,HEALTHY,현재 주문 건전성 상태가 정상입니다.,2026-02-10T08:08:52.451403Z,1_E2E6402
+1_EMUI,1,EMUI,0,0,30,0,0,0,,HEALTHY,현재 주문 건전성 상태가 정상입니다.,2026-02-10T08:08:52.451403Z,1_EMUI
+1_MSFT,1,MSFT,0,0,30,0,0,0,,HEALTHY,현재 주문 건전성 상태가 정상입니다.,2026-02-10T08:08:52.451403Z,1_MSFT
+1_NVDA,1,NVDA,0,0,30,0,0,0,,HEALTHY,현재 주문 건전성 상태가 정상입니다.,2026-02-10T08:08:52.451403Z,1_NVDA

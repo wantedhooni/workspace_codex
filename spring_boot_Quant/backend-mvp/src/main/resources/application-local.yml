@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  flyway:
+    locations: classpath:db/migration/common,classpath:db/migration/local
+
+# local 개발 환경 기본값
+app:
+  runtime-profile: local

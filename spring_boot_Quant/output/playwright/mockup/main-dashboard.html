@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quant Admin - 대시보드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SUIT:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f2f6fb;--panel:#fff;--line:#e1e9f3;--text:#0e2035;--muted:#6b7d91;--primary:#0f74ea;--ok:#00a76f;--warn:#d97706;--bad:#e53935}
+    *{box-sizing:border-box} body{margin:0;font-family:'SUIT',sans-serif;background:linear-gradient(180deg,#eaf2ff,#f7fbff 35%,var(--bg));color:var(--text)}
+    .layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+    .side{background:#0b1f35;color:#d9e7f7;padding:20px 14px}
+    .logo{font-weight:800;font-size:18px;padding:12px 12px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .group{margin-top:14px}.gtitle{font-size:11px;opacity:.7;padding:8px 12px}
+    .item{padding:10px 12px;border-radius:10px;margin:4px 0;font-size:14px}.item.active{background:#0f74ea;color:#fff}
+    .main{padding:22px 24px}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .title{font-size:28px;font-weight:800}.chip{padding:8px 12px;border:1px solid #c8dbf5;border-radius:999px;color:#16518f;background:#edf5ff;font-size:12px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .card .k{font-size:12px;color:var(--muted)} .card .v{font-size:24px;font-weight:800;margin-top:8px}
+    .v.up{color:var(--ok)} .v.down{color:var(--bad)}
+    .grid{display:grid;grid-template-columns:1.3fr .7fr;gap:12px}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+    table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:10px;border-bottom:1px solid #edf2f8;text-align:left}
+    .bar{height:220px;border-radius:10px;background:linear-gradient(180deg,#eff6ff,#fff);position:relative;overflow:hidden}
+    .line{position:absolute;inset:20px 16px 22px 16px;background:linear-gradient(120deg, transparent 0 8%, #0f74ea 8% 12%, transparent 12% 18%, #00a76f 18% 22%, transparent 22% 30%, #0f74ea 30% 34%, transparent 34% 42%, #00a76f 42% 46%, transparent 46% 52%, #0f74ea 52% 57%, transparent 57% 100%);opacity:.9}
+    .pill{font-size:11px;padding:4px 8px;border-radius:999px;background:#e8f5ed;color:#0b6b48}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="side">
+      <div class="logo">Q-Admin Console</div>
+      <div class="group"><div class="gtitle">MAIN</div><div class="item active">대시보드</div><div class="item">전략 관리</div><div class="item">백테스트</div></div>
+      <div class="group"><div class="gtitle">TRADING</div><div class="item">리밸런싱</div><div class="item">주문/체결</div><div class="item">포지션</div></div>
+      <div class="group"><div class="gtitle">SYSTEM</div><div class="item">배치 스케줄</div><div class="item">사용자/권한</div><div class="item">감사 로그</div></div>
+    </aside>
+    <main class="main">
+      <div class="top"><div class="title">운용 대시보드</div><div class="chip">데이터 최신: 2026-02-09 16:20 ET</div></div>
+      <section class="cards">
+        <div class="card"><div class="k">총 운용자산(AUM)</div><div class="v">$12.8M</div></div>
+        <div class="card"><div class="k">YTD 수익률</div><div class="v up">+14.2%</div></div>
+        <div class="card"><div class="k">최대낙폭(MDD)</div><div class="v down">-8.7%</div></div>
+        <div class="card"><div class="k">샤프지수</div><div class="v">1.21</div></div>
+      </section>
+      <section class="grid">
+        <div class="panel"><h3>전략 성과 추이</h3><div class="bar"><div class="line"></div></div></div>
+        <div class="panel">
+          <h3>오늘 리밸런싱</h3>
+          <table>
+            <tr><th>상태</th><th>건수</th></tr>
+            <tr><td>생성</td><td>42</td></tr>
+            <tr><td>체결</td><td>38</td></tr>
+            <tr><td>미체결</td><td>4</td></tr>
+          </table>
+          <p><span class="pill">정상</span> 배치 완료율 100%</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

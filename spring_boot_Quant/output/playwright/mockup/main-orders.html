@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Quant Admin - 주문/체결</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=SUIT:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6fb;--panel:#fff;--line:#e1e9f3;--text:#0e2035;--muted:#6b7d91;--primary:#0f74ea;--ok:#00a76f;--warn:#c77d00;--bad:#e53935}*{box-sizing:border-box}body{margin:0;font-family:'SUIT',sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{background:#0b1f35;color:#d9e7f7;padding:20px 14px}.logo{font-weight:800;font-size:18px;padding:12px 12px 18px;border-bottom:1px solid rgba(255,255,255,.1)}.group{margin-top:14px}.gtitle{font-size:11px;opacity:.7;padding:8px 12px}.item{padding:10px 12px;border-radius:10px;margin:4px 0;font-size:14px}.item.active{background:#0f74ea;color:#fff}
+.main{padding:22px 24px}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:28px;font-weight:800}.chip{padding:8px 10px;border-radius:999px;background:#edf5ff;border:1px solid #c8dbf5;color:#16518f;font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.k{font-size:12px;color:var(--muted)}.v{font-size:22px;font-weight:800;margin-top:6px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid #edf2f8;text-align:left}
+.badge{padding:4px 8px;border-radius:999px;font-size:11px}.ok{background:#e8f5ed;color:#0b6b48}.warn{background:#fff6e6;color:#8a5b00}.bad{background:#fdecec;color:#b52424}
+</style></head>
+<body><div class="layout"><aside class="side"><div class="logo">Q-Admin Console</div><div class="group"><div class="gtitle">MAIN</div><div class="item">대시보드</div><div class="item">전략 관리</div><div class="item">백테스트</div></div><div class="group"><div class="gtitle">TRADING</div><div class="item">리밸런싱</div><div class="item active">주문/체결</div><div class="item">포지션</div></div></aside>
+<main class="main"><div class="top"><div class="title">주문/체결 모니터링</div><div class="chip">시장 상태: CLOSED</div></div>
+<section class="cards"><div class="card"><div class="k">오늘 주문</div><div class="v">42</div></div><div class="card"><div class="k">체결 완료</div><div class="v">38</div></div><div class="card"><div class="k">부분 체결</div><div class="v">3</div></div><div class="card"><div class="k">실패/거부</div><div class="v">1</div></div></section>
+<section class="panel"><table><tr><th>시간</th><th>티커</th><th>유형</th><th>수량</th><th>가격</th><th>상태</th><th>사유</th></tr>
+<tr><td>16:01:11</td><td>AAPL</td><td>BUY</td><td>120</td><td>189.22</td><td><span class="badge ok">FILLED</span></td><td>-</td></tr>
+<tr><td>16:01:14</td><td>MSFT</td><td>BUY</td><td>80</td><td>421.30</td><td><span class="badge warn">PARTIAL</span></td><td>유동성 부족</td></tr>
+<tr><td>16:01:20</td><td>TSLA</td><td>SELL</td><td>45</td><td>188.05</td><td><span class="badge ok">FILLED</span></td><td>-</td></tr>
+<tr><td>16:01:39</td><td>AMD</td><td>BUY</td><td>130</td><td>172.40</td><td><span class="badge bad">REJECTED</span></td><td>리스크 한도 초과</td></tr>
+</table></section>
+</main></div></body></html>

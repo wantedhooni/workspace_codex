@@ -1,0 +1,1 @@
+{"orderId":1009,"portfolioId":1,"symbol":"IWM","side":"BUY","orderType":"LIMIT","timeInForce":"DAY","limitPrice":204.1,"quantity":3,"filledQuantity":0,"remainingQuantity":3.000000,"fillRate":0.00,"status":"NEW","createdAt":"2026-02-10T08:09:42.567382Z","decisionReason":null,"decidedAt":null}

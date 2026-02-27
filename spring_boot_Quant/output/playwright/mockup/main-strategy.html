@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Quant Admin - 전략 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=SUIT:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6fb;--panel:#fff;--line:#e1e9f3;--text:#0e2035;--muted:#6b7d91;--primary:#0f74ea;--ok:#00a76f}*{box-sizing:border-box}body{margin:0;font-family:'SUIT',sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{background:#0b1f35;color:#d9e7f7;padding:20px 14px}.logo{font-weight:800;font-size:18px;padding:12px 12px 18px;border-bottom:1px solid rgba(255,255,255,.1)}.group{margin-top:14px}.gtitle{font-size:11px;opacity:.7;padding:8px 12px}.item{padding:10px 12px;border-radius:10px;margin:4px 0;font-size:14px}.item.active{background:#0f74ea;color:#fff}
+.main{padding:22px 24px}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:28px;font-weight:800}.btn{background:#0f74ea;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700}
+.panel{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid #edf2f8;text-align:left}
+.form{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.box{border:1px solid var(--line);border-radius:10px;padding:10px}.k{font-size:12px;color:var(--muted)}.v{font-size:16px;font-weight:700;margin-top:6px}.tag{padding:4px 8px;border-radius:999px;background:#e8f5ed;color:#0b6b48;font-size:11px}
+</style></head>
+<body><div class="layout"><aside class="side"><div class="logo">Q-Admin Console</div><div class="group"><div class="gtitle">MAIN</div><div class="item">대시보드</div><div class="item active">전략 관리</div><div class="item">백테스트</div></div><div class="group"><div class="gtitle">TRADING</div><div class="item">리밸런싱</div><div class="item">주문/체결</div><div class="item">포지션</div></div></aside>
+<main class="main"><div class="top"><div class="title">전략 관리</div><button class="btn">신규 전략 등록</button></div>
+<div class="panel"><table><tr><th>전략명</th><th>버전</th><th>상태</th><th>리밸런싱</th><th>최근 수익률</th><th>액션</th></tr>
+<tr><td>US_MOMENTUM_12_1</td><td>v1.4</td><td><span class="tag">ACTIVE</span></td><td>매일(EOD)</td><td>+2.31%</td><td>수정 / 백테스트</td></tr>
+<tr><td>US_VALUE_QUALITY</td><td>v1.2</td><td><span class="tag">ACTIVE</span></td><td>주간(금)</td><td>+1.12%</td><td>수정 / 백테스트</td></tr>
+<tr><td>LOW_VOL_DEFENSIVE</td><td>v0.9</td><td>INACTIVE</td><td>월간</td><td>-0.20%</td><td>활성화</td></tr></table></div>
+<div class="panel"><h3>선택 전략 파라미터</h3><div class="form"><div class="box"><div class="k">유니버스</div><div class="v">NASDAQ100 + S&P500</div></div><div class="box"><div class="k">보유 종목 수</div><div class="v">30</div></div><div class="box"><div class="k">종목당 최대비중</div><div class="v">6%</div></div><div class="box"><div class="k">리스크 컷</div><div class="v">ATR 기반</div></div></div></div>
+</main></div></body></html>

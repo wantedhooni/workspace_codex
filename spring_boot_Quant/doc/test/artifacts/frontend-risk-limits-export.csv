@@ -1,0 +1,4 @@
+portfolioId,maxOrderNotional,maxPositionNotionalPerSymbol,maxDailyTurnover,maxOpenOrdersPerSymbol,commissionBps,slippageBps,id
+1,1000000,3000000,5000000,20,2.5,1.5,1
+2,1000000,3000000,5000000,20,2.5,1.5,2
+3,1000000,3000000,5000000,20,2.5,1.5,3

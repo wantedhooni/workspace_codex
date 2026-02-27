@@ -1,0 +1,2 @@
+portfolioId,grossExposure,marketValue,realizedPnl,unrealizedPnl,totalPnl,dailyTurnover,turnoverUsagePct,openOrderCount,filledOrderCount,tradeCount,positionCount,id
+1,23462.75,23462.75,106.5207,244.4664,350.9871,28782.25,0.5756,0,4,5,4,1

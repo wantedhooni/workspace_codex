@@ -1,0 +1,6 @@
+qualityKey,portfolioId,symbol,orderCount,filledOrderCount,fillRatePct,tradeCount,executedQuantity,executedNotional,averageFillPrice,averageFeeBps,averageSlippageBps,netCashFlow,qualityGrade,qualityNote,lastTradedAt,id
+1_AAPL,1,AAPL,2,2,100,2,65,11948.5,183.823077,2.5,1.5,-6271.2794,A,체결률/슬리피지가 우수합니다.,2026-02-10T08:08:16.043933Z,1_AAPL
+1_E2E6402,1,E2E6402,1,1,100,1,7,1051.75,150.25,2.500005,1.500005,-1052.170701,A,체결률/슬리피지가 우수합니다.,2026-02-10T08:08:36.447411Z,1_E2E6402
+1_EMUI,1,EMUI,1,0,0,0,0,0,0,0,0,0,D,미체결 비중이 높아 주문 전략 점검이 필요합니다.,,1_EMUI
+1_MSFT,1,MSFT,1,0,66.6667,1,20,8359,417.95,2.5,1.5,-8362.3436,D,집행 품질이 낮아 긴급 개선이 필요합니다.,2026-02-10T08:08:16.043527Z,1_MSFT
+1_NVDA,1,NVDA,1,1,100,1,10,7423,742.3,2.5,1.5,-7425.9692,A,체결률/슬리피지가 우수합니다.,2026-02-10T08:08:16.043597Z,1_NVDA
