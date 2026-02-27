@@ -1,0 +1,22 @@
+# 형식: <type>(<scope>): <subject>
+# 예시: feat(backend): 사용자 검색 API 정렬 옵션 추가
+# type: feat | fix | refactor | test | docs | chore | perf | ci | build | revert
+# subject: 명령형, 50자 내외, 마침표 금지
+
+<type>(<scope>): <subject>
+
+# 변경 배경/목적
+- 
+
+# 주요 변경사항
+- 
+
+# 테스트/검증
+- [ ] 단위 테스트
+- [ ] 통합 테스트
+- [ ] 수동 검증
+- 실행 결과:
+  - 
+
+# 연관 이슈 (선택)
+# Closes #123
