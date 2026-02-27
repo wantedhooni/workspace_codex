@@ -1,0 +1,23 @@
+server:
+  port: port
+
+spring:
+  application:
+    name: service-catalog
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:service-catalog;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

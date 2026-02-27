@@ -1,0 +1,30 @@
+server:
+  port: port
+
+spring:
+  application:
+    name: service-notification
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.commerce.service_notification.events
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:service-notification;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

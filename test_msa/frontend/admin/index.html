@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Commerce Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">AURA</span>
+      <span class="sub">Unified Admin</span>
+    </div>
+    <nav>
+      <a class="active">Dashboard</a>
+      <a>Catalog</a>
+      <a>Orders</a>
+      <a>Customers</a>
+      <a>Inventory</a>
+      <a>Pricing</a>
+      <a>Marketing</a>
+      <a>Settings</a>
+    </nav>
+    <div class="tenant">
+      <span>Tenant</span>
+      <strong>aurora-global</strong>
+    </div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div>
+        <h1>Commerce Operations</h1>
+        <p>Admin / Application 공통 서비스 상태 요약</p>
+      </div>
+      <div class="top-actions">
+        <button class="ghost" id="btn-health">Health Check</button>
+        <button class="solid" id="btn-create-product">Create Product</button>
+      </div>
+    </header>
+
+    <section class="panel auth-panel">
+      <header>
+        <h2>Admin Login</h2>
+        <span class="pill">JWT</span>
+      </header>
+      <div class="auth-grid">
+        <input id="login-username" placeholder="admin" value="admin" />
+        <input id="login-password" placeholder="admin1234" value="admin1234" type="password" />
+        <button class="solid" id="btn-login">Login</button>
+      </div>
+      <div class="token" id="token-box">Token: -</div>
+    </section>
+
+    <section class="cards">
+      <article>
+        <span>GMV</span>
+        <strong>₩ 8.2B</strong>
+        <p>+12.4% vs last week</p>
+      </article>
+      <article>
+        <span>Orders</span>
+        <strong>142,091</strong>
+        <p>Peak 9PM</p>
+      </article>
+      <article>
+        <span>Inventory Risk</span>
+        <strong>24 SKUs</strong>
+        <p>Reorder suggested</p>
+      </article>
+      <article>
+        <span>Search Health</span>
+        <strong>98.9%</strong>
+        <p>Latency 112ms</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <header>
+        <h2>서비스 공유 현황</h2>
+        <span class="pill">Admin + Application</span>
+      </header>
+      <div class="service-grid">
+        <div>
+          <h4>Auth</h4>
+          <p>JWT / RBAC / SSO</p>
+          <span class="status ok">Healthy</span>
+        </div>
+        <div>
+          <h4>Tenant</h4>
+          <p>Multi-tenant rules</p>
+          <span class="status ok">Healthy</span>
+        </div>
+        <div>
+          <h4>Metadata</h4>
+          <p>Schema & attribute map</p>
+          <span class="status warn">Syncing</span>
+        </div>
+        <div>
+          <h4>Search</h4>
+          <p>Index + Suggest</p>
+          <span class="status ok">Healthy</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <header>
+          <h2>Search Index</h2>
+          <span class="pill">OpenSearch</span>
+        </header>
+        <div class="search-box">
+          <input id="admin-search" placeholder="Search catalog..." />
+          <button class="ghost" id="btn-admin-search">Search</button>
+        </div>
+        <ul id="search-results" class="list"></ul>
+      </div>
+      <div class="panel">
+        <header>
+          <h2>Notifications</h2>
+          <button class="ghost" id="btn-load-notify">Load</button>
+        </header>
+        <ul id="notify-results" class="list"></ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <h2>Create Customer</h2>
+        <span class="pill">CRUD</span>
+      </header>
+      <div class="form-grid">
+        <input id="cust-name" placeholder="Name" />
+        <input id="cust-email" placeholder="Email" />
+        <button class="solid" id="btn-create-customer">Create</button>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel">
+        <header>
+          <h2>Order Ops</h2>
+          <span class="pill">Last 24h</span>
+        </header>
+        <ul>
+          <li><span>Approval Queue</span><strong>1,204</strong></li>
+          <li><span>Refund Review</span><strong>84</strong></li>
+          <li><span>Shipping Delay</span><strong>17</strong></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <header>
+          <h2>Job Scheduler</h2>
+          <span class="pill">CRON</span>
+        </header>
+        <div class="jobs">
+          <div>
+            <strong>Catalog Sync</strong>
+            <span>*/15 * * * *</span>
+            <em>SUCCESS</em>
+          </div>
+          <div>
+            <strong>Price Index</strong>
+            <span>0 */2 * * *</span>
+            <em>RUNNING</em>
+          </div>
+          <div>
+            <strong>Inventory Sweep</strong>
+            <span>0 2 * * *</span>
+            <em>SUCCESS</em>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <h2>최근 주문</h2>
+        <button class="ghost" id="btn-load-orders">Load Orders</button>
+      </header>
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Customer</th>
+            <th>Channel</th>
+            <th>Status</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="orders-body">
+          <tr>
+            <td>#90231</td>
+            <td>Minji Lee</td>
+            <td>App</td>
+            <td><span class="badge green">Shipped</span></td>
+            <td>₩ 192,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
