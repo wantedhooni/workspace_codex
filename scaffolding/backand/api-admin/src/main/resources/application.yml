@@ -1,0 +1,32 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: api-admin
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:scaffolding_admin}
+    username: ${POSTGRES_USER:scaffolding}
+    password: ${POSTGRES_PASSWORD:scaffolding}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+        jdbc:
+          time_zone: UTC
+  jackson:
+    time-zone: UTC
+
+jwt:
+  secret: ${JWT_SECRET:change-this-secret-key-change-this-secret-key}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.hibernate.type.descriptor.sql.BasicBinder: warn
