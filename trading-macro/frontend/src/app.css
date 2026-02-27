@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 15% 15%, rgba(14, 165, 233, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 5%, rgba(234, 88, 12, 0.12), transparent 35%),
+    #f7f3ee;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.ra-layout .RaSidebar-fixed {
+  background: #0b1b2b;
+  color: #f8fafc;
+}
+
+.ra-menu .RaMenuItemLink-root {
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.ra-menu .RaMenuItemLink-root.Mui-selected {
+  background: rgba(14, 165, 233, 0.2);
+}

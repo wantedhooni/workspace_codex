@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/trading_macro}
+    username: ${SPRING_DATASOURCE_USERNAME:trading}
+    password: ${SPRING_DATASOURCE_PASSWORD:trading}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  security:
+    jwt:
+      secret: ${APP_SECURITY_JWT_SECRET:CHANGE_ME_TO_A_LONG_RANDOM_SECRET}
+      issuer: ${APP_SECURITY_JWT_ISSUER:trading-macro}
+      access-token-minutes: ${APP_SECURITY_JWT_ACCESS_TOKEN_MINUTES:60}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.springframework.security: debug
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
