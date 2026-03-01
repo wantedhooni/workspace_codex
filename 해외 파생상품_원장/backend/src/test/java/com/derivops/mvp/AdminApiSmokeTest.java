@@ -5,9 +5,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.derivops.mvp.audit.infrastructure.AuditLogRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +29,9 @@ class AdminApiSmokeTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
 
     @Test
     void loginAndReadAccountsShouldSucceed() throws Exception {
@@ -55,6 +60,16 @@ class AdminApiSmokeTest {
     void unauthorizedAccessShouldFail() throws Exception {
         mockMvc.perform(get("/api/v1/accounts"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldPersistAuditLogViaR2dbcOnLogin() throws Exception {
+        long before = auditLogRepository.count();
+
+        login("opsadmin", "admin123!");
+
+        long after = auditLogRepository.count();
+        Assertions.assertThat(after).isGreaterThan(before);
     }
 
     @Test

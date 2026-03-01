@@ -157,3 +157,19 @@
 2. Generate Gradle wrapper and ignore Gradle build outputs.
 3. Update scripts/docs from `mvn` to `./gradlew`.
 4. Remove obsolete Maven build file and verify `./gradlew test`.
+
+## Audit R2DBC Write Path
+
+### Objective
+- Move audit log persistence off the JPA write path and store audit events through R2DBC while keeping the current JPA/Querydsl read model intact.
+
+### Scope
+- Target: backend audit domain, datasource configuration, backend smoke tests
+- In scope: R2DBC dependencies/config, audit write component, `AuditLogService` save path change, test coverage
+- Out of scope: full reactive controller/service migration, audit read API rewrite
+
+### Execution Steps
+1. Add R2DBC dependencies and connection properties for runtime and test profiles.
+2. Implement a dedicated R2DBC audit writer using `DatabaseClient`.
+3. Change `AuditLogService.log()` to write after transaction commit or immediately when no transaction exists.
+4. Verify audit persistence with backend tests.

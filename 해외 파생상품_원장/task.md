@@ -85,3 +85,10 @@
 - [x] 3. Gradle wrapper 생성 및 스크립트/문서 전환
 - [x] 4. Maven 파일 제거
 - [x] 5. Gradle 빌드 검증
+
+# Audit R2DBC Tasks
+
+- [x] 1. R2DBC 의존성 및 프로파일 설정 추가
+- [x] 2. 감사 로그 전용 R2DBC writer 구현
+- [x] 3. `AuditLogService` 저장 경로를 R2DBC로 전환
+- [x] 4. 감사 저장 동작 테스트 검증

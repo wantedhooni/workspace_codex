@@ -37,16 +37,19 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework:spring-r2dbc")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.boot:spring-boot-starter-quartz")
     implementation("org.springframework.ai:spring-ai-starter-model-ollama:$springAiVersion")
+    implementation("io.r2dbc:r2dbc-pool")
 
     implementation("com.querydsl:querydsl-jpa:$querydslVersion:jakarta")
     implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
 
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.postgresql:r2dbc-postgresql")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
 
@@ -59,6 +62,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.h2database:h2")
+    testRuntimeOnly("io.r2dbc:r2dbc-h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")

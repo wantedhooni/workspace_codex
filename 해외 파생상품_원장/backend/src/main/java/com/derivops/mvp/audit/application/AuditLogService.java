@@ -10,25 +10,30 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @RequiredArgsConstructor
 @Service
 public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
+    private final AuditLogR2dbcWriter auditLogR2dbcWriter;
 
-    @Transactional
     public void log(String actor, String action, String targetType, String targetId, String details) {
-        AuditLog log = new AuditLog();
-        log.setActor(actor);
-        log.setAction(action);
-        log.setTargetType(targetType);
-        log.setTargetId(targetId);
-        log.setDetails(details);
-        auditLogRepository.save(log);
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    auditLogR2dbcWriter.insert(actor, action, targetType, targetId, details);
+                }
+            });
+            return;
+        }
+
+        auditLogR2dbcWriter.insert(actor, action, targetType, targetId, details);
     }
 
-    @Transactional(readOnly = true)
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Page<AuditLogResponse> search(
             String actor,
             String action,
