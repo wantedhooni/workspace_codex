@@ -37,7 +37,7 @@ docker compose up -d
 ### 2) Backend
 ```bash
 cd backend
-mvn spring-boot:run
+./gradlew bootRun
 ```
 
 기본 접속: `http://localhost:8080`

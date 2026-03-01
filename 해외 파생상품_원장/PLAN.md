@@ -141,3 +141,19 @@
 2. Attach quoted rate and expected receive amount to FX requests.
 3. Add frontend `Exchange Rates` page and FX request quote preview.
 4. Update docs and verify backend/frontend builds.
+
+## Gradle Kotlin DSL Migration
+
+### Objective
+- Replace the backend Maven build with Gradle Kotlin DSL and wrapper-based commands.
+
+### Scope
+- Target: backend build files, wrapper, run scripts, root docs
+- In scope: `build.gradle.kts`, `settings.gradle.kts`, Gradle wrapper, `.gitignore`, script and README command updates
+- Out of scope: frontend package manager changes, multi-module split
+
+### Execution Steps
+1. Translate backend Maven dependencies/plugins into `build.gradle.kts`.
+2. Generate Gradle wrapper and ignore Gradle build outputs.
+3. Update scripts/docs from `mvn` to `./gradlew`.
+4. Remove obsolete Maven build file and verify `./gradlew test`.

@@ -72,7 +72,7 @@ assert_port_free 8080 "backend"
 assert_port_free 5173 "frontend"
 
 echo "[backend/frontend] starting services..."
-start_with_pidfile "backend" "$ROOT_DIR/backend" "mvn spring-boot:run"
+start_with_pidfile "backend" "$ROOT_DIR/backend" "./gradlew bootRun"
 start_with_pidfile "frontend" "$ROOT_DIR/frontend" "if [[ ! -d node_modules ]]; then npm install; fi && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
 
 wait_for_port 8080 "backend"

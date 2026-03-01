@@ -77,3 +77,11 @@
 - [x] 3. 프론트 `Exchange Rates` 화면 및 FX quote 미리보기 추가
 - [x] 4. 메뉴/용어/샘플 데이터 반영
 - [x] 5. 문서 및 빌드 검증
+
+# Gradle Kotlin DSL Migration Tasks
+
+- [x] 1. Maven 의존성/플러그인 구조 분석
+- [x] 2. `build.gradle.kts` / `settings.gradle.kts` 추가
+- [x] 3. Gradle wrapper 생성 및 스크립트/문서 전환
+- [x] 4. Maven 파일 제거
+- [x] 5. Gradle 빌드 검증
