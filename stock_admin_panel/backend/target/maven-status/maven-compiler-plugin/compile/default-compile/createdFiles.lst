@@ -1,0 +1,8 @@
+com/stockadmin/dashboard/dashboard/DashboardMetricsQueryRepository.class
+com/stockadmin/dashboard/StockAdminDashboardApplication.class
+com/stockadmin/dashboard/dashboard/DashboardOverviewService.class
+com/stockadmin/dashboard/dashboard/DashboardOverviewController.class
+com/stockadmin/dashboard/dashboard/DashboardMetricCard.class
+com/stockadmin/dashboard/dashboard/DashboardBreakdownRow.class
+com/stockadmin/dashboard/dashboard/DashboardOverviewResponse.class
+com/stockadmin/dashboard/dashboard/DashboardTrendPoint.class

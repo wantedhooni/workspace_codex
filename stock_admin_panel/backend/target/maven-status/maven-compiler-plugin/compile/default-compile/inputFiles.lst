@@ -1,0 +1,8 @@
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/StockAdminDashboardApplication.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardBreakdownRow.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardMetricCard.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardMetricsQueryRepository.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardOverviewController.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardOverviewResponse.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardOverviewService.java
+/Users/revy/workspace_codex/stock_admin_panel/backend/src/main/java/com/stockadmin/dashboard/dashboard/DashboardTrendPoint.java

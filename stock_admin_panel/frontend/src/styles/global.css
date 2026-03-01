@@ -1,0 +1,117 @@
+:root {
+  color-scheme: light;
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(134, 239, 172, 0.24), transparent 32%),
+    linear-gradient(180deg, #f3f8f2 0%, #f7f9f6 42%, #ffffff 100%);
+}
+
+body {
+  margin: 0;
+  color: #111827;
+  background: transparent;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.app-shell .ant-layout-sider {
+  background: rgba(255, 255, 255, 0.88);
+  border-right: 1px solid rgba(20, 83, 45, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.app-shell__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 20px 16px;
+}
+
+.app-shell__header {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.68);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.dashboard-hero {
+  background:
+    linear-gradient(135deg, rgba(20, 83, 45, 0.96), rgba(22, 101, 52, 0.78)),
+    #14532d;
+  color: #f0fdf4;
+  overflow: hidden;
+}
+
+.dashboard-hero .ant-typography,
+.dashboard-hero .ant-alert-message,
+.dashboard-hero .ant-alert-description {
+  color: inherit;
+}
+
+.dashboard-hero .ant-alert {
+  background: rgba(240, 253, 244, 0.14);
+  border: 1px solid rgba(240, 253, 244, 0.2);
+}
+
+.dashboard-hero__eyebrow {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 253, 244, 0.72);
+}
+
+.kpi-card {
+  min-height: 160px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.trend-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.trend-chart svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.trend-chart__label {
+  fill: #6b7280;
+  font-size: 12px;
+}
+
+.trend-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.trend-chart__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #166534;
+  display: inline-block;
+}
+
+.ant-layout {
+  background: transparent;
+}
+
+.ant-layout-content {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .ant-layout-content {
+    padding: 16px;
+  }
+}
