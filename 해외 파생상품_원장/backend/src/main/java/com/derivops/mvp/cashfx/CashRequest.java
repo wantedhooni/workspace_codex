@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
@@ -48,6 +49,33 @@ public class CashRequest {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private RequestStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private RequestPriority priority;
+
+    private LocalDate valueDate;
+
+    @Column(nullable = false)
+    private boolean manualReviewRequired;
+
+    @Column(length = 500)
+    private String controlReason;
+
+    private Long controlPolicyId;
+
+    @Column(length = 30)
+    private String controlPolicySource;
+
+    private Long controlLimitPolicyId;
+
+    @Column(length = 30)
+    private String controlLimitPolicySource;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal projectedDailyExposure;
+
+    private OffsetDateTime slaDueAt;
 
     @Column(nullable = false, length = 300)
     private String reason;

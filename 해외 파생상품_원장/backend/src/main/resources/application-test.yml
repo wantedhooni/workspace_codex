@@ -11,8 +11,23 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
     open-in-view: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  quartz:
+    auto-startup: false
 
 security:
   jwt:
     secret: test-secret-test-secret-test-secret-test-secret-123456
     expiration-seconds: 3600
+
+app:
+  ai:
+    stock-recommendation:
+      enabled: true
+      provider: stub
+      model-name: stub-local-model
+      max-recommendations: 5

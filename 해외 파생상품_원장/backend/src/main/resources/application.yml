@@ -10,9 +10,28 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  quartz:
+    job-store-type: memory
+    auto-startup: true
+    properties:
+      org.quartz.scheduler.instanceName: DerivOpsQuartz
+      org.quartz.threadPool.threadCount: 3
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${OLLAMA_CHAT_MODEL:llama3.1}
+          temperature: ${OLLAMA_CHAT_TEMPERATURE:0.2}
+          format: json
 
 server:
   port: ${SERVER_PORT:8080}
@@ -26,3 +45,12 @@ logging:
   level:
     org.springframework.security: INFO
     com.derivops.mvp: INFO
+
+app:
+  ai:
+    stock-recommendation:
+      enabled: ${AI_STOCK_RECOMMENDATION_ENABLED:true}
+      provider: ${AI_STOCK_RECOMMENDATION_PROVIDER:ollama}
+      model-name: ${OLLAMA_CHAT_MODEL:llama3.1}
+      max-recommendations: 5
+      disclaimer: ${AI_STOCK_RECOMMENDATION_DISCLAIMER:AI 추천 결과는 운영 보조용 초안이며 투자 자문이 아닙니다. 실제 주문 전 시장 데이터, 승인 정책, 리스크 한도를 별도로 확인해야 합니다.}

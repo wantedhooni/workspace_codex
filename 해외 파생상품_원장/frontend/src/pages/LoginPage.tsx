@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Box, Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
 import { useLogin } from "@refinedev/core";
+import { PageTitle } from "../components/PageTitle";
+import { pageDescriptions } from "../utils/pageDescriptions";
 
 export function LoginPage() {
   const { mutate: login, isLoading } = useLogin();
@@ -20,9 +22,7 @@ export function LoginPage() {
       <Card sx={{ width: 420 }}>
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="h5" fontWeight={700}>
-              Derivatives Ops Login
-            </Typography>
+            <PageTitle title="Derivatives Ops Login" description={pageDescriptions.login} />
             <TextField
               label="Username"
               value={username}
@@ -44,7 +44,7 @@ export function LoginPage() {
               Login
             </Button>
             <Typography variant="caption" color="text.secondary">
-              Demo: opsadmin / admin123!
+              Demo: opsadmin / admin123! (requester), opsadmin2 / admin234! (approver)
             </Typography>
           </Stack>
         </CardContent>

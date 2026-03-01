@@ -55,12 +55,25 @@ wait_for_port() {
   return 1
 }
 
+assert_port_free() {
+  local port="$1"
+  local name="$2"
+  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "[$name] port $port is already in use:"
+    lsof -nP -iTCP:"$port" -sTCP:LISTEN
+    return 1
+  fi
+}
+
 echo "[db] starting postgres..."
 docker compose --project-name derivops_mvp -f "$ROOT_DIR/docker-compose.yml" up -d postgres >/dev/null
 
+assert_port_free 8080 "backend"
+assert_port_free 5173 "frontend"
+
 echo "[backend/frontend] starting services..."
 start_with_pidfile "backend" "$ROOT_DIR/backend" "mvn spring-boot:run"
-start_with_pidfile "frontend" "$ROOT_DIR/frontend" "if [[ ! -d node_modules ]]; then npm install; fi && npm run dev -- --host 0.0.0.0 --port 5173"
+start_with_pidfile "frontend" "$ROOT_DIR/frontend" "if [[ ! -d node_modules ]]; then npm install; fi && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
 
 wait_for_port 8080 "backend"
 wait_for_port 5173 "frontend"

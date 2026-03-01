@@ -1,0 +1,52 @@
+package com.derivops.mvp.risk.api;
+import com.derivops.mvp.risk.*;
+import com.derivops.mvp.risk.application.*;
+import com.derivops.mvp.risk.dto.*;
+import com.derivops.mvp.risk.infrastructure.*;
+
+
+import com.derivops.mvp.common.SecurityUtils;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/api/v1/risk-limits")
+public class RiskLimitPolicyController {
+
+    private final RiskLimitPolicyService riskLimitPolicyService;
+
+    @PreAuthorize("hasAnyRole('OPS_ADMIN','AUDITOR')")
+    @GetMapping
+    public Page<RiskLimitPolicyResponse> list(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        return riskLimitPolicyService.list(keyword, filter, PageRequest.of(page, size));
+    }
+
+    @PreAuthorize("hasRole('OPS_ADMIN')")
+    @PostMapping
+    public RiskLimitPolicyResponse create(@Valid @RequestBody UpsertRiskLimitPolicyRequest request) {
+        return riskLimitPolicyService.create(request, SecurityUtils.currentUsername());
+    }
+
+    @PreAuthorize("hasRole('OPS_ADMIN')")
+    @PutMapping("/{id}")
+    public RiskLimitPolicyResponse update(@PathVariable Long id, @Valid @RequestBody UpsertRiskLimitPolicyRequest request) {
+        return riskLimitPolicyService.update(id, request, SecurityUtils.currentUsername());
+    }
+}

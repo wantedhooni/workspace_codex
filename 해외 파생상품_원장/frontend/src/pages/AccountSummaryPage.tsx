@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import { useSearchParams, useParams } from "react-router-dom";
 import { api } from "../api/client";
+import { PageTitle } from "../components/PageTitle";
+import { pageDescriptions } from "../utils/pageDescriptions";
 
 type Summary = {
   accountId: number;
@@ -48,9 +50,7 @@ export function AccountSummaryPage() {
       <Grid item xs={12}>
         <Card>
           <CardContent>
-            <Typography variant="h6" fontWeight={700}>
-              Account Summary #{summary.accountId}
-            </Typography>
+            <PageTitle title={`Account Summary #${summary.accountId}`} description={pageDescriptions.accountSummary} variant="h6" />
             <Typography>
               {summary.accountNo} / {summary.broker} / {summary.status} / snapshot: {summary.snapshotDate}
             </Typography>

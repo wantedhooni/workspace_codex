@@ -6,10 +6,6 @@ import java.util.List;
 
 public final class RsqlParser {
 
-    private static final List<String> OPERATORS = List.of(
-            "=out=", "=in=", "=like=", "=ge=", "=le=", "=gt=", "=lt=", "==", "!="
-    );
-
     private RsqlParser() {
     }
 
@@ -40,43 +36,39 @@ public final class RsqlParser {
     }
 
     private static RsqlExpression parseExpression(String raw) {
-        String operator = findOperator(raw);
+        RsqlOperator operator = RsqlOperator.fromExpression(raw);
         if (operator == null) {
             throw new BadRequestException("Invalid RSQL expression: " + raw);
         }
 
-        int idx = raw.indexOf(operator);
+        int idx = raw.indexOf(operator.token());
         String selector = raw.substring(0, idx).trim();
-        String argumentPart = raw.substring(idx + operator.length()).trim();
+        String argumentPart = raw.substring(idx + operator.token().length()).trim();
 
         if (selector.isBlank()) {
             throw new BadRequestException("RSQL selector is empty: " + raw);
         }
 
-        List<String> args;
-        if ("=in=".equals(operator) || "=out=".equals(operator)) {
-            if (!(argumentPart.startsWith("(") && argumentPart.endsWith(")"))) {
-                throw new BadRequestException("RSQL IN/OUT requires parentheses: " + raw);
-            }
-            String body = argumentPart.substring(1, argumentPart.length() - 1);
-            args = splitTopLevel(body, ',').stream().map(RsqlParser::stripQuotes).toList();
-            if (args.isEmpty()) {
-                throw new BadRequestException("RSQL IN/OUT requires at least one value: " + raw);
-            }
-        } else {
-            args = List.of(stripQuotes(argumentPart));
-        }
-
-        return new RsqlExpression(selector, operator, args);
+        return new RsqlExpression(selector, operator, parseArgument(raw, operator, argumentPart));
     }
 
-    private static String findOperator(String raw) {
-        for (String op : OPERATORS) {
-            if (raw.contains(op)) {
-                return op;
-            }
+    private static RsqlArgument parseArgument(String raw, RsqlOperator operator, String argumentPart) {
+        if (!operator.isMultiValue()) {
+            return new RsqlArgument.SingleValue(stripQuotes(argumentPart));
         }
-        return null;
+        if (!(argumentPart.startsWith("(") && argumentPart.endsWith(")"))) {
+            throw new BadRequestException("RSQL IN/OUT requires parentheses: " + raw);
+        }
+
+        List<String> arguments = splitTopLevel(argumentPart.substring(1, argumentPart.length() - 1), ',').stream()
+                .map(RsqlParser::stripQuotes)
+                .filter(argument -> !argument.isBlank())
+                .toList();
+
+        if (arguments.isEmpty()) {
+            throw new BadRequestException("RSQL IN/OUT requires at least one value: " + raw);
+        }
+        return new RsqlArgument.MultiValue(arguments);
     }
 
     private static String stripQuotes(String value) {

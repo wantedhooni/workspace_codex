@@ -1,7 +1,7 @@
 package com.derivops.mvp.config;
 
-import com.derivops.mvp.auth.CustomUserDetailsService;
-import com.derivops.mvp.auth.JwtService;
+import com.derivops.mvp.auth.application.CustomUserDetailsService;
+import com.derivops.mvp.auth.application.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

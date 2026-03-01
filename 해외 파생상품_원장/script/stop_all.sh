@@ -43,8 +43,29 @@ stop_from_pidfile() {
   rm -f "$pid_file"
 }
 
+stop_port_process_if_workspace_owned() {
+  local port="$1"
+  local name="$2"
+  local pids
+  pids="$(lsof -t -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [[ -z "$pids" ]]; then
+    return
+  fi
+
+  for pid in $pids; do
+    local cmd
+    cmd="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+    if [[ "$cmd" == *"$ROOT_DIR"* ]]; then
+      echo "[$name] stopping workspace process on port $port (pid=$pid)"
+      kill "$pid" >/dev/null 2>&1 || true
+    fi
+  done
+}
+
 stop_from_pidfile "frontend"
 stop_from_pidfile "backend"
+stop_port_process_if_workspace_owned 5173 "frontend"
+stop_port_process_if_workspace_owned 8080 "backend"
 
 echo "[db] stopping postgres..."
 docker compose --project-name derivops_mvp -f "$ROOT_DIR/docker-compose.yml" stop postgres >/dev/null || true

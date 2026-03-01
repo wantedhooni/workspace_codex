@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Dialog,
@@ -14,11 +14,13 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { api, getRole } from "../api/client";
+import { PageTitle } from "../components/PageTitle";
 import type { PagedResponse, RequestRow } from "../types/models";
+import { pageDescriptions } from "../utils/pageDescriptions";
+import { buildRsqlFilter, createEnterSearchHandler } from "../utils/listSearch";
 
 type DecisionState = {
   open: boolean;
@@ -28,18 +30,21 @@ type DecisionState = {
 };
 
 export function CashRequestsPage() {
+  const defaultValueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const navigate = useNavigate();
   const isAdmin = getRole() === "OPS_ADMIN";
 
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
   const [accountIdFilter, setAccountIdFilter] = useState("");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createAccountId, setCreateAccountId] = useState("1");
   const [type, setType] = useState("DEPOSIT");
+  const [createPriority, setCreatePriority] = useState("NORMAL");
+  const [createValueDate, setCreateValueDate] = useState(defaultValueDate);
   const [amount, setAmount] = useState("10000");
   const [currency, setCurrency] = useState("USD");
   const [reason, setReason] = useState("Daily cash adjustment");
@@ -51,22 +56,34 @@ export function CashRequestsPage() {
     reason: "",
   });
 
+  const rsqlFilter = useMemo(
+    () =>
+      buildRsqlFilter([
+        { field: "status", operator: "==", value: statusFilter || null },
+        { field: "priority", operator: "==", value: priorityFilter || null },
+        { field: "accountId", operator: "==", value: accountIdFilter.trim() || null },
+      ]),
+    [statusFilter, priorityFilter, accountIdFilter],
+  );
+
   const load = async () => {
     const params = new URLSearchParams();
     params.set("size", "100");
     if (keyword.trim()) params.set("keyword", keyword.trim());
-    if (filter.trim()) params.set("filter", filter.trim());
-    if (statusFilter) params.set("status", statusFilter);
-    if (accountIdFilter.trim()) params.set("accountId", accountIdFilter.trim());
+    if (rsqlFilter) params.set("filter", rsqlFilter);
 
     const res = await api.get<PagedResponse<RequestRow>>(`/cash-requests?${params.toString()}`);
     setRows(res.content);
   };
 
+  const onEnterSearch = createEnterSearchHandler(() => {
+    void load();
+  });
+
   const reset = async () => {
     setKeyword("");
-    setFilter("");
     setStatusFilter("");
+    setPriorityFilter("");
     setAccountIdFilter("");
     const res = await api.get<PagedResponse<RequestRow>>("/cash-requests?size=100");
     setRows(res.content);
@@ -83,6 +100,8 @@ export function CashRequestsPage() {
       amount: Number(amount),
       currency,
       reason,
+      priority: createPriority,
+      valueDate: createValueDate,
     });
     setCreateOpen(false);
     await load();
@@ -103,36 +122,33 @@ export function CashRequestsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="h5" fontWeight={700}>
-          Cash Requests
-        </Typography>
-        {isAdmin && (
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>
-            Create Request
+      <PageTitle title="Cash Requests" description={pageDescriptions.cashRequests} />
+
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ xs: "stretch", md: "center" }}>
+        <TextField
+          label="Keyword (reason/requestedBy/accountNo/currency)"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={onEnterSearch}
+          fullWidth
+        />
+        <Stack direction="row" spacing={1}>
+          {isAdmin && (
+            <Button variant="contained" onClick={() => setCreateOpen(true)}>
+              Create Request
+            </Button>
+          )}
+          <Button variant="contained" onClick={() => load().catch(console.error)}>
+            Search
           </Button>
-        )}
+          <Button variant="outlined" onClick={() => reset().catch(console.error)}>
+            Reset
+          </Button>
+        </Stack>
       </Stack>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
-          <TextField
-            label="Keyword (reason/requestedBy/accountNo)"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            label="RSQL Filter"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder={"status==PENDING;amount=ge=10000"}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
+        <Grid item xs={12} md={3}>
           <TextField select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} fullWidth>
             <MenuItem value="">ALL</MenuItem>
             <MenuItem value="PENDING">PENDING</MenuItem>
@@ -141,23 +157,23 @@ export function CashRequestsPage() {
             <MenuItem value="FAILED">FAILED</MenuItem>
           </TextField>
         </Grid>
-        <Grid item xs={12} md={2}>
+        <Grid item xs={12} md={3}>
+          <TextField select label="Priority" value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} fullWidth>
+            <MenuItem value="">ALL</MenuItem>
+            <MenuItem value="LOW">LOW</MenuItem>
+            <MenuItem value="NORMAL">NORMAL</MenuItem>
+            <MenuItem value="HIGH">HIGH</MenuItem>
+            <MenuItem value="URGENT">URGENT</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} md={3}>
           <TextField
             label="Account ID"
             value={accountIdFilter}
             onChange={(e) => setAccountIdFilter(e.target.value)}
+            onKeyDown={onEnterSearch}
             fullWidth
           />
-        </Grid>
-        <Grid item xs={12} md={12}>
-          <Stack direction="row" spacing={1}>
-            <Button variant="contained" onClick={() => load().catch(console.error)}>
-              Search
-            </Button>
-            <Button variant="outlined" onClick={() => reset().catch(console.error)}>
-              Reset
-            </Button>
-          </Stack>
         </Grid>
       </Grid>
 
@@ -169,6 +185,11 @@ export function CashRequestsPage() {
             <TableCell>Status</TableCell>
             <TableCell>Account</TableCell>
             <TableCell>Amount</TableCell>
+            <TableCell>Priority</TableCell>
+            <TableCell>Value Date</TableCell>
+            <TableCell>Manual</TableCell>
+            <TableCell>Policy</TableCell>
+            <TableCell>Risk</TableCell>
             <TableCell>Requested By</TableCell>
             <TableCell>Reason</TableCell>
             <TableCell>Action</TableCell>
@@ -180,8 +201,20 @@ export function CashRequestsPage() {
               <TableCell>{row.id}</TableCell>
               <TableCell>{row.requestType}</TableCell>
               <TableCell>{row.status}</TableCell>
-              <TableCell>{row.accountId}</TableCell>
-              <TableCell>{row.amount}</TableCell>
+              <TableCell>
+                {row.accountId} ({row.accountNo})
+              </TableCell>
+              <TableCell>
+                {row.amount} {row.currency}
+              </TableCell>
+              <TableCell>{row.priority ?? "-"}</TableCell>
+              <TableCell>{row.valueDate ?? "-"}</TableCell>
+              <TableCell>{row.manualReviewRequired ? "Y" : "N"}</TableCell>
+              <TableCell>{row.controlPolicySource ?? "-"}</TableCell>
+              <TableCell>
+                {row.controlLimitPolicySource ?? "-"}
+                {row.projectedDailyExposure !== undefined ? ` (${row.projectedDailyExposure})` : ""}
+              </TableCell>
               <TableCell>{row.requestedBy}</TableCell>
               <TableCell>{row.reason}</TableCell>
               <TableCell>
@@ -218,6 +251,20 @@ export function CashRequestsPage() {
               <MenuItem value="DEPOSIT">DEPOSIT</MenuItem>
               <MenuItem value="WITHDRAW">WITHDRAW</MenuItem>
             </TextField>
+            <TextField select label="Priority" value={createPriority} onChange={(e) => setCreatePriority(e.target.value)} fullWidth>
+              <MenuItem value="LOW">LOW</MenuItem>
+              <MenuItem value="NORMAL">NORMAL</MenuItem>
+              <MenuItem value="HIGH">HIGH</MenuItem>
+              <MenuItem value="URGENT">URGENT</MenuItem>
+            </TextField>
+            <TextField
+              label="Value Date"
+              type="date"
+              value={createValueDate}
+              onChange={(e) => setCreateValueDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
             <TextField label="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} fullWidth />
             <TextField label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value)} fullWidth />
             <TextField label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} fullWidth multiline minRows={2} />
