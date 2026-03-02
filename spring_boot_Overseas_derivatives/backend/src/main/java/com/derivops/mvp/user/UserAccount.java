@@ -14,11 +14,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "users")
 public class UserAccount {
 
@@ -30,6 +33,7 @@ public class UserAccount {
     private String username;
 
     @Column(nullable = false, length = 255)
+    @NotAudited
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)

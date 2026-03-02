@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ThemedSiderV2, type RefineThemedLayoutV2SiderProps } from "@refinedev/mui";
-import { Alert, Box, CircularProgress, List, ListItemButton, ListItemIcon, ListItemText, Tooltip, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Collapse,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -17,6 +28,8 @@ import Inventory2Icon from "@mui/icons-material/Inventory2";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import type { MenuItem } from "../types/models";
@@ -40,10 +53,41 @@ const iconByName: Record<string, JSX.Element> = {
   query_stats: <QueryStatsIcon fontSize="small" />,
 };
 
+const hasNavigablePath = (menu: MenuItem) => menu.path.trim().length > 0;
+
+const isPathSelected = (menu: MenuItem, pathname: string) =>
+  hasNavigablePath(menu) && (pathname === menu.path || (menu.path !== "/" && pathname.startsWith(menu.path)));
+
+const hasSelectedDescendant = (menu: MenuItem, pathname: string): boolean =>
+  menu.children.some((child) => isPathSelected(child, pathname) || hasSelectedDescendant(child, pathname));
+
+const flattenLeafMenus = (menus: MenuItem[]): MenuItem[] =>
+  menus.flatMap((menu) => (menu.children.length === 0 ? [menu] : flattenLeafMenus(menu.children)));
+
+const collectExpandedAncestorKeys = (menus: MenuItem[], pathname: string) => {
+  const expandedKeys = new Set<string>();
+
+  const visit = (nodes: MenuItem[], ancestors: string[]) => {
+    for (const node of nodes) {
+      const nextAncestors = [...ancestors, node.menuKey];
+      if (isPathSelected(node, pathname)) {
+        ancestors.forEach((key) => expandedKeys.add(key));
+      }
+      if (node.children.length > 0) {
+        visit(node.children, nextAncestors);
+      }
+    }
+  };
+
+  visit(menus, []);
+  return expandedKeys;
+};
+
 export function DbSider(props: RefineThemedLayoutV2SiderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [menus, setMenus] = useState<MenuItem[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,10 +109,26 @@ export function DbSider(props: RefineThemedLayoutV2SiderProps) {
     void fetchMenus();
   }, [fetchMenus]);
 
-  const normalizedMenus = useMemo(
-    () => [...menus].sort((a, b) => a.sortOrder - b.sortOrder),
-    [menus],
-  );
+  useEffect(() => {
+    const ancestorKeys = collectExpandedAncestorKeys(menus, location.pathname);
+    if (ancestorKeys.size === 0) {
+      return;
+    }
+
+    setExpandedKeys((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      ancestorKeys.forEach((key) => {
+        if (!next[key]) {
+          next[key] = true;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [menus, location.pathname]);
+
+  const collapsedLeafMenus = useMemo(() => flattenLeafMenus(menus), [menus]);
 
   const renderTooltip = (menu: MenuItem) => (
     <Box sx={{ maxWidth: 280, py: 0.25 }}>
@@ -80,6 +140,60 @@ export function DbSider(props: RefineThemedLayoutV2SiderProps) {
       </Typography>
     </Box>
   );
+
+  const toggleExpanded = (menuKey: string) => {
+    setExpandedKeys((prev) => ({
+      ...prev,
+      [menuKey]: !prev[menuKey],
+    }));
+  };
+
+  const renderMenuNode = (menu: MenuItem, collapsed: boolean, level = 0): JSX.Element => {
+    const icon = menu.icon ? iconByName[menu.icon] : undefined;
+    const hasChildren = menu.children.length > 0;
+    const selectedSelf = isPathSelected(menu, location.pathname);
+    const selectedDescendant = hasChildren && hasSelectedDescendant(menu, location.pathname);
+    const expanded = Boolean(expandedKeys[menu.menuKey]) || selectedDescendant;
+
+    const handleClick = () => {
+      if (hasChildren && !collapsed) {
+        toggleExpanded(menu.menuKey);
+        return;
+      }
+      if (hasNavigablePath(menu)) {
+        navigate(menu.path);
+      }
+    };
+
+    return (
+      <Box key={menu.menuKey}>
+        <Tooltip title={renderTooltip(menu)} placement="right" arrow enterDelay={250}>
+          <ListItemButton
+            selected={selectedSelf || (!hasNavigablePath(menu) && selectedDescendant)}
+            onClick={handleClick}
+            sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              pl: collapsed ? 1 : 1 + level * 2,
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: collapsed ? 0 : 32, justifyContent: "center" }}>
+              {icon ?? <MenuIcon fontSize="small" />}
+            </ListItemIcon>
+            {!collapsed && <ListItemText primary={menu.title} />}
+            {!collapsed && hasChildren && (expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />)}
+          </ListItemButton>
+        </Tooltip>
+        {!collapsed && hasChildren && (
+          <Collapse in={expanded} timeout="auto" unmountOnExit>
+            <List dense disablePadding>
+              {menu.children.map((child) => renderMenuNode(child, collapsed, level + 1))}
+            </List>
+          </Collapse>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <ThemedSiderV2
@@ -98,20 +212,7 @@ export function DbSider(props: RefineThemedLayoutV2SiderProps) {
             </Box>
           ) : (
             <List dense sx={{ px: 1 }}>
-              {normalizedMenus.map((menu) => {
-                const icon = menu.icon ? iconByName[menu.icon] : undefined;
-                const selected = location.pathname === menu.path || (menu.path !== "/" && location.pathname.startsWith(menu.path));
-                return (
-                  <Tooltip key={menu.menuKey} title={renderTooltip(menu)} placement="right" arrow enterDelay={250}>
-                    <ListItemButton selected={selected} onClick={() => navigate(menu.path)} sx={{ borderRadius: 1, mb: 0.5 }}>
-                      <ListItemIcon sx={{ minWidth: collapsed ? 0 : 32, justifyContent: "center" }}>
-                        {icon ?? <MenuIcon fontSize="small" />}
-                      </ListItemIcon>
-                      {!collapsed && <ListItemText primary={menu.title} />}
-                    </ListItemButton>
-                  </Tooltip>
-                );
-              })}
+              {(collapsed ? collapsedLeafMenus : menus).map((menu) => renderMenuNode(menu, collapsed))}
             </List>
           )}
           <Box sx={{ mt: "auto" }}>{logout}</Box>

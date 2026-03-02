@@ -225,11 +225,14 @@ export type MenuItem = {
   title: string;
   description?: string;
   path: string;
+  parentMenuKey?: string;
+  depth: number;
   resourceName?: string;
   icon?: string;
   sortOrder: number;
   enabled: boolean;
   roles: string[];
+  children: MenuItem[];
 };
 
 export type AuditLog = {

@@ -19,11 +19,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.envers.Audited;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(
         name = "stock_positions",
         uniqueConstraints = @UniqueConstraint(name = "uk_stock_position_account_symbol", columnNames = {"account_id", "symbol"})

@@ -11,11 +11,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.envers.Audited;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
+@Audited
 @Table(name = "menus")
 public class MenuEntry {
 
@@ -34,6 +36,9 @@ public class MenuEntry {
 
     @Column(nullable = false, length = 120)
     private String path;
+
+    @Column(length = 80)
+    private String parentMenuKey;
 
     @Column(length = 80)
     private String resourceName;

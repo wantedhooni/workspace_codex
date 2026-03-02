@@ -22,6 +22,8 @@ import com.derivops.mvp.domainterm.DomainTerm;
 import com.derivops.mvp.domainterm.infrastructure.DomainTermRepository;
 import com.derivops.mvp.exchangerate.ExchangeRate;
 import com.derivops.mvp.exchangerate.infrastructure.ExchangeRateRepository;
+import com.derivops.mvp.journalentry.JournalEntry;
+import com.derivops.mvp.ledger.LedgerEntry;
 import com.derivops.mvp.menu.MenuEntry;
 import com.derivops.mvp.menu.infrastructure.MenuEntryRepository;
 import com.derivops.mvp.opscase.OpsCase;
@@ -38,18 +40,23 @@ import com.derivops.mvp.position.infrastructure.PositionRepository;
 import com.derivops.mvp.risk.RiskLimitPolicy;
 import com.derivops.mvp.risk.infrastructure.RiskLimitPolicyRepository;
 import com.derivops.mvp.stockpurchase.application.StockPurchaseService;
+import com.derivops.mvp.stockpurchase.StockPurchase;
 import com.derivops.mvp.stockpurchase.dto.CreateStockPurchaseRequest;
 import com.derivops.mvp.stockpurchase.infrastructure.StockPurchaseRepository;
+import com.derivops.mvp.stockposition.StockPosition;
 import com.derivops.mvp.user.UserAccount;
 import com.derivops.mvp.user.infrastructure.UserAccountRepository;
 import com.derivops.mvp.user.UserRole;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -80,6 +87,7 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner seedData() {
         return args -> {
+            ensureEnversSchema();
             patchLegacySchema();
 
             ensureDemoUser("opsadmin", "admin123!", UserRole.OPS_ADMIN);
@@ -160,22 +168,26 @@ public class DataInitializer {
             ensureExchangeRate("USD", "JPY", LocalDate.now(), "149.25000000", "OPS_DEMO");
             ensureExchangeRate("USD", "SGD", LocalDate.now(), "1.35240000", "OPS_DEMO");
 
-            ensureMenu("dashboard", "Dashboard", "운영 개요 도메인. 계좌, 요청, 배치, 통제 현황을 한눈에 보는 시작 화면입니다.", "/", "dashboard", "dashboard", 10, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("domain-terms", "Domain Terms", "도메인 용어집 화면. 업무 용어를 한글 설명과 예시로 조회하는 공통 사전입니다.", "/domain-terms", "domain-terms", "menu_book", 15, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("accounts", "Accounts", "계좌 도메인. 해외 브로커 계좌와 잔고, 포지션, 증거금 현황을 조회합니다.", "/accounts", "accounts", "account_balance", 20, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("portfolio", "Portfolio", "포트폴리오 도메인. 계좌별 현금 잔고와 주식 보유, 최근 매수 내역을 한 화면에서 확인합니다.", "/portfolio", "portfolio", "pie_chart", 25, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("stock-purchases", "Stock Purchases", "증권 거래 도메인. 주식 매수 등록과 체결 이력을 조회합니다.", "/stock-purchases", "stock-purchases", "candlestick_chart", 26, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("stock-positions", "Stock Positions", "증권 포지션 도메인. 종목별 현재 보유 수량, 평균단가, 총원가를 조회합니다.", "/stock-positions", "stock-positions", "inventory_2", 27, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("stock-recommendations", "Stock Recommendations", "AI 추천 도메인. 포트폴리오와 운용 조건을 기준으로 종목 추천 초안을 생성합니다.", "/stock-recommendations", "stock-recommendations", "auto_awesome", 28, true, "OPS_ADMIN,OPS_VIEWER");
-            ensureMenu("exchange-rates", "Exchange Rates", "환율 도메인. 통화쌍별 기준 환율과 환전 예상 금액을 조회하고 관리합니다.", "/exchange-rates", "exchange-rates", "query_stats", 29, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("cash-requests", "Cash Requests", "자금 도메인. 입금과 출금 요청을 등록하고 승인 상태와 통제 결과를 확인합니다.", "/cash-requests", "cash-requests", "payments", 30, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("fx-requests", "FX Requests", "환전 도메인. 통화 전환 요청과 브로커 처리 상태를 관리합니다.", "/fx-requests", "fx-requests", "currency_exchange", 40, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("batches", "Batches", "배치 도메인. 포지션 동기화, 증거금 재계산, EOD 정산 작업의 실행 상태를 모니터링합니다.", "/batches", "batches", "schedule", 50, true, "OPS_ADMIN,OPS_VIEWER");
-            ensureMenu("audit-logs", "Audit Logs", "감사 도메인. 로그인, 요청 처리, 정책 변경 같은 주요 행위를 추적합니다.", "/audit-logs", "audit-logs", "manage_search", 60, true, "OPS_ADMIN,AUDITOR");
-            ensureMenu("approval-policies", "Approval Policies", "통제 정책 도메인. 요청 승인 임계치와 수동심사 기준을 설정합니다.", "/approval-policies", "approval-policies", "policy", 70, true, "OPS_ADMIN,AUDITOR");
-            ensureMenu("risk-limits", "Risk Limits", "리스크 도메인. 단건 요청 한도와 일중 누적 노출 한도를 관리합니다.", "/risk-limits", "risk-limits", "risk", 80, true, "OPS_ADMIN,AUDITOR");
-            ensureMenu("ops-cases", "Ops Cases", "운영 예외 도메인. 장애, 실패, 통제 위반 케이스를 등록하고 추적합니다.", "/ops-cases", "ops-cases", "incident", 90, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
-            ensureMenu("menu-admin", "Menus", "메뉴 관리 도메인. 역할별 메뉴 노출과 화면 진입 구성을 관리합니다.", "/menus", "menus", "menu", 100, true, "OPS_ADMIN,AUDITOR");
+            ensureMenu("dashboard", "Dashboard", "운영 개요 도메인. 계좌, 요청, 배치, 통제 현황을 한눈에 보는 시작 화면입니다.", "/", null, "dashboard", "dashboard", 10, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("reference-root", "Reference", "공통 기준 정보 묶음입니다. 용어집과 환율처럼 여러 업무가 함께 참조하는 데이터를 모아둡니다.", "", null, null, "menu_book", 20, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("domain-terms", "Domain Terms", "도메인 용어집 화면. 업무 용어를 한글 설명과 예시로 조회하는 공통 사전입니다.", "/domain-terms", "reference-root", "domain-terms", "menu_book", 10, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("exchange-rates", "Exchange Rates", "환율 도메인. 통화쌍별 기준 환율과 환전 예상 금액을 조회하고 관리합니다.", "/exchange-rates", "reference-root", "exchange-rates", "query_stats", 20, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("operations-root", "Operations", "실행성 업무 메뉴 묶음입니다. 계좌, 증권, 자금, 배치 운영 기능을 2 depth 구조로 제공합니다.", "", null, null, "dashboard", 30, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("accounts", "Accounts", "계좌 도메인. 해외 브로커 계좌와 잔고, 포지션, 증거금 현황을 조회합니다.", "/accounts", "operations-root", "accounts", "account_balance", 10, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("portfolio", "Portfolio", "포트폴리오 도메인. 계좌별 현금 잔고와 주식 보유, 최근 매수 내역을 한 화면에서 확인합니다.", "/portfolio", "operations-root", "portfolio", "pie_chart", 20, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("stock-purchases", "Stock Purchases", "증권 거래 도메인. 주식 매수 등록과 체결 이력을 조회합니다.", "/stock-purchases", "operations-root", "stock-purchases", "candlestick_chart", 30, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("stock-positions", "Stock Positions", "증권 포지션 도메인. 종목별 현재 보유 수량, 평균단가, 총원가를 조회합니다.", "/stock-positions", "operations-root", "stock-positions", "inventory_2", 40, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("stock-recommendations", "Stock Recommendations", "AI 추천 도메인. 포트폴리오와 운용 조건을 기준으로 종목 추천 초안을 생성합니다.", "/stock-recommendations", "operations-root", "stock-recommendations", "auto_awesome", 50, true, "OPS_ADMIN,OPS_VIEWER");
+            ensureMenu("cash-requests", "Cash Requests", "자금 도메인. 입금과 출금 요청을 등록하고 승인 상태와 통제 결과를 확인합니다.", "/cash-requests", "operations-root", "cash-requests", "payments", 60, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("fx-requests", "FX Requests", "환전 도메인. 통화 전환 요청과 브로커 처리 상태를 관리합니다.", "/fx-requests", "operations-root", "fx-requests", "currency_exchange", 70, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("batches", "Batches", "배치 도메인. 포지션 동기화, 증거금 재계산, EOD 정산 작업의 실행 상태를 모니터링합니다.", "/batches", "operations-root", "batches", "schedule", 80, true, "OPS_ADMIN,OPS_VIEWER");
+            ensureMenu("control-root", "Control", "감사, 정책, 운영 예외 같은 내부통제 업무 메뉴 묶음입니다.", "", null, null, "manage_search", 40, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("audit-logs", "Audit Logs", "감사 도메인. 로그인, 요청 처리, 정책 변경 같은 주요 행위를 추적합니다.", "/audit-logs", "control-root", "audit-logs", "manage_search", 10, true, "OPS_ADMIN,AUDITOR");
+            ensureMenu("ops-cases", "Ops Cases", "운영 예외 도메인. 장애, 실패, 통제 위반 케이스를 등록하고 추적합니다.", "/ops-cases", "control-root", "ops-cases", "incident", 20, true, "OPS_ADMIN,OPS_VIEWER,AUDITOR");
+            ensureMenu("approval-policies", "Approval Policies", "통제 정책 도메인. 요청 승인 임계치와 수동심사 기준을 설정합니다.", "/approval-policies", "control-root", "approval-policies", "policy", 30, true, "OPS_ADMIN,AUDITOR");
+            ensureMenu("risk-limits", "Risk Limits", "리스크 도메인. 단건 요청 한도와 일중 누적 노출 한도를 관리합니다.", "/risk-limits", "control-root", "risk-limits", "risk", 40, true, "OPS_ADMIN,AUDITOR");
+            ensureMenu("menu-admin", "Menus", "메뉴 관리 도메인. 역할별 메뉴 노출과 화면 진입 구성을 관리합니다.", "/menus", "control-root", "menus", "menu", 50, true, "OPS_ADMIN,AUDITOR");
+            cleanupLegacyMenus("account-ops-root", "funding-root", "settlement-root", "audit-root", "policy-root");
             ensureDomainTerm("ACCOUNT", "계좌/잔고", 10, "ACCOUNT", "Account", "계좌", "해외 브로커에 개설된 거래 계좌 마스터입니다. 잔고, 포지션, 증거금, 요청의 기준 단위가 됩니다.", "예: CME-77889901 계좌에서 현금요청과 주식매수가 발생합니다.", 10);
             ensureDomainTerm("ACCOUNT", "계좌/잔고", 10, "BALANCE", "Balance", "잔고", "계좌와 통화 기준 현재 가용 자금 또는 예치 금액 스냅샷입니다.", "예: USD 2,450,000.2500 보유", 20);
             ensureDomainTerm("ACCOUNT", "계좌/잔고", 10, "POSITION", "Position", "포지션", "선물/옵션 등 파생상품의 종목별 보유 수량과 평균 단가 스냅샷입니다.", "예: ESM6 3계약 보유", 30);
@@ -284,6 +296,69 @@ public class DataInitializer {
         };
     }
 
+    private void ensureEnversSchema() {
+        executeDdlSafely("""
+                create table revinfo (
+                    rev integer generated by default as identity primary key,
+                    revtstmp bigint not null
+                )
+                """);
+
+        List.of(
+                "accounts",
+                "approval_policies",
+                "batch_runs",
+                "balances",
+                "cash_requests",
+                "domain_terms",
+                "exchange_rates",
+                "fx_requests",
+                "journal_entries",
+                "ledger_entries",
+                "margins",
+                "menus",
+                "ops_cases",
+                "positions",
+                "risk_limit_policies",
+                "stock_positions",
+                "stock_purchases",
+                "users"
+        ).forEach(this::ensureAuditShadowTable);
+    }
+
+    private void ensureAuditShadowTable(String baseTable) {
+        String auditTable = baseTable + "_aud";
+        executeDdlSafely("create table " + auditTable + " as select * from " + baseTable + " where 1 = 0");
+        executeDdlSafely("alter table " + auditTable + " add column rev integer not null");
+        executeDdlSafely("alter table " + auditTable + " add column revtype smallint");
+    }
+
+    private void executeDdlSafely(String sql) {
+        try {
+            jdbcTemplate.execute(sql);
+        } catch (DataAccessException ex) {
+            if (!isDuplicateDdl(ex)) {
+                throw ex;
+            }
+        }
+    }
+
+    private boolean isDuplicateDdl(DataAccessException ex) {
+        return containsDuplicateMarker(ex.getMessage())
+                || containsDuplicateMarker(ex.getMostSpecificCause() == null ? null : ex.getMostSpecificCause().getMessage());
+    }
+
+    private boolean containsDuplicateMarker(String message) {
+        if (message == null) {
+            return false;
+        }
+
+        String normalized = message.toLowerCase(Locale.ROOT);
+        return normalized.contains("already exists")
+                || normalized.contains("already used by an existing object")
+                || normalized.contains("duplicate column name");
+    }
+
     private void seedStockPurchase(
             Account account,
             String symbol,
@@ -339,6 +414,7 @@ public class DataInitializer {
         jdbcTemplate.execute("alter table if exists fx_requests alter column manual_review_required set default false");
         jdbcTemplate.execute("alter table if exists fx_requests alter column manual_review_required set not null");
         jdbcTemplate.execute("alter table if exists menus add column if not exists description varchar(255)");
+        jdbcTemplate.execute("alter table if exists menus add column if not exists parent_menu_key varchar(80)");
     }
 
     private Account createAccount(String accountNo, String broker, AccountStatus status, String ownerName) {
@@ -516,6 +592,7 @@ public class DataInitializer {
             String title,
             String description,
             String path,
+            String parentMenuKey,
             String resourceName,
             String icon,
             int sortOrder,
@@ -527,12 +604,19 @@ public class DataInitializer {
         menu.setTitle(title);
         menu.setDescription(description);
         menu.setPath(path);
+        menu.setParentMenuKey(parentMenuKey);
         menu.setResourceName(resourceName);
         menu.setIcon(icon);
         menu.setSortOrder(sortOrder);
         menu.setEnabled(enabled);
         menu.setRolesCsv(rolesCsv);
         menuEntryRepository.save(menu);
+    }
+
+    private void cleanupLegacyMenus(String... menuKeys) {
+        for (String menuKey : menuKeys) {
+            jdbcTemplate.update("delete from menus where menu_key = ?", menuKey);
+        }
     }
 
     private void ensureDomainTerm(

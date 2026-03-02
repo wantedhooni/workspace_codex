@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Grid,
   MenuItem,
@@ -43,6 +44,34 @@ export function MenusPage() {
     void load();
   });
 
+  const orderedRows = useMemo(() => {
+    const existingKeys = new Set(rows.map((row) => row.menuKey));
+    const grouped = new Map<string, MenuModel[]>();
+
+    rows.forEach((row) => {
+      const parentKey = row.parentMenuKey && existingKeys.has(row.parentMenuKey) ? row.parentMenuKey : "__root__";
+      const group = grouped.get(parentKey) ?? [];
+      group.push(row);
+      grouped.set(parentKey, group);
+    });
+
+    grouped.forEach((group) => {
+      group.sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id);
+    });
+
+    const flattened: MenuModel[] = [];
+    const visit = (parentKey: string) => {
+      const group = grouped.get(parentKey) ?? [];
+      group.forEach((row) => {
+        flattened.push(row);
+        visit(row.menuKey);
+      });
+    };
+
+    visit("__root__");
+    return flattened;
+  }, [rows]);
+
   useEffect(() => {
     load().catch(console.error);
   }, []);
@@ -53,7 +82,7 @@ export function MenusPage() {
 
       <Stack direction={{ xs: "column", md: "row" }} spacing={1} alignItems={{ xs: "stretch", md: "center" }}>
         <TextField
-          label="Keyword (key/title/description/path/role)"
+          label="Keyword (key/title/description/path/parent/role)"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={onEnterSearch}
@@ -91,6 +120,8 @@ export function MenusPage() {
           <TableRow>
             <TableCell>ID</TableCell>
             <TableCell>Key</TableCell>
+            <TableCell>Parent</TableCell>
+            <TableCell>Depth</TableCell>
             <TableCell>Title</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Path</TableCell>
@@ -101,13 +132,17 @@ export function MenusPage() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+          {orderedRows.map((row) => (
             <TableRow key={row.id}>
               <TableCell>{row.id}</TableCell>
               <TableCell>{row.menuKey}</TableCell>
-              <TableCell>{row.title}</TableCell>
+              <TableCell>{row.parentMenuKey ?? "-"}</TableCell>
+              <TableCell>{row.depth}</TableCell>
+              <TableCell>
+                <Box sx={{ pl: row.depth * 2 }}>{row.title}</Box>
+              </TableCell>
               <TableCell>{row.description ?? "-"}</TableCell>
-              <TableCell>{row.path}</TableCell>
+              <TableCell>{row.path || "-"}</TableCell>
               <TableCell>{row.resourceName ?? "-"}</TableCell>
               <TableCell>{row.sortOrder}</TableCell>
               <TableCell>{row.enabled ? "Y" : "N"}</TableCell>

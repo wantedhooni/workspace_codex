@@ -1,9 +1,11 @@
 import type { AuthBindings } from "@refinedev/core";
-import { api, clearAuth, getToken, setAuth } from "../api/client";
+import { ApiError, api, clearAuth, ensureValidAccessToken, getRole, setAuth } from "../api/client";
 
 type LoginResponse = {
   accessToken: string;
+  refreshToken: string;
   expiresIn: number;
+  refreshExpiresIn: number;
   role: string;
 };
 
@@ -11,7 +13,7 @@ export const authProvider: AuthBindings = {
   login: async ({ username, password }) => {
     try {
       const res = await api.post<LoginResponse>("/auth/login", { username, password });
-      setAuth(res.accessToken, res.role);
+      setAuth(res);
       return {
         success: true,
         redirectTo: "/",
@@ -34,7 +36,7 @@ export const authProvider: AuthBindings = {
     };
   },
   check: async () => {
-    const token = getToken();
+    const token = await ensureValidAccessToken();
     if (token) {
       return {
         authenticated: true,
@@ -46,7 +48,7 @@ export const authProvider: AuthBindings = {
     };
   },
   getPermissions: async () => {
-    return localStorage.getItem("derivops_role") ?? null;
+    return getRole();
   },
   getIdentity: async () => {
     return {
@@ -54,7 +56,19 @@ export const authProvider: AuthBindings = {
       name: "operations",
     };
   },
-  onError: async () => {
+  onError: async (error) => {
+    if (error instanceof ApiError && error.status === 401) {
+      clearAuth();
+      return {
+        logout: true,
+        redirectTo: "/login",
+        error: {
+          name: "AuthExpired",
+          message: "세션이 만료되어 다시 로그인해야 합니다.",
+        },
+      };
+    }
+
     return {
       error: {
         name: "AuthError",

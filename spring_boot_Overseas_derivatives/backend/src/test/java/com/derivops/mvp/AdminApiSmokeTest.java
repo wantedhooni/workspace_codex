@@ -5,19 +5,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.derivops.mvp.account.Account;
 import com.derivops.mvp.audit.infrastructure.AuditLogRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
+import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
+import org.hibernate.envers.AuditReaderFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -32,6 +39,12 @@ class AdminApiSmokeTest {
 
     @Autowired
     private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void loginAndReadAccountsShouldSucceed() throws Exception {
@@ -68,8 +81,73 @@ class AdminApiSmokeTest {
 
         login("opsadmin", "admin123!");
 
-        long after = auditLogRepository.count();
+        long after = waitForAuditLogCountToExceed(before, Duration.ofSeconds(5));
         Assertions.assertThat(after).isGreaterThan(before);
+    }
+
+    @Test
+    void shouldRefreshTokensAndRejectRefreshTokenAsAccessToken() throws Exception {
+        MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "opsadmin",
+                                  "password": "admin123!"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andReturn();
+
+        JsonNode loginBody = objectMapper.readTree(login.getResponse().getContentAsString());
+        String refreshToken = loginBody.get("refreshToken").asText();
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(refreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.role").value("OPS_ADMIN"));
+
+        mockMvc.perform(get("/api/v1/accounts")
+                        .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Transactional(readOnly = true)
+    void shouldEnableEnversForDomainEntitiesButExcludeAuditLog() {
+        Assertions.assertThat(tableExists("REVINFO")).isTrue();
+        Assertions.assertThat(tableExists("ACCOUNTS_AUD")).isTrue();
+        Assertions.assertThat(tableExists("AUDIT_LOGS_AUD")).isFalse();
+
+        List<Number> revisions = AuditReaderFactory.get(entityManager).getRevisions(Account.class, 1L);
+        Assertions.assertThat(revisions).isNotEmpty();
+    }
+
+    private long waitForAuditLogCountToExceed(long baseline, Duration timeout) throws InterruptedException {
+        long deadline = System.nanoTime() + timeout.toNanos();
+        long current = auditLogRepository.count();
+        while (current <= baseline && System.nanoTime() < deadline) {
+            Thread.sleep(100);
+            current = auditLogRepository.count();
+        }
+        return current;
+    }
+
+    private boolean tableExists(String tableName) {
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(*) from information_schema.tables where upper(table_name) = ?",
+                Integer.class,
+                tableName
+        );
+        return count != null && count > 0;
     }
 
     @Test
@@ -150,7 +228,13 @@ class AdminApiSmokeTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].menuKey").isNotEmpty());
+                .andExpect(jsonPath("$[0].menuKey").value("dashboard"))
+                .andExpect(jsonPath("$[1].menuKey").value("reference-root"))
+                .andExpect(jsonPath("$[1].children[0].menuKey").value("domain-terms"))
+                .andExpect(jsonPath("$[2].menuKey").value("operations-root"))
+                .andExpect(jsonPath("$[2].children[0].menuKey").value("accounts"))
+                .andExpect(jsonPath("$[2].children[0].depth").value(1))
+                .andExpect(jsonPath("$[2].children[0].children").isEmpty());
 
         mockMvc.perform(get("/api/v1/domain-terms")
                         .header("Authorization", "Bearer " + token))

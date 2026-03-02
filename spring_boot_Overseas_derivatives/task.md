@@ -1,13 +1,13 @@
-# Package Refactor Tasks
+# 패키지 리팩터링 작업
 
-- [x] 1. Current package structure and dirty worktree status reviewed
-- [x] 2. Working plan documented in `plan.md`
-- [x] 3. Backend domain packages split by role
-- [x] 4. Package/import references updated across main/test sources
-- [x] 5. Backend build/test verification completed
-- [x] 6. Final status synced back into this checklist
+- [x] 1. 현재 패키지 구조와 변경된 작업 트리 상태 점검 완료
+- [x] 2. 작업 계획을 `PLANS.MD`에 문서화 완료
+- [x] 3. 백엔드 도메인 패키지를 역할별로 분리 완료
+- [x] 4. 운영/테스트 코드의 패키지 및 import 참조 갱신 완료
+- [x] 5. 백엔드 빌드/테스트 검증 완료
+- [x] 6. 최종 상태를 본 체크리스트에 반영 완료
 
-# Stock Purchase Flow Tasks
+# 주식 매수 흐름 작업
 
 - [x] 1. 주식 매수 도메인 및 API 추가
 - [x] 2. 주식 포지션 집계/업서트 로직 반영
@@ -15,54 +15,54 @@
 - [x] 4. 분개(`journal_entries`) 생성 로직 반영
 - [x] 5. 시드 데이터와 스모크 테스트 검증 완료
 
-# Stock Sample / Docs Tasks
+# 주식 샘플 / 문서 작업
 
 - [x] 1. 주식 샘플 데이터 다건 추가
 - [x] 2. 도메인 설명 문서(`docs/DOMAIN_OVERVIEW.md`) 추가
 - [x] 3. 문서 인덱스와 루트 README 링크 갱신
 
-# Menu Tooltip Tasks
+# 메뉴 툴팁 작업
 
 - [x] 1. 메뉴 설명 필드 추가
 - [x] 2. 시드 메뉴별 도메인/화면 설명 반영
 - [x] 3. 사이드 메뉴 hover tooltip 적용
 - [x] 4. 메뉴 관리 화면에 설명 컬럼 노출
 
-# Domain Terms Tasks
+# 도메인 용어집 작업
 
 - [x] 1. 도메인 용어집 DB 모델 및 조회 API 추가
 - [x] 2. 한글 용어 시드 데이터 추가
 - [x] 3. Dashboard 용어집 섹션 추가
 - [x] 4. 용어 문서 및 인덱스 갱신
 
-# Page Tooltip Tasks
+# 페이지 툴팁 작업
 
 - [x] 1. 공통 페이지 제목 tooltip 컴포넌트 추가
 - [x] 2. 주요 화면별 한글 설명 문구 정리
 - [x] 3. 리스트/상세/로그인/Dashboard 화면에 tooltip 적용
 
-# Securities / Portfolio Tasks
+# 증권 / 포트폴리오 작업
 
 - [x] 1. 포트폴리오 조회 API 추가
 - [x] 2. 포트폴리오/주식 매수/주식 포지션 메뉴 추가
 - [x] 3. 프론트 `Portfolio`, `Stock Purchases`, `Stock Positions` 화면 추가
 - [x] 4. 문서 및 검증 반영
 
-# Domain Glossary Data Tasks
+# 도메인 용어 데이터 작업
 
 - [x] 1. 현재 도메인 용어집 시드 범위 검토
 - [x] 2. 주문/체결/정산/연계 실무 용어 시드 추가
 - [x] 3. `docs/DOMAIN_TERMS.md` 문서 동기화
 - [x] 4. 백엔드 테스트 재검증
 
-# Domain Glossary Menu Tasks
+# 도메인 용어집 메뉴 작업
 
 - [x] 1. 용어집 전용 메뉴 시드 추가
 - [x] 2. 프론트 `Domain Terms` 페이지와 라우트 추가
 - [x] 3. 사이드 메뉴 아이콘/설명 연결
 - [x] 4. 빌드 및 테스트 검증
 
-# AI Stock Recommendation Tasks
+# AI 주식 추천 작업
 
 - [x] 1. Spring AI / Ollama 연동 구조 추가
 - [x] 2. 테스트용 stub 추천 생성기 추가
@@ -70,7 +70,7 @@
 - [x] 4. 프론트 추천 화면/라우트 추가
 - [x] 5. 문서 및 빌드 검증
 
-# FX Rate / Conversion Tasks
+# 환율 / 환전 작업
 
 - [x] 1. 환율 마스터 도메인 및 API 추가
 - [x] 2. 환전 요청에 환율/예상 수취금액 반영
@@ -78,7 +78,7 @@
 - [x] 4. 메뉴/용어/샘플 데이터 반영
 - [x] 5. 문서 및 빌드 검증
 
-# Gradle Kotlin DSL Migration Tasks
+# Gradle Kotlin DSL 전환 작업
 
 - [x] 1. Maven 의존성/플러그인 구조 분석
 - [x] 2. `build.gradle.kts` / `settings.gradle.kts` 추가
@@ -86,9 +86,58 @@
 - [x] 4. Maven 파일 제거
 - [x] 5. Gradle 빌드 검증
 
-# Audit R2DBC Tasks
+# Audit R2DBC 작업
 
 - [x] 1. R2DBC 의존성 및 프로파일 설정 추가
 - [x] 2. 감사 로그 전용 R2DBC writer 구현
 - [x] 3. `AuditLogService` 저장 경로를 R2DBC로 전환
 - [x] 4. 감사 저장 동작 테스트 검증
+
+# Audit 비동기 이벤트 작업
+
+- [x] 1. 현재 `AuditLogService` 저장 흐름과 비동기 설정 유무 확인
+- [x] 2. 감사 로그 이벤트 발행 구조로 `AuditLogService` 변경
+- [x] 3. `@Async` 리스너 및 전용 executor 추가
+- [x] 4. 비동기 반영에 맞춰 테스트/검증 갱신
+
+# Envers 작업
+
+- [x] 1. JPA 엔티티 범위 및 Envers 적용 대상 점검
+- [x] 2. `AuditLog` 제외 Envers 의존성/엔티티 설정 반영
+- [x] 3. 민감 필드(`passwordHash`) Envers 제외 처리
+- [x] 4. revision 테이블 및 제외 대상 테스트 검증
+
+# 실행 스크립트 종료 방식 작업
+
+- [x] 1. 시작/종료 스크립트와 서비스 포트 구성 점검
+- [x] 2. `stop_all.sh`를 포트 기준 종료 방식으로 변경
+- [x] 3. PID 파일 정리 및 스크립트 검증 반영
+
+# 프론트 토큰 자동 갱신 작업
+
+- [x] 1. 현재 로그인 응답/인증 저장 구조 점검
+- [x] 2. 백엔드 refresh token 발급/갱신 API 추가
+- [x] 3. 프론트 자동 갱신 및 재시도 로직 반영
+- [x] 4. 인증 테스트 및 빌드 검증
+
+# 메뉴 N Depth 작업
+
+- [x] 1. 메뉴 엔티티/응답/시드 구조에 부모 메뉴 개념 추가
+- [x] 2. `/menus/my`를 계층형 응답으로 변경
+- [x] 3. 메뉴 관리 화면에 부모 메뉴와 depth 정보 노출
+- [x] 4. 프론트 사이드바 재귀 렌더링 및 접힘 상태 보완
+- [x] 5. 테스트 및 빌드 검증
+
+# 메뉴 2 Depth 정리 작업
+
+- [x] 1. 2 depth 목표 메뉴 구조 확정
+- [x] 2. 메뉴 시드의 부모 관계를 2 depth 기준으로 재배치
+- [x] 3. 기존 중간 그룹 메뉴 정리 로직 추가
+- [x] 4. 스모크 테스트 및 검증 갱신
+
+# 부팅 복구 및 E2E 검증 작업
+
+- [x] 1. 메뉴 정리 로직으로 인한 부팅 오류 수정
+- [x] 2. 백엔드 부팅 및 스모크 테스트 재확인
+- [x] 3. 프론트/백엔드 실행 후 브라우저 E2E 검증
+- [x] 4. 결과 및 잔여 이슈 정리

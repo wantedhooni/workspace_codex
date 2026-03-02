@@ -1,36 +1,28 @@
 package com.derivops.mvp.audit.application;
-import com.derivops.mvp.audit.*;
-import com.derivops.mvp.audit.api.*;
-import com.derivops.mvp.audit.dto.*;
-import com.derivops.mvp.audit.infrastructure.*;
 
-
+import com.derivops.mvp.audit.dto.AuditLogResponse;
+import com.derivops.mvp.audit.infrastructure.AuditLogRepository;
 import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @RequiredArgsConstructor
 @Service
 public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
-    private final AuditLogR2dbcWriter auditLogR2dbcWriter;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public void log(String actor, String action, String targetType, String targetId, String details) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    auditLogR2dbcWriter.insert(actor, action, targetType, targetId, details);
-                }
-            });
-            return;
-        }
-
-        auditLogR2dbcWriter.insert(actor, action, targetType, targetId, details);
+        applicationEventPublisher.publishEvent(new AuditLogRequestedEvent(
+                actor,
+                action,
+                targetType,
+                targetId,
+                details
+        ));
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)

@@ -27,6 +27,7 @@ public class MenuEntryRepositoryImpl implements MenuEntryRepositoryCustom {
             Map.entry("title", menu.title),
             Map.entry("description", menu.description),
             Map.entry("path", menu.path),
+            Map.entry("parentMenuKey", menu.parentMenuKey),
             Map.entry("resourceName", menu.resourceName),
             Map.entry("icon", menu.icon),
             Map.entry("sortOrder", menu.sortOrder),
@@ -48,6 +49,7 @@ public class MenuEntryRepositoryImpl implements MenuEntryRepositoryCustom {
                             .or(menu.title.containsIgnoreCase(q))
                             .or(menu.description.containsIgnoreCase(q))
                             .or(menu.path.containsIgnoreCase(q))
+                            .or(menu.parentMenuKey.containsIgnoreCase(q))
                             .or(menu.resourceName.containsIgnoreCase(q))
                             .or(menu.rolesCsv.containsIgnoreCase(q))
             );

@@ -15,6 +15,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        integration:
+          envers:
+            enabled: true
+        envers:
+          autoRegisterListeners: true
     open-in-view: false
   batch:
     job:
@@ -28,6 +33,7 @@ security:
   jwt:
     secret: test-secret-test-secret-test-secret-test-secret-123456
     expiration-seconds: 3600
+    refresh-expiration-seconds: 604800
 
 app:
   audit:
