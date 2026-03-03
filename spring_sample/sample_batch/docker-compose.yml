@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sample-batch-postgres
+    environment:
+      POSTGRES_DB: sample_batch
+      POSTGRES_USER: sample_batch
+      POSTGRES_PASSWORD: sample_batch
+    ports:
+      - "5432:5432"
+    volumes:
+      - sample_batch_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sample_batch_pgdata:

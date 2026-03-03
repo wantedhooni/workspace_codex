@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: sample-redisson
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  redisson:
+    address: ${APP_REDISSON_ADDRESS:redis://localhost:6379}
+    password: ${APP_REDISSON_PASSWORD:}
+    connect-timeout: ${APP_REDISSON_CONNECT_TIMEOUT:10000}
+    operation-timeout: ${APP_REDISSON_OPERATION_TIMEOUT:3000}
