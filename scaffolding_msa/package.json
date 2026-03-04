@@ -1,0 +1,17 @@
+{
+  "name": "scaffolding-msa-workspace",
+  "private": true,
+  "packageManager": "npm@11.8.0",
+  "workspaces": [
+    "frontend/apps/*"
+  ],
+  "scripts": {
+    "dev:admin": "npm run dev --workspace @scaffolding/admin-portal",
+    "dev:web": "npm run dev --workspace @scaffolding/web-application",
+    "build:frontends": "npm run build --workspace @scaffolding/admin-portal && npm run build --workspace @scaffolding/web-application",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

@@ -4,6 +4,8 @@ Spring Cloud 기반 MSA 스캐폴딩 프로젝트다. `discovery-service`, `conf
 
 실무에서 신규 MSA 백엔드를 빠르게 시작할 때 필요한 최소 플랫폼 구성을 먼저 제공하고, 이후 인증, 메시징, 설정 서버, 관측성 같은 운영 요소를 붙일 수 있도록 뼈대를 분리했다.
 
+프론트엔드는 `Next.js + React` 기반으로 `admin-portal`, `web-application` 두 앱을 추가했고, 관리 화면은 `refine.dev`를 기본 데이터 계층으로 사용한다.
+
 ## 기술 스택
 - Java 21
 - Gradle 9.2.1 Wrapper
@@ -23,6 +25,7 @@ Spring Cloud 기반 MSA 스캐폴딩 프로젝트다. `discovery-service`, `conf
 - Spring Cloud Gateway 기반 진입점
 - Spring Authorization Server 기반 인증 서버
 - JPA + Querydsl 기반 도메인 서비스 예제 2종
+- Next.js 기반 `admin-portal`, `web-application`
 - 공통 API 응답 포맷과 전역 예외 처리
 - 로컬 H2 실행 환경과 Docker PostgreSQL 전환 환경
 
@@ -41,8 +44,16 @@ Spring Cloud 기반 MSA 스캐폴딩 프로젝트다. `discovery-service`, `conf
 ./scripts/build.sh
 ./scripts/all-start.sh
 ./scripts/all-stop.sh
+./scripts/e2e-test.sh
 ./scripts/docker-start.sh
 ./scripts/docker-stop.sh
+```
+
+### 프론트 개발 실행
+```bash
+npm install
+npm run dev:admin
+npm run dev:web
 ```
 
 ### Docker 이미지 빌드
@@ -61,6 +72,11 @@ docker compose down
 ```bash
 ./scripts/all-start.sh
 ./scripts/all-stop.sh
+```
+
+### E2E 테스트
+```bash
+./scripts/e2e-test.sh
 ```
 
 ### 서비스 실행 순서
@@ -82,6 +98,8 @@ docker compose down
 ├── common
 │   └── core                 # 공통 API 응답, 예외 처리
 ├── config-repo              # Config Server native backend
+├── frontend
+│   └── apps                 # Next.js admin/web apps
 ├── services
 │   ├── discovery-service    # Eureka Server
 │   ├── config-server        # Config Server + Vault + UI
@@ -109,6 +127,21 @@ docker compose down
 | `services:auth-server` | `9000` | 인증 서버 | OAuth2/OIDC, JWK, 토큰 발급 |
 | `services:user-service` | `8081` | 사용자 도메인 서비스 | JPA, Querydsl, 내부 조회 API |
 | `services:order-service` | `8082` | 주문 도메인 서비스 | JPA, Querydsl, OpenFeign |
+| `frontend/apps/admin-portal` | `3001` | 운영 포털 | Next.js, refine.dev, Gateway proxy |
+| `frontend/apps/web-application` | `3002` | 대외 웹 앱 | Next.js, Gateway proxy |
+
+## 프론트엔드 앱
+### admin-portal
+- 포트: `3001`
+- 스택: `Next.js + React + refine.dev + MUI`
+- 목적: 사용자, 주문, Config Server를 운영 관점으로 읽는 관리 포털
+- 백엔드 접근: Next Route Handler가 `/api/users`, `/api/orders`, `/api/config`로 Gateway를 프록시
+
+### web-application
+- 포트: `3002`
+- 스택: `Next.js + React`
+- 목적: 대외 채널 기본 화면과 BFF 레이어 제공
+- 백엔드 접근: `/api/overview` Route Handler가 Gateway와 Auth 메타데이터를 조합
 
 ## 실행 순서
 기본 프로필은 `local`이며, `user-service`와 `order-service`는 H2 메모리 DB로 즉시 실행된다.
@@ -169,7 +202,8 @@ docker compose down
 - Config Server 주소는 `CONFIG_SERVER_URL`로 바꿀 수 있으며 기본값은 `http://localhost:8888/config`다.
 - `spring.cloud.config.import-check.enabled=false`를 적용해 Config Server를 쓰지 않는 서버도 동일 바이너리로 기동할 수 있게 했다.
 - `./scripts/all-start.sh`는 `api-gateway`, `auth-server`, `user-service`, `order-service`를 Config Server 연동 모드로 기동한다.
-- `./scripts/all-start.sh`는 마지막에 Gateway 라우트까지 확인한 뒤 종료한다.
+- `./scripts/all-start.sh`는 백엔드가 모두 건강해진 뒤 `admin-portal`, `web-application`까지 같이 올린다.
+- `./scripts/all-start.sh`는 마지막에 Gateway 라우트와 프론트엔드 진입 페이지까지 확인한 뒤 종료한다.
 
 예시:
 ```bash
@@ -183,6 +217,13 @@ docker compose -f infra/docker-compose.yml up -d
 ./gradlew :services:user-service:bootRun --args='--spring.profiles.active=docker'
 ./gradlew :services:order-service:bootRun --args='--spring.profiles.active=docker'
 ```
+
+## E2E 테스트
+- Playwright 기반 브라우저 테스트는 루트 [`playwright.config.ts`](/Users/revy/workspace_codex/scaffolding_msa/playwright.config.ts)와 [`e2e`](/Users/revy/workspace_codex/scaffolding_msa/e2e) 아래에 둔다.
+- [`scripts/e2e-test.sh`](/Users/revy/workspace_codex/scaffolding_msa/scripts/e2e-test.sh)는 `build -> all-start -> playwright -> all-stop` 순서로 전체 검증을 수행한다.
+- 테스트 대상:
+  - `admin-portal`의 dashboard, users, orders, config 화면
+  - `web-application`의 overview 화면
 
 ## Docker Compose 전체 스택
 ```bash
@@ -333,6 +374,7 @@ curl -X POST http://localhost:9000/oauth2/token \
 ./scripts/all-start.sh
 ./scripts/all-stop.sh
 docker compose config
+./scripts/build.sh
 ```
 
 ## 확장 가이드

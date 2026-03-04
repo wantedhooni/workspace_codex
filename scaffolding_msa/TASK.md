@@ -13,3 +13,5 @@
 - 전체 기동/중지 스크립트 추가 및 빌드/실행 검증
 - Dockerfile 및 전체 서비스 docker-compose 구성 추가
 - build/docker start/docker stop 스크립트 추가
+- Next.js 기반 admin-portal, web-application 프론트엔드 워크스페이스 추가
+- Playwright E2E 테스트와 전체 스택 build/start/stop 검증 스크립트 추가
