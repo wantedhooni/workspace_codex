@@ -1,0 +1,4 @@
+scaffolding:
+  order-service:
+    list-default-limit: 20
+

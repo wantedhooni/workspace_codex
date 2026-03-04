@@ -1,0 +1,5 @@
+scaffolding:
+  gateway:
+    request-id-header: X-Request-Id
+    config-ui-path: /config-ui
+

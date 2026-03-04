@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: config-server
+  profiles:
+    default: local,composite
+  thymeleaf:
+    cache: false
+  cloud:
+    config:
+      server:
+        prefix: /config
+        fail-on-composite-error: false
+        composite:
+          - type: vault
+            host: ${VAULT_HOST:localhost}
+            port: ${VAULT_PORT:8200}
+            scheme: ${VAULT_SCHEME:http}
+            backend: ${VAULT_BACKEND:secret}
+            default-key: application
+            kv-version: 2
+            profile-separator: /
+            authentication: TOKEN
+            token: ${CONFIG_SERVER_VAULT_TOKEN:dev-root-token}
+            timeout: 5
+            order: 1
+            ignore-label: true
+          - type: native
+            search-locations:
+              - ${CONFIG_REPO_PATH:file:./config-repo}
+              - optional:classpath:/config-repo
+            order: 2
+
+server:
+  port: 8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,configprops
+

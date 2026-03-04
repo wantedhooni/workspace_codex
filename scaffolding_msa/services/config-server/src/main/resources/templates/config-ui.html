@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Server UI</title>
+    <style>
+        :root {
+            --bg: #f4efe7;
+            --panel: #fffaf4;
+            --line: #d9c7ad;
+            --ink: #1f1b18;
+            --muted: #6e6256;
+            --accent: #b55d32;
+            --accent-soft: #f1d7c7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Iowan Old Style", "Palatino Linotype", serif;
+            background:
+                radial-gradient(circle at top left, rgba(181, 93, 50, 0.18), transparent 25%),
+                linear-gradient(180deg, #f8f2ea 0%, var(--bg) 100%);
+            color: var(--ink);
+        }
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        .hero {
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 10px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 250, 244, 0.75);
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 14px 0 8px;
+            font-size: clamp(32px, 6vw, 64px);
+            line-height: 0.98;
+        }
+
+        .hero p {
+            max-width: 760px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 250, 244, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(54, 33, 15, 0.08);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        input {
+            width: 100%;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: white;
+            font: inherit;
+            color: var(--ink);
+        }
+
+        button {
+            width: 100%;
+            border: 0;
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: var(--accent);
+            color: white;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .hint,
+        .meta {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .meta {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .result-header h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 13px;
+        }
+
+        .empty {
+            min-height: 260px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed var(--line);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.45);
+        }
+
+        .source {
+            margin-top: 16px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        .source-header {
+            padding: 14px 16px;
+            background: rgba(181, 93, 50, 0.08);
+            border-bottom: 1px solid var(--line);
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(217, 199, 173, 0.5);
+            vertical-align: top;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            width: 34%;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        code {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .result-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <section class="hero">
+        <span class="eyebrow">Scaffolding MSA</span>
+        <h1>Config Server UI</h1>
+        <p>native config-repo와 Vault에서 읽은 설정을 한 화면에서 조회한다. Spring Cloud Config Server의 기본 HTTP API 위에 올린 조회용 UI다.</p>
+    </section>
+
+    <div class="layout">
+        <section class="card">
+            <form method="get" action="/config-ui">
+                <label for="application">Application</label>
+                <input id="application" name="application" th:value="${query.application}" placeholder="user-service">
+
+                <label for="profile">Profile</label>
+                <input id="profile" name="profile" th:value="${query.profile}" placeholder="local">
+
+                <label for="label">Label</label>
+                <input id="label" name="label" th:value="${query.label}" placeholder="main or blank">
+
+                <button type="submit">Load Config</button>
+            </form>
+
+            <p class="meta">
+                설정 조회 API:
+                <br>
+                <code>/config/{application}/{profile}</code>
+            </p>
+            <p class="hint">
+                Vault는 <code>secret/&lt;application&gt;</code> 또는 <code>secret/application</code> 경로를 기본으로 사용한다.
+            </p>
+        </section>
+
+        <section class="card">
+            <div class="result-header">
+                <div>
+                    <h2 th:text="${hasResult} ? ${environment.name} : 'Query Result'">Query Result</h2>
+                    <p class="hint" th:if="${hasResult}" th:text="'profiles=' + ${environment.profiles} + (${environment.label} != null ? ', label=' + ${environment.label} : '')"></p>
+                </div>
+                <span class="pill" th:text="${hasResult} ? ${#lists.size(environment.propertySources)} + ' property sources' : 'ready'">ready</span>
+            </div>
+
+            <div class="empty" th:if="${!hasResult}">
+                <div>
+                    <strong>Application</strong>과 <strong>Profile</strong>을 입력하면 설정 원본을 조회한다.
+                </div>
+            </div>
+
+            <div th:if="${hasResult}">
+                <div class="source" th:each="propertySource : ${environment.propertySources}">
+                    <div class="source-header" th:text="${propertySource.name}">source</div>
+                    <table>
+                        <tbody>
+                        <tr th:each="entry : ${propertySource.source}">
+                            <th th:text="${entry.key}">key</th>
+                            <td><code th:text="${entry.value}">value</code></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+</body>
+</html>
+

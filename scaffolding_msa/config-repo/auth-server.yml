@@ -1,0 +1,4 @@
+scaffolding:
+  auth:
+    issuer-alias: local-auth
+

@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${USER_DB_HOST:localhost}:${USER_DB_PORT:5432}/${USER_DB_NAME:userdb}
+    username: ${USER_DB_USERNAME:userapp}
+    password: ${USER_DB_PASSWORD:userapp}
+  jpa:
+    hibernate:
+      ddl-auto: update
+

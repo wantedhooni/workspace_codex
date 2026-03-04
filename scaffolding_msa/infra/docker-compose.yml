@@ -1,0 +1,40 @@
+services:
+  vault:
+    image: hashicorp/vault:1.21
+    container_name: scaffolding-vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: server -dev -dev-root-token-id=dev-root-token
+
+  user-db:
+    image: postgres:17
+    container_name: scaffolding-user-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: userapp
+      POSTGRES_PASSWORD: userapp
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+
+  order-db:
+    image: postgres:17
+    container_name: scaffolding-order-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: orderapp
+      POSTGRES_PASSWORD: orderapp
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+
+volumes:
+  user-db-data:
+  order-db-data:

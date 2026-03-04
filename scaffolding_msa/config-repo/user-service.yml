@@ -1,0 +1,4 @@
+scaffolding:
+  user-service:
+    search-default-limit: 20
+

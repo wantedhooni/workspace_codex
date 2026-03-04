@@ -1,0 +1,58 @@
+import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension
+
+plugins {
+    id "org.springframework.boot" version "${springBootVersion}" apply false
+    id "io.spring.dependency-management" version "1.1.7" apply false
+}
+
+description = "Spring Cloud MSA scaffolding project"
+
+subprojects {
+    group = providers.gradleProperty("projectGroup").get()
+    version = providers.gradleProperty("projectVersion").get()
+
+    pluginManager.withPlugin("java") {
+        extensions.configure(JavaPluginExtension) { JavaPluginExtension javaExtension ->
+            javaExtension.toolchain.languageVersion = JavaLanguageVersion.of(21)
+        }
+
+        dependencies {
+            compileOnly "org.projectlombok:lombok"
+            annotationProcessor "org.projectlombok:lombok"
+            testCompileOnly "org.projectlombok:lombok"
+            testAnnotationProcessor "org.projectlombok:lombok"
+        }
+
+        tasks.withType(Test).configureEach {
+            useJUnitPlatform()
+        }
+    }
+
+    pluginManager.withPlugin("io.spring.dependency-management") {
+        extensions.configure(DependencyManagementExtension) { DependencyManagementExtension dependencyManagement ->
+            dependencyManagement.imports {
+                mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+                if (pluginManager.hasPlugin("org.springframework.boot")) {
+                    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+                }
+            }
+        }
+    }
+
+    pluginManager.withPlugin("org.springframework.boot") {
+        dependencies {
+            testImplementation "org.springframework.boot:spring-boot-starter-test"
+            testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+        }
+    }
+
+    pluginManager.withPlugin("java-library") {
+        dependencies {
+            testImplementation "org.junit.jupiter:junit-jupiter"
+        }
+    }
+}

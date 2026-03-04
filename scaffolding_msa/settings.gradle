@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+    }
+}
+
+rootProject.name = "scaffolding-msa"
+
+include("common:core")
+include("services:discovery-service")
+include("services:config-server")
+include("services:api-gateway")
+include("services:auth-server")
+include("services:user-service")
+include("services:order-service")

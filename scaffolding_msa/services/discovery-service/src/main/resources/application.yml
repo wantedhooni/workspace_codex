@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: discovery-service
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888/config}
+      fail-fast: ${CONFIG_SERVER_FAIL_FAST:false}
+      import-check:
+        enabled: false
+
+server:
+  port: 8761
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

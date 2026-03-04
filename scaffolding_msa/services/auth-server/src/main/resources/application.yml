@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: auth-server
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888/config}
+      fail-fast: ${CONFIG_SERVER_FAIL_FAST:false}
+      import-check:
+        enabled: false
+
+server:
+  port: 9000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    org.springframework.security: info

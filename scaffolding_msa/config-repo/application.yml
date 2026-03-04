@@ -1,0 +1,10 @@
+platform:
+  team: scaffolding
+  region: ap-northeast-2
+  remote-config-source: config-server
+
+management:
+  endpoint:
+    health:
+      show-details: always
+

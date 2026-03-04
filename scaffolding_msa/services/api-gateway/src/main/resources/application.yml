@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888/config}
+      fail-fast: ${CONFIG_SERVER_FAIL_FAST:false}
+      import-check:
+        enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: config-server
+          uri: lb://config-server
+          predicates:
+            - Path=/config/**,/config-ui,/config-ui/**
+          filters:
+            - StripPrefix=0
+        - id: auth-server-oauth2
+          uri: lb://auth-server
+          predicates:
+            - Path=/oauth2/**,/.well-known/**,/connect/**,/login
+          filters:
+            - StripPrefix=0
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**,/api/v1/users/**
+          filters:
+            - StripPrefix=0
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/orders/**,/api/v1/orders/**
+          filters:
+            - StripPrefix=0
+
+server:
+  port: 8000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

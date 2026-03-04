@@ -1,0 +1,5 @@
+scaffolding:
+  config-server:
+    ui-enabled: true
+    vault-enabled: true
+
