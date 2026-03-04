@@ -36,6 +36,15 @@ Spring Cloud 기반 MSA 스캐폴딩 프로젝트다. `discovery-service`, `conf
 ./gradlew build
 ```
 
+### 스크립트
+```bash
+./scripts/build.sh
+./scripts/all-start.sh
+./scripts/all-stop.sh
+./scripts/docker-start.sh
+./scripts/docker-stop.sh
+```
+
 ### Docker 이미지 빌드
 대표 예시:
 ```bash
@@ -84,7 +93,7 @@ docker compose down
 │   └── docker-compose.yml   # 로컬 인프라
 ├── docker-compose.yml       # 전체 서비스 컨테이너 구성
 ├── Dockerfile               # 공통 멀티스테이지 이미지 빌드
-├── scripts                  # 전체 기동/중지 스크립트
+├── scripts                  # build, 로컬 기동, docker 기동 스크립트
 ├── build.gradle             # 루트 공통 빌드 규약
 └── settings.gradle          # 멀티모듈 구성
 ```
@@ -177,9 +186,9 @@ docker compose -f infra/docker-compose.yml up -d
 
 ## Docker Compose 전체 스택
 ```bash
-docker compose up -d --build
+./scripts/docker-start.sh
 docker compose ps
-docker compose down
+./scripts/docker-stop.sh
 ```
 
 기본 구성:

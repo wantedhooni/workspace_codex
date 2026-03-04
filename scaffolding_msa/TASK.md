@@ -12,3 +12,4 @@
 - build-logic 제거 후 루트 Gradle 공통 설정으로 전환
 - 전체 기동/중지 스크립트 추가 및 빌드/실행 검증
 - Dockerfile 및 전체 서비스 docker-compose 구성 추가
+- build/docker start/docker stop 스크립트 추가
