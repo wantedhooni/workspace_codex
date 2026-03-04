@@ -1,0 +1,16 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: apigateway-webflux-sample
+  cloud:
+    gateway:
+      default-filters:
+        - AddResponseHeader=X-Gateway-App,apigateway-webflux
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway

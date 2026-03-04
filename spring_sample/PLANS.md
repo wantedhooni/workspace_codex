@@ -1,5 +1,5 @@
 # 작업 계획
 
-1. `sample_redisson` 디렉터리에 Spring Boot 프로젝트 골격을 만든다.
-2. Redisson 연결 설정과 예제 API를 추가한다.
-3. 로컬 Redis 실행 방법, 애플리케이션 실행 방법, 테스트 방법을 문서화한다.
+1. `r2dbc`, `r2dbc-auditlog`, `webflux`, `apigateway-webflux` 디렉터리에 독립 실행형 Spring Boot 프로젝트를 생성한다.
+2. 각 프로젝트에 주제별 예제 API, 설정, 테스트 코드를 추가한다.
+3. 루트 `README.md`와 `TASK.md`에 실행 방법, 검증 방법, 작업 내역을 반영한다.

@@ -1,0 +1,19 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: r2dbc-sample
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/customerdb
+    username: app
+    password: app
+  sql:
+    init:
+      mode: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

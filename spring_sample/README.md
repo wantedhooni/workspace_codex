@@ -2,6 +2,8 @@
 
 Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독립 실행형 프로젝트이며, 웹/API, 보안, AI, 배치, 이벤트 드리븐, 실시간 통신, 게이트웨이, Native Image까지 주제별로 분리했다.
 
+최근 추가된 `r2dbc`, `r2dbc-auditlog`, `webflux`, `apigateway-webflux`는 반응형 데이터 처리, 감사 로그, SSE, API Gateway를 한 번에 확인할 수 있는 reactive 샘플 묶음이다.
+
 ## 프로젝트 지도
 
 ### 웹 / BFF / API
@@ -14,6 +16,8 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | `sample_websocket_realtime` | STOMP 기반 가격/작업 진행률 실시간 전송 샘플 | Spring Boot, WebSocket, STOMP |
 | `sample_gateway_observability` | Gateway 라우팅과 메트릭 노출을 결합한 샘플 | Spring Boot, Spring Cloud Gateway, Prometheus |
 | `sample_spring_admin` | Spring Boot Admin UI와 자기 등록형 모니터링 샘플 | Spring Boot Admin, Actuator |
+| `webflux` | 운영 대시보드 집계와 SSE 스트림을 제공하는 WebFlux 샘플 | Spring Boot, WebFlux, Reactor |
+| `apigateway-webflux` | Spring Cloud Gateway WebFlux 기반 API Gateway 샘플 | Spring Boot, Spring Cloud Gateway, WebFlux |
 
 ### 데이터 / 인프라 / 배치
 
@@ -24,6 +28,8 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | `sample_batch_quartz_dashboard` | Batch/Quartz 메타데이터와 운영 화면을 함께 제공하는 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
 | `sample_native_image` | GraalVM Native Image 빌드 준비 샘플 | Spring Boot, AOT, RuntimeHints |
 | `sample_grafana_prometheus` | Prometheus 수집과 Grafana 대시보드 프로비저닝 샘플 | Spring Boot, Micrometer, Prometheus, Grafana |
+| `r2dbc` | PostgreSQL 기반 반응형 고객 계정 CRUD 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
+| `r2dbc-auditlog` | 승인 요청과 감사 로그를 함께 저장하는 반응형 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
 
 ### 아키텍처 / 메시징 / AI Tooling
 
@@ -44,6 +50,20 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 
 ## 빠른 시작
 
+### 이번에 추가한 reactive 샘플 먼저 실행하기
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample/r2dbc && docker compose up -d && ./gradlew bootRun
+cd /Users/revy/workspace_codex/spring_sample/r2dbc-auditlog && docker compose up -d && ./gradlew bootRun
+cd /Users/revy/workspace_codex/spring_sample/webflux && ./gradlew bootRun
+cd /Users/revy/workspace_codex/spring_sample/apigateway-webflux && ./gradlew bootRun
+```
+
+- `r2dbc`: 고객 계정 CRUD 샘플, 애플리케이션 `8081`, PostgreSQL `5433`
+- `r2dbc-auditlog`: 승인 요청 + 감사 로그 샘플, 애플리케이션 `8082`, PostgreSQL `5434`
+- `webflux`: 운영 대시보드 + SSE 샘플, 애플리케이션 `8083`
+- `apigateway-webflux`: Spring Cloud Gateway WebFlux 샘플, 애플리케이션 `8084`
+
 ### 인프라가 필요한 프로젝트
 
 ```bash
@@ -54,6 +74,8 @@ cd /Users/revy/workspace_codex/spring_sample/sample_kafka_integration && docker 
 cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/r2dbc && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/r2dbc-auditlog && docker compose up -d
 ```
 
 ### 바로 실행 가능한 대표 샘플
@@ -61,9 +83,11 @@ cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && do
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample_ai_bff && ./gradlew bootRun
 cd /Users/revy/workspace_codex/spring_sample/sample_secure_bff && ./gradlew bootRun --args='--server.port=8081'
-cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew bootRun --args='--server.port=8082'
-cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8083'
+cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew bootRun --args='--server.port=8085'
+cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8086'
 ```
+
+위 명령은 동시 실행 기준 예시다. 개별 프로젝트만 실행할 때는 각 프로젝트 `README.md`의 기본 포트를 그대로 사용하면 된다.
 
 ### MCP 서버/클라이언트 실행
 
@@ -93,8 +117,21 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | `sample_batch_quartz_dashboard` | `8080` |
 | `sample_mcp_server` | `8090` |
 | `sample_mcp_client` | `8091` |
+| `r2dbc` | `8081` |
+| `r2dbc-auditlog` | `8082` |
+| `webflux` | `8083` |
+| `apigateway-webflux` | `8084` |
 
-여러 프로젝트를 동시에 실행하려면 `--server.port=` 로 포트를 조정해야 한다.
+여러 프로젝트를 동시에 실행하려면 `--server.port=` 로 포트를 조정해야 한다. 위 빠른 시작 예시는 신규 reactive 샘플의 기본 포트 `8081`~`8084`를 우선 유지하도록 맞췄다.
+
+## 신규 reactive 샘플 비교
+
+| 프로젝트 | 핵심 시나리오 | 확인 포인트 |
+| --- | --- | --- |
+| `r2dbc` | PostgreSQL 반응형 CRUD | R2DBC Repository, SQL 초기화, WebFlux API |
+| `r2dbc-auditlog` | 상태 변경 + 감사 로그 저장 | 반응형 트랜잭션, audit trail, 이력 조회 |
+| `webflux` | 비동기 집계 + SSE | `Mono.zip`, `Flux`, `text/event-stream` |
+| `apigateway-webflux` | Gateway 라우팅 | Spring Cloud Gateway, GlobalFilter, 메트릭 헤더 |
 
 ## 문서 위치
 
@@ -115,6 +152,10 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 - [sample_grafana_prometheus/README.md](/Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus/README.md)
 - [sample_spring_admin/README.md](/Users/revy/workspace_codex/spring_sample/sample_spring_admin/README.md)
 - [sample_batch_quartz_dashboard/README.md](/Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard/README.md)
+- [r2dbc/README.md](/Users/revy/workspace_codex/spring_sample/r2dbc/README.md)
+- [r2dbc-auditlog/README.md](/Users/revy/workspace_codex/spring_sample/r2dbc-auditlog/README.md)
+- [webflux/README.md](/Users/revy/workspace_codex/spring_sample/webflux/README.md)
+- [apigateway-webflux/README.md](/Users/revy/workspace_codex/spring_sample/apigateway-webflux/README.md)
 
 ## 검증 명령
 
@@ -136,6 +177,10 @@ cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && ./gr
 cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/r2dbc && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/r2dbc-auditlog && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/webflux && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/apigateway-webflux && ./gradlew test
 ```
 
-`sample_redisson`, `sample_batch`, `sample_rabbitmq_integration`, `sample_batch_quartz_dashboard` 일부 테스트는 Testcontainers를 사용하므로 Docker 데몬에 연결할 수 없는 환경에서는 자동 스킵될 수 있다.
+`sample_redisson`, `sample_batch`, `sample_rabbitmq_integration`, `sample_batch_quartz_dashboard` 일부 테스트는 Testcontainers를 사용하므로 Docker 데몬에 연결할 수 없는 환경에서는 자동 스킵될 수 있다. `r2dbc`, `r2dbc-auditlog`는 실행 시 로컬 PostgreSQL 컨테이너가 필요하지만 현재 테스트는 DB 연결 없이 통과하도록 구성했다.

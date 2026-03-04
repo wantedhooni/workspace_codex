@@ -1,0 +1,19 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: r2dbc-auditlog-sample
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5434/auditdb
+    username: app
+    password: app
+  sql:
+    init:
+      mode: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
