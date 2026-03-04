@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: mvp-banking-api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: admin-api-route
+              uri: lb://mvp-banking-admin-api
+              predicates:
+                - Path=/api/admin/**
+            - id: user-api-route
+              uri: lb://mvp-banking-user-api
+              predicates:
+                - Path=/api/user/**
+
+server:
+  port: ${SERVER_PORT:8080}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

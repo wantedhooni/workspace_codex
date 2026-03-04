@@ -1,0 +1,36 @@
+# User API
+
+Spring Boot server for user web application traffic.
+
+Responsibilities:
+- user signup and login
+- announcement lookup and service banner source
+- own account and transaction lookup
+- funding request creation and request history lookup
+- FX rates and exchange requests
+- stock orders and stock positions
+
+Defaults:
+- app name: `mvp-banking-user-api`
+- port: `8082`
+- profile: `user-api`
+
+Run:
+
+```bash
+cd /Users/revy/workspace_codex/mvp_banking/backend
+./gradlew :user-api:bootRun --args='--spring.profiles.active=user-api'
+```
+
+Main entry:
+- `src/main/java/com/revy/mvpbanking/userapi/UserApiApplication.java`
+
+Seed login:
+- `user@mvpbanking.local / User1234!`
+
+Typical direct checks:
+
+```bash
+curl http://localhost:8082/actuator/health
+curl http://localhost:8082/api/system/ping
+```

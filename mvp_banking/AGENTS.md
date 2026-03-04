@@ -1,7 +1,7 @@
 # MVP Banking Platform
 
 ## 목적
-- 이 저장소는 뱅킹 / 증권 서비스를 위한 `admin portal`과 `user portal`을 함께 구현한다.
+- 이 저장소는 뱅킹 / 증권 서비스를 위한 `admin portal`과 `user web application`을 함께 구현한다.
 - 목표는 내부 운영자 업무와 일반 사용자 서비스를 분리된 채널로 검증하는 것이다.
 - 설계와 코드는 MVP여도 실무 환경에 바로 확장 가능한 구조를 유지한다.
 
@@ -21,7 +21,7 @@
     - 상태 변경 승인 플로우
     - 공지 / 배치 / 장애 대응용 운영 기능
     - 감사 로그 / 접속 로그 / 관리자 액션 이력
-  - User Portal
+  - User Web Application
     - 사용자 회원가입 / 로그인
     - 내 계좌 / 잔고 / 보유상품 조회
     - 거래 / 주문 / 입출금 내역 조회
@@ -37,10 +37,12 @@
   - JSQL
   - JWT Access Token
   - Refresh Token
+  - PostgreSQL
+  - Redis
 - Frontend
   - React
   - Refine for Admin Portal
-  - React App for User Portal
+  - React App for User Web Application
 
 ## 아키텍처 원칙
 - 모듈은 업무 중심으로 나눈다. 공통 기술 계층보다 도메인 흐름이 우선이다.
@@ -48,9 +50,9 @@
 - JPA는 명령과 단순 조회 중심으로 사용한다.
 - 복잡한 목록 조회, 검색, 집계는 Querydsl 또는 JSQL로 분리한다.
 - 인증 / 인가 / 감사 / 공통 예외는 횡단 관심사로 공통화한다.
-- `admin portal`과 `user portal`은 프론트엔드 앱과 API 경계를 분리한다.
+- `admin portal`과 `user web application`은 프론트엔드 앱과 API 경계를 분리한다.
 - 화면은 admin에서는 Refine의 CRUD 생산성을 활용하되, 금융 운영 화면 특성상 검색 / 필터 / 상태 뱃지 / 승인 액션을 우선 설계한다.
-- user portal은 일반 사용자 경험을 우선해 업무 중심 화면보다 단순하고 명확한 플로우를 유지한다.
+- user web application은 일반 사용자 경험을 우선해 업무 중심 화면보다 단순하고 명확한 플로우를 유지한다.
 
 ## 권장 디렉터리 구조
 ```text
@@ -75,7 +77,7 @@ frontend/
       features/
       providers/
       routes/
-  user-portal/
+  user-web-app/
     src/
       app/
       pages/
@@ -94,6 +96,8 @@ docs/
 - Repository는 JPA Repository와 Query Repository를 역할별로 분리한다.
 - API는 최소 `admin API`와 `user API`를 논리적으로 분리한다.
 - 관리자 전용 기능은 `/api/admin/**`, 사용자 기능은 `/api/user/**` 또는 이에 준하는 경로 체계를 사용한다.
+- 주 데이터 저장소는 PostgreSQL을 사용한다.
+- Redis는 Refresh Token, 세션성 데이터, 캐시 저장소로 사용한다.
 - Querydsl은 검색 조건이 많은 조회에 우선 사용한다.
 - JSQL은 통계, 리포트, 복잡 조인, 성능 민감 조회에 제한적으로 사용한다.
 - DTO와 Entity는 분리한다.
@@ -109,6 +113,8 @@ docs/
 - 토큰 기반 인증이어도 관리자 세션 강제 만료 기능을 열어둔다.
 
 ## 데이터 / 보안 기준
+- PostgreSQL은 시스템 오브 레코드로 사용하고, 거래 / 계좌 / 감사 데이터의 정합성을 우선한다.
+- Redis는 캐시와 토큰 저장소로 사용하되, 원본 데이터 저장소로 취급하지 않는다.
 - 고객 실명정보, 계좌번호, 거래식별자는 마스킹 규칙을 둔다.
 - 관리자 비밀번호, 토큰, 비밀키는 코드에 하드코딩하지 않는다.
 - 개인정보 접근, 상태 변경, 승인 / 반려는 감사 로그에 남긴다.
@@ -129,7 +135,7 @@ docs/
     - 승인 대기함
     - 관리자 관리
     - 감사 로그
-- User Portal
+- User Web Application
   - 사용자 기준의 핵심 여정에 집중한다.
   - 필수 화면 예시
     - 회원가입 / 로그인
@@ -146,7 +152,7 @@ docs/
 
 ## 개발 원칙
 - MVP라도 운영자 기준으로 설명 가능한 코드만 남긴다.
-- user portal은 불필요한 복잡성을 피하고 본인 데이터 접근 경계를 명확히 한다.
+- user web application은 불필요한 복잡성을 피하고 본인 데이터 접근 경계를 명확히 한다.
 - 추상화는 필요할 때만 한다. 다만 인증, 감사, 예외 처리, 응답 포맷은 일관성 있게 공통화한다.
 - 테스트는 도메인 정책, 인증, 권한, 승인 흐름, 감사 로그 적재에 우선 투자한다.
 - admin / user API의 권한 경계와 데이터 노출 경계는 테스트로 보장한다.
@@ -161,11 +167,10 @@ docs/
 
 ## 문서 운영 규칙
 - 초기 방향성과 단계별 실행 계획은 `PLANS.md`에 정리한다.
-- 현재 실행 계획은 `plan.md`에 유지한다.
 - 실제 진행 체크와 완료 여부는 `task.md`에서 관리한다.
-- 큰 방향이 바뀌면 `PLANS.md`와 `plan.md`를 함께 갱신한다.
+- 큰 방향이 바뀌면 `PLANS.md`를 갱신한다.
 
 ## 현재 가정
-- 대상은 내부 운영용 admin portal과 외부 사용자용 user portal이다.
+- 대상은 내부 운영용 admin portal과 외부 사용자용 user web application이다.
 - 두 포털은 분리 배포 가능 구조를 우선한다.
 - 멀티테넌시, 해외 법인 분리, 실시간 시세 연동은 후속 단계로 둔다.

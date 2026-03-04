@@ -1,0 +1,28 @@
+# Platform Core
+
+Shared backend module used by `admin-api` and `user-api`.
+
+Contains:
+- domain models
+- application services
+- security and JWT infrastructure
+- JPA, Querydsl, Redis integration
+- Flyway migrations
+- shared API response models
+- exchange fee / net settlement and stock fee / tax / net settlement domain logic
+
+Key paths:
+- `src/main/java/com/revy/mvpbanking`
+- `src/main/resources/application.yml`
+- `src/main/resources/db/migration`
+
+This module is not started directly. It is consumed by:
+- `../admin-api`
+- `../user-api`
+
+Build:
+
+```bash
+cd /Users/revy/workspace_codex/mvp_banking/backend
+./gradlew :platform-core:build
+```

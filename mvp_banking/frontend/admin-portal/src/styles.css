@@ -1,0 +1,161 @@
+:root {
+  font-family: "SUIT", "Pretendard", sans-serif;
+  color: #14213d;
+  background:
+    radial-gradient(circle at top left, rgba(15, 76, 129, 0.18), transparent 30%),
+    linear-gradient(180deg, #f4f8fb 0%, #eaf1f7 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.admin-auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.admin-login-card {
+  width: min(100%, 460px);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(20, 33, 61, 0.12);
+}
+
+.demo-account-panel {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border: 1px solid rgba(15, 76, 129, 0.12);
+  border-radius: 18px;
+  background: #f5f9fc;
+  align-items: center;
+}
+
+.demo-account-panel .eyebrow {
+  margin-bottom: 6px;
+}
+
+.demo-account-password {
+  margin: 2px 0 0;
+  color: #607087;
+}
+
+.admin-layout {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.admin-sider {
+  padding: 32px 24px;
+  border-inline-end: 1px solid rgba(20, 33, 61, 0.08);
+  background: rgba(255, 255, 255, 0.84) !important;
+  backdrop-filter: blur(12px);
+}
+
+.brand-block h1 {
+  margin: 0 0 8px;
+  font-size: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #0f4c81;
+}
+
+.muted {
+  margin: 0;
+  color: #607087;
+}
+
+.nav-block {
+  width: 100%;
+  margin-top: 32px;
+}
+
+.nav-link {
+  width: 100%;
+  display: block;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: #486581;
+  text-decoration: none;
+  background: #edf3f9;
+  font-weight: 600;
+}
+
+.nav-link.active {
+  color: #fff;
+  background: #0f4c81;
+}
+
+.operator-card {
+  margin-top: 24px;
+  border-radius: 18px;
+}
+
+.nav-block .ant-tag {
+  margin-inline-end: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.admin-content {
+  padding: 32px;
+}
+
+.filter-row {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.filter-row .ant-input {
+  width: 280px;
+}
+
+.customer-summary-grid {
+  margin-bottom: 18px;
+}
+
+.customer-summary-card {
+  border-radius: 18px;
+  background: #f7fbff;
+}
+
+.loading-panel {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 768px) {
+  .demo-account-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-sider {
+    display: none;
+  }
+
+  .admin-content {
+    padding: 20px;
+  }
+}

@@ -1,7 +1,7 @@
 # Banking / Securities Platform MVP Plan
 
 ## 목표
-- 내부 운영자용 `admin portal`과 일반 사용자용 `user portal`을 분리된 채널로 구축한다.
+- 내부 운영자용 `admin portal`과 일반 사용자용 `user web application`을 분리된 채널로 구축한다.
 - 빠른 시연이 가능해야 하며, 이후 운영 기능과 사용자 기능을 독립적으로 확장할 수 있는 구조를 만든다.
 
 ## MVP 범위
@@ -18,7 +18,7 @@
 - 승인 대기 / 승인 / 반려
 - 운영 대시보드
 
-### User Portal
+### User Web Application
 - 회원가입 / 로그인
 - 내 계좌 / 잔고 / 보유상품 조회
 - 거래 / 주문 / 입출금 내역 조회
@@ -39,6 +39,8 @@
 ## 백엔드 설계 방향
 - Spring Boot 기반 모듈형 모놀리스로 시작한다.
 - 하나의 백엔드 안에서 `admin API`와 `user API`를 명확히 분리한다.
+- 주 데이터베이스는 PostgreSQL로 고정한다.
+- Redis는 Refresh Token, 세션, 캐시 계층으로 추가한다.
 - JPA는 트랜잭션 처리와 기본 엔티티 관리에 사용한다.
 - Querydsl은 검색 조건이 많은 리스트 API에 사용한다.
 - JSQL은 복잡 조회와 운영 리포트성 SQL에 사용한다.
@@ -47,17 +49,17 @@
 - Audit 이벤트는 비즈니스 로직과 분리된 공통 메커니즘으로 처리한다.
 
 ## 프론트엔드 설계 방향
-- `frontend/admin-portal`과 `frontend/user-portal`을 별도 앱으로 구성한다.
+- `frontend/admin-portal`과 `frontend/user-web-app`을 별도 앱으로 구성한다.
 - Admin Portal은 React + Refine 기반으로 resource를 빠르게 구성한다.
-- User Portal은 React 기반 일반 서비스 앱으로 구성한다.
+- User Web Application은 React 기반 일반 서비스 앱으로 구성한다.
 - admin은 운영 화면 중심의 검색성과 가시성을 우선한다.
 - user는 계좌, 자산, 거래 확인과 요청 흐름의 단순성을 우선한다.
 
 ## 단계별 계획
 ### Phase 1. 프로젝트 기반 구성
-- backend / admin-portal / user-portal 기본 프로젝트 생성
+- backend / admin-portal / user-web-app 기본 프로젝트 생성
 - 공통 설정, 환경변수, 빌드, lint, formatting 정리
-- DB 연결 및 공통 응답 / 예외 포맷 수립
+- PostgreSQL / Redis 연결 및 공통 응답 / 예외 포맷 수립
 
 ### Phase 2. 인증 / 권한 / 감사
 - 관리자 로그인
@@ -93,6 +95,7 @@
 - AdminRole
 - AdminPermission
 - RefreshToken
+- LoginSession
 - Customer
 - Account
 - Product
@@ -129,5 +132,6 @@
 
 ## 운영 원칙
 - 먼저 admin과 user의 인증 경계를 명확히 만든다.
+- PostgreSQL 정합성과 Redis 만료 정책을 초기부터 분리해 설계한다.
 - 읽기 기능을 안정화한 뒤 쓰기 / 승인 기능을 확장한다.
 - 모든 민감 액션은 추적 가능해야 한다.

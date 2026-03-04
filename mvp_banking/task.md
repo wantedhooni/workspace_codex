@@ -3,15 +3,61 @@
 ## Documentation
 - [x] `AGENTS.md` 작성
 - [x] `PLANS.md` 작성
-- [x] `plan.md` 작성
 - [x] `task.md` 작성
+- [x] `docs/system-architecture.md` 작성
 
 ## Next
-- [ ] backend 프로젝트 초기화
-- [ ] admin-portal 프로젝트 초기화
-- [ ] user-portal 프로젝트 초기화
-- [ ] 공통 환경설정 및 실행 방법 정리
-- [ ] admin / user 인증 모듈 설계
-- [ ] 감사 로그 모듈 설계
-- [ ] admin / user API 경계 설계
-- [ ] 고객 / 계좌 / 거래 조회 모델 설계
+- [x] backend 프로젝트 초기화
+- [x] admin-portal 프로젝트 초기화
+- [x] user-web-app 프로젝트 초기화
+- [x] PostgreSQL 설정
+- [x] Redis 설정
+- [x] 공통 환경설정 및 실행 방법 정리
+- [x] admin / user 인증 모듈 설계
+- [x] 감사 로그 모듈 설계
+- [x] admin / user API 경계 설계
+- [x] 고객 / 계좌 / 거래 조회 모델 설계
+- [x] 승인 워크플로우 설계
+- [x] admin-portal API 연동
+- [x] user-web-app API 연동
+- [x] Querydsl 검색 / 페이징 적용
+- [x] 운영 마스킹 규칙 적용
+- [x] admin-portal 페이지 라우팅 분리
+- [x] user-web-app 필터 / 상태 표시 추가
+- [x] admin-portal lazy loading 적용
+- [x] admin 목록 정렬 옵션 추가
+- [x] 통합 start / stop 스크립트 작성
+- [x] 데모 고객 100명 및 관련 시드 데이터 추가
+- [x] user-web-app 자산 요약 대시보드 추가
+- [x] admin 계좌 / 거래 고급 검색 조건 추가
+- [x] user-web-app 계좌별 최근 거래 표시 추가
+- [x] admin-portal manualChunks 적용
+- [x] admin 고객 상태 집계 및 생성일 필터 추가
+- [x] 환율 / 환전 / 주식거래 도메인 및 화면 추가
+- [x] backend `admin-api` / `user-api` 멀티 프로젝트 및 서버 분리
+- [x] frontend 프록시 및 실행 스크립트 분리 서버 기준 정리
+- [x] Spring Cloud `discovery-server` / `api-gateway` 적용
+- [x] frontend gateway 프록시 적용
+- [x] 환전 승인 시 계좌 반영 및 거래 원장 생성
+- [x] 주식 주문 승인 시 포지션/체결 데이터 반영
+- [x] admin / user 주식 포지션 조회 화면 추가
+- [x] e2e smoke 테스트 스크립트 추가
+- [x] 스크립트 기동 안정성 보강 및 README 실행 가이드 갱신
+- [x] `backend/src` 공통 소스 정리 및 `platform-core` 기준 구조 통합
+- [x] 각 프로젝트별 `README.md` 정리
+- [x] 서비스 상태 확인용 `scripts/status.sh` 추가
+- [x] `user-web-app` 도메인별 페이지 / API 모듈 분리
+- [x] 환전 요청 `source / destination` 계좌 분리 및 이중 정산 원장 반영
+- [x] 주식 시세 / 포지션 평가금액 / 평가손익 도메인 확장
+- [x] 주식 주문 execution history 분리 및 주문 화면 반영
+- [x] 주식 주문 부분체결 / 잔여수량 / 관리자 잔여 체결 완료 흐름 추가
+- [x] user-web-app 환전 / 주식 주문 입력 UI/UX 가독성 개선
+- [x] 환전 수수료 / 순수령 금액 및 주식 주문 수수료 / 세금 / 순정산 도메인 확장
+- [x] admin / user 화면에 환전 / 주식 주문 정산 미리보기와 수수료 상세 표시 개선
+- [x] e2e smoke 테스트 설명 문서 작성 및 README 링크 정리
+- [x] admin 운영 overview / user dashboard insight 도메인 추가
+- [x] 상용 서비스형 운영 대시보드 및 사용자 자산 인사이트 UI/UX 개선
+- [x] admin 운영 인박스 / user 알림 센터 도메인 및 UI/UX 추가
+- [x] admin / user 공지 도메인 및 서비스 배너 UI 추가
+- [x] 입출금 요청 `funding` 도메인 및 admin / user 화면 추가
+- [x] 운영 overview / 사용자 dashboard에 입출금 대기 물량 반영
