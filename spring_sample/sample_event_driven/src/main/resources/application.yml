@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: sample-event-driven
+  datasource:
+    url: ${APP_DATASOURCE_URL:jdbc:postgresql://localhost:5433/sample_event}
+    username: ${APP_DATASOURCE_USERNAME:sample_event}
+    password: ${APP_DATASOURCE_PASSWORD:sample_event}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  kafka:
+    bootstrap-servers: ${APP_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      group-id: sample-event-driven
+    listener:
+      auto-startup: ${APP_KAFKA_LISTENER_AUTO_STARTUP:true}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  kafka:
+    enabled: ${APP_KAFKA_ENABLED:true}
+  outbox:
+    scheduler-enabled: ${APP_OUTBOX_SCHEDULER_ENABLED:true}
+    fixed-delay: ${APP_OUTBOX_FIXED_DELAY:5000}
+  events:
+    orders-topic: ${APP_ORDERS_TOPIC:orders.created}
+    payments-topic: ${APP_PAYMENTS_TOPIC:payments.result}
+    publish-batch-size: ${APP_PUBLISH_BATCH_SIZE:50}

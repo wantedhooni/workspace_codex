@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: sample-observability-api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true

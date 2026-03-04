@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: sample-secure-bff
+
+app:
+  downstream:
+    base-url: ${APP_DOWNSTREAM_BASE_URL:http://localhost:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

@@ -9,3 +9,10 @@
 - 대용량 데이터 적재 API, 페이징 기반 배치 처리, Quartz 스케줄 실행 예제 추가 완료
 - `docker-compose.yml`, `README.md`, Gradle wrapper, Testcontainers 기반 테스트 추가 완료
 - 루트 `README.md` 신규 작성 및 각 프로젝트 `README.md` 내용 최신화 완료
+- `sample_ai_bff` 폴더에 AI BFF / 내부 업무 코파일럿 샘플 프로젝트 생성 완료
+- `sample_secure_bff` 폴더에 Secure BFF / API Composition 샘플 프로젝트 생성 완료
+- `sample_observability_api` 폴더에 Observability-First REST API 샘플 프로젝트 생성 완료
+- `sample_modular_monolith` 폴더에 Modular Monolith 업무 시스템 샘플 프로젝트 생성 완료
+- `sample_event_driven` 폴더에 Event-Driven 주문/결제 흐름 샘플 프로젝트 생성 완료
+- 5개 신규 프로젝트 `README.md`, Gradle wrapper, 테스트/빌드 검증 완료
+- 모든 하위 프로젝트 `README.md` 문서를 공통 형식으로 재작성 완료
