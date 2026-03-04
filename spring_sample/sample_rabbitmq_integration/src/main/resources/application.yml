@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: sample-rabbitmq-integration
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: sample
+    password: sample
+    listener:
+      simple:
+        default-requeue-rejected: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  rabbitmq:
+    exchange: settlement.exchange
+    queue: settlement.queue
+    dlx: settlement.dlx
+    dlq: settlement.dlq
+    routing-key: settlement.process
+    dlq-routing-key: settlement.failed

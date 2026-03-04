@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sample-batch-quartz-dashboard-postgres
+    environment:
+      POSTGRES_DB: sample_batch_dashboard
+      POSTGRES_USER: sample_batch_dashboard
+      POSTGRES_PASSWORD: sample_batch_dashboard
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sample_batch_dashboard -d sample_batch_dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

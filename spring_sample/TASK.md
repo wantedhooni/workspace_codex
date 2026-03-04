@@ -23,3 +23,10 @@
 - `sample_gateway_observability` 폴더에 Gateway + Observability 샘플 프로젝트 생성 완료
 - 신규 5개 프로젝트 `README.md`, Gradle wrapper, 테스트/빌드 검증 완료
 - 루트 `README.md`를 프로젝트 분류, 빠른 시작, 포트 표 기준으로 최신화 완료
+- `sample_kafka_integration` 폴더에 Kafka 발행/소비/DLT 샘플 프로젝트 생성 완료
+- `sample_rabbitmq_integration` 폴더에 RabbitMQ 발행/소비/DLQ 샘플 프로젝트 생성 완료
+- `sample_grafana_prometheus` 폴더에 Prometheus/Grafana 대시보드 샘플 프로젝트 생성 완료
+- `sample_spring_admin` 폴더에 Spring Boot Admin Server/Client 샘플 프로젝트 생성 완료
+- `sample_batch_quartz_dashboard` 폴더에 Batch/Quartz 운영 대시보드 샘플 프로젝트 생성 완료
+- 신규 5개 프로젝트 `README.md`, Docker 설정, 테스트 검증 완료
+- 루트 `README.md`에 신규 5개 프로젝트 설명, 실행 방법, 문서 링크, 검증 명령 추가 완료

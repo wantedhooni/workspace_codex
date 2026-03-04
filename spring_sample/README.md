@@ -13,6 +13,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | `sample_observability_api` | 메트릭과 observation 중심의 운영형 REST API 샘플 | Spring Boot, Actuator, Micrometer, Prometheus |
 | `sample_websocket_realtime` | STOMP 기반 가격/작업 진행률 실시간 전송 샘플 | Spring Boot, WebSocket, STOMP |
 | `sample_gateway_observability` | Gateway 라우팅과 메트릭 노출을 결합한 샘플 | Spring Boot, Spring Cloud Gateway, Prometheus |
+| `sample_spring_admin` | Spring Boot Admin UI와 자기 등록형 모니터링 샘플 | Spring Boot Admin, Actuator |
 
 ### 데이터 / 인프라 / 배치
 
@@ -20,7 +21,9 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | --- | --- | --- |
 | `sample_redisson` | Redis 기반 키-값 저장, 원자 카운터, 분산 락 샘플 | Spring Boot, Redisson, Redis |
 | `sample_batch` | DB 기반 Spring Batch + Quartz 대용량 처리 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
+| `sample_batch_quartz_dashboard` | Batch/Quartz 메타데이터와 운영 화면을 함께 제공하는 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
 | `sample_native_image` | GraalVM Native Image 빌드 준비 샘플 | Spring Boot, AOT, RuntimeHints |
+| `sample_grafana_prometheus` | Prometheus 수집과 Grafana 대시보드 프로비저닝 샘플 | Spring Boot, Micrometer, Prometheus, Grafana |
 
 ### 아키텍처 / 메시징 / AI Tooling
 
@@ -28,6 +31,8 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | --- | --- | --- |
 | `sample_modular_monolith` | 주문, 재고, 청구를 모듈 단위로 나눈 업무 시스템 샘플 | Spring Boot, JPA, Domain Event, H2 |
 | `sample_event_driven` | 주문 생성, outbox, Kafka 발행, 결제 결과 반영 흐름 샘플 | Spring Boot, JPA, Kafka, PostgreSQL |
+| `sample_kafka_integration` | 거래 지시 메시지 발행, 소비, DLT 처리 샘플 | Spring Boot, Spring Kafka, Kafka UI |
+| `sample_rabbitmq_integration` | 정산 요청 발행, 소비, DLQ 처리 샘플 | Spring Boot, Spring AMQP, RabbitMQ |
 | `sample_mcp_server` | 운영 도구를 MCP Tool 로 노출하는 샘플 | Spring Boot, Spring AI MCP Server |
 | `sample_mcp_client` | MCP 서버에 연결해 tool 호출을 감싸는 샘플 | Spring Boot, Spring AI MCP Client |
 
@@ -45,6 +50,10 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 cd /Users/revy/workspace_codex/spring_sample/sample_redisson && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_batch && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_event_driven && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/sample_kafka_integration && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && docker compose up -d
 ```
 
 ### 바로 실행 가능한 대표 샘플
@@ -53,6 +62,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_event_driven && docker compo
 cd /Users/revy/workspace_codex/spring_sample/sample_ai_bff && ./gradlew bootRun
 cd /Users/revy/workspace_codex/spring_sample/sample_secure_bff && ./gradlew bootRun --args='--server.port=8081'
 cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew bootRun --args='--server.port=8082'
+cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8083'
 ```
 
 ### MCP 서버/클라이언트 실행
@@ -76,6 +86,11 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | `sample_websocket_realtime` | `8080` |
 | `sample_native_image` | `8080` |
 | `sample_gateway_observability` | `8080` |
+| `sample_kafka_integration` | `8080` |
+| `sample_rabbitmq_integration` | `8080` |
+| `sample_grafana_prometheus` | `8080` |
+| `sample_spring_admin` | `8080` |
+| `sample_batch_quartz_dashboard` | `8080` |
 | `sample_mcp_server` | `8090` |
 | `sample_mcp_client` | `8091` |
 
@@ -95,6 +110,11 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 - [sample_websocket_realtime/README.md](/Users/revy/workspace_codex/spring_sample/sample_websocket_realtime/README.md)
 - [sample_native_image/README.md](/Users/revy/workspace_codex/spring_sample/sample_native_image/README.md)
 - [sample_gateway_observability/README.md](/Users/revy/workspace_codex/spring_sample/sample_gateway_observability/README.md)
+- [sample_kafka_integration/README.md](/Users/revy/workspace_codex/spring_sample/sample_kafka_integration/README.md)
+- [sample_rabbitmq_integration/README.md](/Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration/README.md)
+- [sample_grafana_prometheus/README.md](/Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus/README.md)
+- [sample_spring_admin/README.md](/Users/revy/workspace_codex/spring_sample/sample_spring_admin/README.md)
+- [sample_batch_quartz_dashboard/README.md](/Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard/README.md)
 
 ## 검증 명령
 
@@ -111,6 +131,11 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_native_image && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_gateway_observability && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_kafka_integration && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && ./gradlew test
 ```
 
-`sample_redisson`, `sample_batch` 일부 테스트는 Testcontainers를 사용하므로 Docker 데몬에 연결할 수 없는 환경에서는 자동 스킵될 수 있다.
+`sample_redisson`, `sample_batch`, `sample_rabbitmq_integration`, `sample_batch_quartz_dashboard` 일부 테스트는 Testcontainers를 사용하므로 Docker 데몬에 연결할 수 없는 환경에서는 자동 스킵될 수 있다.

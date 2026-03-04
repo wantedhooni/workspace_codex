@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Quartz Dashboard</title>
+    <style>
+        :root {
+            --bg: #f4f6f1;
+            --ink: #122620;
+            --accent: #0b6e4f;
+            --card: #ffffff;
+            --line: #d7dfd9;
+        }
+        body {
+            margin: 0;
+            font-family: "SF Pro Display", "Apple SD Gothic Neo", sans-serif;
+            background: linear-gradient(180deg, #edf2eb 0%, var(--bg) 100%);
+            color: var(--ink);
+        }
+        .wrap {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+        h1 {
+            margin: 0 0 12px;
+            font-size: 40px;
+        }
+        .actions, .grid {
+            display: grid;
+            gap: 16px;
+        }
+        .actions {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin: 24px 0;
+        }
+        .grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 18px 40px rgba(18, 38, 32, 0.06);
+        }
+        .metric {
+            font-size: 34px;
+            font-weight: 700;
+            margin-top: 12px;
+        }
+        button {
+            width: 100%;
+            border: 0;
+            border-radius: 14px;
+            padding: 14px 18px;
+            background: var(--accent);
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .meta {
+            margin-top: 28px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Batch + Quartz Dashboard</h1>
+    <p>요청 적재, 수동 실행, 스케줄 상태를 한 화면에서 확인한다.</p>
+
+    <div class="actions">
+        <div class="card"><button onclick="seed()">샘플 5,000건 적재</button></div>
+        <div class="card"><button onclick="runBatch()">수동 배치 실행</button></div>
+        <div class="card"><button onclick="triggerQuartz()">Quartz 즉시 트리거</button></div>
+    </div>
+
+    <div class="grid">
+        <div class="card"><div>전체 요청</div><div class="metric" id="totalRequests">0</div></div>
+        <div class="card"><div>대기 요청</div><div class="metric" id="pendingRequests">0</div></div>
+        <div class="card"><div>처리 완료</div><div class="metric" id="processedRequests">0</div></div>
+        <div class="card"><div>감사 로그</div><div class="metric" id="auditRows">0</div></div>
+    </div>
+
+    <div class="card meta">
+        <div>최근 배치 상태: <strong id="lastBatchStatus">NONE</strong></div>
+        <div>Batch 실행 횟수: <strong id="batchExecutions">0</strong></div>
+        <div>Quartz Trigger 상태: <strong id="quartzTriggerState">NONE</strong></div>
+        <div>다음 실행 시각: <strong id="nextFireTime">-</strong></div>
+    </div>
+</div>
+<script>
+    async function refresh() {
+        const response = await fetch('/api/dashboard/overview');
+        const data = await response.json();
+        for (const [key, value] of Object.entries(data)) {
+            const element = document.getElementById(key);
+            if (element) {
+                element.textContent = value ?? '-';
+            }
+        }
+    }
+
+    async function seed() {
+        await fetch('/api/dashboard/tasks/seed', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({size: 5000, truncateBeforeLoad: true})
+        });
+        await refresh();
+    }
+
+    async function runBatch() {
+        await fetch('/api/dashboard/jobs/import/run', {method: 'POST'});
+        setTimeout(refresh, 1500);
+    }
+
+    async function triggerQuartz() {
+        await fetch('/api/dashboard/jobs/import/quartz/trigger', {method: 'POST'});
+        setTimeout(refresh, 1500);
+    }
+
+    refresh();
+    setInterval(refresh, 5000);
+</script>
+</body>
+</html>

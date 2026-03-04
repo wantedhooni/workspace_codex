@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sample-spring-admin
+  boot:
+    admin:
+      ui:
+        public-url: http://localhost:${server.port}/admin
+      client:
+        enabled: true
+        url: http://localhost:${server.port}/admin
+        instance:
+          service-base-url: http://localhost:${server.port}
+          management-base-url: http://localhost:${server.port}/actuator
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,prometheus,env,beans,loggers,mappings,threaddump
+  endpoint:
+    health:
+      show-details: always
+
+spring.boot.admin:
+  context-path: /admin

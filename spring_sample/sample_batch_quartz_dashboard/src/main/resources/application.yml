@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: sample-batch-quartz-dashboard
+  datasource:
+    url: ${APP_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sample_batch_dashboard}
+    username: ${APP_DATASOURCE_USERNAME:sample_batch_dashboard}
+    password: ${APP_DATASOURCE_PASSWORD:sample_batch_dashboard}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    overwrite-existing-jobs: true
+    wait-for-jobs-to-complete-on-shutdown: true
+    properties:
+      org.quartz.scheduler.instanceName: sampleBatchQuartzDashboardScheduler
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.threadPool.class: org.quartz.simpl.SimpleThreadPool
+      org.quartz.threadPool.threadCount: 6
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.useProperties: false
+      org.quartz.jobStore.tablePrefix: QRTZ_
+      org.quartz.jobStore.isClustered: true
+      org.quartz.jobStore.clusterCheckinInterval: 15000
+  sql:
+    init:
+      mode: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,quartz
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  batch-dashboard:
+    cron: ${APP_BATCH_DASHBOARD_CRON:0 0/1 * * * ?}
+    chunk-size: ${APP_BATCH_DASHBOARD_CHUNK_SIZE:500}
+    page-size: ${APP_BATCH_DASHBOARD_PAGE_SIZE:500}
