@@ -16,3 +16,10 @@
 - `sample_event_driven` 폴더에 Event-Driven 주문/결제 흐름 샘플 프로젝트 생성 완료
 - 5개 신규 프로젝트 `README.md`, Gradle wrapper, 테스트/빌드 검증 완료
 - 모든 하위 프로젝트 `README.md` 문서를 공통 형식으로 재작성 완료
+- `sample_mcp_server` 폴더에 Spring AI MCP Server 샘플 프로젝트 생성 완료
+- `sample_mcp_client` 폴더에 Spring AI MCP Client 샘플 프로젝트 생성 완료
+- `sample_websocket_realtime` 폴더에 WebSocket 실시간 샘플 프로젝트 생성 완료
+- `sample_native_image` 폴더에 Native Image 빌드 샘플 프로젝트 생성 완료
+- `sample_gateway_observability` 폴더에 Gateway + Observability 샘플 프로젝트 생성 완료
+- 신규 5개 프로젝트 `README.md`, Gradle wrapper, 테스트/빌드 검증 완료
+- 루트 `README.md`를 프로젝트 분류, 빠른 시작, 포트 표 기준으로 최신화 완료

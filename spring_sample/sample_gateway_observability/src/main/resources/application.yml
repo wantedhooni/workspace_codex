@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: sample-gateway-observability
+  cloud:
+    gateway:
+      mvc:
+        routes:
+          - id: trades-route
+            uri: http://localhost:${server.port}
+            predicates:
+              - Path=/api/trades/**
+            filters:
+              - RewritePath=/api/trades/?(?<segment>.*), /backend/trades/${segment}
+          - id: risk-route
+            uri: http://localhost:${server.port}
+            predicates:
+              - Path=/api/risk/**
+            filters:
+              - RewritePath=/api/risk/?(?<segment>.*), /backend/risk/${segment}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

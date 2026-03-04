@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: sample-mcp-server
+  ai:
+    mcp:
+      server:
+        name: ops-mcp-server
+        version: 0.0.1
+        type: sync
+        instructions: 운영 점검, 배포 체크리스트, 사고 보고 초안 생성을 지원하는 샘플 MCP 서버
+
+server:
+  port: 8090
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

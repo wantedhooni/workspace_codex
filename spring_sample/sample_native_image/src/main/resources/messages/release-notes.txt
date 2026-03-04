@@ -1,0 +1,4 @@
+Native Image 샘플 실행 노트
+- 빠른 기동 시간 확인
+- 메모리 사용량 비교
+- AOT 및 RuntimeHints 구성 확인
