@@ -1,5 +1,6 @@
-import { Card, Table } from "antd";
+import { Card } from "antd";
 import type { AuditLog } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type AuditLogsPageProps = {
   auditLogs: AuditLog[];
@@ -8,7 +9,7 @@ type AuditLogsPageProps = {
 export function AuditLogsPage({ auditLogs }: AuditLogsPageProps) {
   return (
     <Card title="Audit Logs">
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={auditLogs}
         pagination={{ pageSize: 10 }}

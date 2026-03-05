@@ -1,5 +1,6 @@
-import { Card, Table, Tag } from "antd";
+import { Card, Tag } from "antd";
 import type { StockPosition } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type StockPositionsPageProps = {
   stockPositions: StockPosition[];
@@ -8,7 +9,7 @@ type StockPositionsPageProps = {
 export function StockPositionsPage({ stockPositions }: StockPositionsPageProps) {
   return (
     <Card title="Stock Positions">
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={stockPositions}
         pagination={false}

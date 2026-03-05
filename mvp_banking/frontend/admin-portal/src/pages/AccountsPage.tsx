@@ -1,6 +1,7 @@
-import { Card, Input, Select, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Input, Select, Space, Tag, Typography } from "antd";
 import type { Dispatch, SetStateAction } from "react";
 import type { Account, PageResponse } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type AccountFilter = {
   query: string;
@@ -18,9 +19,12 @@ type AccountsPageProps = {
   data: PageResponse<Account>;
   filter: AccountFilter;
   setFilter: Dispatch<SetStateAction<AccountFilter>>;
+  onSearch: () => void;
+  onReset: () => void;
+  onPageChange: (page: number, size: number) => void;
 };
 
-export function AccountsPage({ data, filter, setFilter }: AccountsPageProps) {
+export function AccountsPage({ data, filter, setFilter, onSearch, onReset, onPageChange }: AccountsPageProps) {
   return (
     <Card title="Accounts" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
       <Space wrap className="filter-row">
@@ -28,6 +32,7 @@ export function AccountsPage({ data, filter, setFilter }: AccountsPageProps) {
           placeholder="계좌번호 / 통화 검색"
           value={filter.query}
           onChange={(event) => setFilter((current) => ({ ...current, query: event.target.value, page: 0 }))}
+          onPressEnter={onSearch}
         />
         <Select
           allowClear
@@ -88,15 +93,17 @@ export function AccountsPage({ data, filter, setFilter }: AccountsPageProps) {
             { label: "오름차순", value: "asc" },
           ]}
         />
+        <Button type="primary" onClick={onSearch}>Search</Button>
+        <Button onClick={onReset}>Reset</Button>
       </Space>
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={data.items}
         pagination={{
           current: data.page + 1,
           pageSize: data.size,
           total: data.totalElements,
-          onChange: (page, size) => setFilter((current) => ({ ...current, page: page - 1, size })),
+          onChange: (page, size) => onPageChange(page, size),
         }}
         columns={[
           { title: "Account No", dataIndex: "accountNumber" },

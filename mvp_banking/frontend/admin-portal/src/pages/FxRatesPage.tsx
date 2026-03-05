@@ -1,5 +1,6 @@
-import { Card, Table } from "antd";
+import { Card } from "antd";
 import type { FxRate } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type FxRatesPageProps = {
   rates: FxRate[];
@@ -8,7 +9,7 @@ type FxRatesPageProps = {
 export function FxRatesPage({ rates }: FxRatesPageProps) {
   return (
     <Card title="FX Rates">
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={rates}
         pagination={false}

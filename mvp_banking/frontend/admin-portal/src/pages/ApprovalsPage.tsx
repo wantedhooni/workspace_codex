@@ -1,5 +1,6 @@
-import { Button, Card, Modal, Space, Table, Tag, Typography, Input } from "antd";
+import { Button, Card, Modal, Space, Tag, Typography, Input } from "antd";
 import type { Approval } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type ApprovalsPageProps = {
   approvals: Approval[];
@@ -25,7 +26,7 @@ export function ApprovalsPage({
   return (
     <>
       <Card title="Approval Queue">
-        <Table
+        <OperationsGridTable
           rowKey="id"
           dataSource={approvals}
           pagination={false}

@@ -1,5 +1,6 @@
-import { Card, Col, Row, Table, Tag, Typography } from "antd";
+import { Card, Col, Row, Tag, Typography } from "antd";
 import type { FundingRequest } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type FundingRequestsPageProps = {
   fundingRequests: FundingRequest[];
@@ -115,7 +116,7 @@ export function FundingRequestsPage({ fundingRequests }: FundingRequestsPageProp
       </Row>
 
       <Card title="Funding Request Queue">
-        <Table
+        <OperationsGridTable
           rowKey="id"
           dataSource={fundingRequests}
           pagination={false}

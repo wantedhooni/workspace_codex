@@ -145,6 +145,35 @@ body {
   place-items: center;
 }
 
+.ops-grid-table .ant-table-container {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ops-grid-table .ant-table-cell {
+  vertical-align: top;
+}
+
+.ops-grid-table .ant-table-thead > tr > th {
+  background: #eef4fa !important;
+  color: #20354f;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 1px solid #d6e0ea;
+}
+
+.ops-grid-table .ant-table-tbody > tr:nth-child(even) > td {
+  background: #f9fbfe;
+}
+
+.ops-grid-table .ant-table-tbody > tr:hover > td {
+  background: #edf4fb !important;
+}
+
+.ops-grid-table .ant-pagination {
+  margin: 12px 0 0;
+}
+
 @media (max-width: 768px) {
   .demo-account-panel {
     flex-direction: column;

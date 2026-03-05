@@ -1,6 +1,7 @@
-import { Button, Card, Col, Row, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Col, Row, Space, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
 import type { LinkedBankAccount } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type LinkedBankAccountsPageProps = {
   linkedBankAccounts: LinkedBankAccount[];
@@ -96,7 +97,7 @@ export function LinkedBankAccountsPage({ linkedBankAccounts, activatingId, block
           <Button type={filter === "STALE" ? "primary" : "default"} onClick={() => setFilter("STALE")}>Stale</Button>
           <Button type={filter === "BLOCKED" ? "primary" : "default"} onClick={() => setFilter("BLOCKED")}>Blocked</Button>
         </Space>
-        <Table
+        <OperationsGridTable
           rowKey="id"
           dataSource={filteredAccounts}
           pagination={false}

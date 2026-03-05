@@ -1,6 +1,7 @@
-import { Card, Col, Input, Row, Select, Space, Statistic, Table, Tag, Typography } from "antd";
+import { Button, Card, Col, Input, Row, Select, Space, Statistic, Tag, Typography } from "antd";
 import type { Dispatch, SetStateAction } from "react";
 import type { Customer, CustomerStatusSummary, PageResponse } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type CustomerFilter = {
   query: string;
@@ -18,9 +19,12 @@ type CustomersPageProps = {
   data: PageResponse<Customer>;
   filter: CustomerFilter;
   setFilter: Dispatch<SetStateAction<CustomerFilter>>;
+  onSearch: () => void;
+  onReset: () => void;
+  onPageChange: (page: number, size: number) => void;
 };
 
-export function CustomersPage({ summary, data, filter, setFilter }: CustomersPageProps) {
+export function CustomersPage({ summary, data, filter, setFilter, onSearch, onReset, onPageChange }: CustomersPageProps) {
   return (
     <Card title="Customers" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
       <Row gutter={[16, 16]} className="customer-summary-grid">
@@ -50,6 +54,7 @@ export function CustomersPage({ summary, data, filter, setFilter }: CustomersPag
           placeholder="고객번호 / 이름 / 이메일 검색"
           value={filter.query}
           onChange={(event) => setFilter((current) => ({ ...current, query: event.target.value, page: 0 }))}
+          onPressEnter={onSearch}
         />
         <Select
           allowClear
@@ -99,15 +104,17 @@ export function CustomersPage({ summary, data, filter, setFilter }: CustomersPag
             { label: "오름차순", value: "asc" },
           ]}
         />
+        <Button type="primary" onClick={onSearch}>Search</Button>
+        <Button onClick={onReset}>Reset</Button>
       </Space>
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={data.items}
         pagination={{
           current: data.page + 1,
           pageSize: data.size,
           total: data.totalElements,
-          onChange: (page, size) => setFilter((current) => ({ ...current, page: page - 1, size })),
+          onChange: (page, size) => onPageChange(page, size),
         }}
         columns={[
           { title: "Customer No", dataIndex: "customerNumber" },

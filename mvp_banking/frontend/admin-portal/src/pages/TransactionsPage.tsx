@@ -1,6 +1,7 @@
-import { Card, Input, Select, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Input, Select, Space, Tag, Typography } from "antd";
 import type { Dispatch, SetStateAction } from "react";
 import type { PageResponse, Transaction } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type TransactionFilter = {
   query: string;
@@ -20,9 +21,12 @@ type TransactionsPageProps = {
   data: PageResponse<Transaction>;
   filter: TransactionFilter;
   setFilter: Dispatch<SetStateAction<TransactionFilter>>;
+  onSearch: () => void;
+  onReset: () => void;
+  onPageChange: (page: number, size: number) => void;
 };
 
-export function TransactionsPage({ data, filter, setFilter }: TransactionsPageProps) {
+export function TransactionsPage({ data, filter, setFilter, onSearch, onReset, onPageChange }: TransactionsPageProps) {
   return (
     <Card title="Transactions" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
       <Space wrap className="filter-row">
@@ -30,6 +34,7 @@ export function TransactionsPage({ data, filter, setFilter }: TransactionsPagePr
           placeholder="거래번호 / 통화 검색"
           value={filter.query}
           onChange={(event) => setFilter((current) => ({ ...current, query: event.target.value, page: 0 }))}
+          onPressEnter={onSearch}
         />
         <Select
           allowClear
@@ -105,15 +110,17 @@ export function TransactionsPage({ data, filter, setFilter }: TransactionsPagePr
             { label: "오름차순", value: "asc" },
           ]}
         />
+        <Button type="primary" onClick={onSearch}>Search</Button>
+        <Button onClick={onReset}>Reset</Button>
       </Space>
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={data.items}
         pagination={{
           current: data.page + 1,
           pageSize: data.size,
           total: data.totalElements,
-          onChange: (page, size) => setFilter((current) => ({ ...current, page: page - 1, size })),
+          onChange: (page, size) => onPageChange(page, size),
         }}
         columns={[
           { title: "Transaction No", dataIndex: "transactionNumber" },

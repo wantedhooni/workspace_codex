@@ -1,5 +1,6 @@
-import { Button, Card, Col, Row, Space, Table, Tag, Typography } from "antd";
+import { Button, Card, Col, Row, Space, Tag, Typography } from "antd";
 import type { Notification } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type NotificationsPageProps = {
   notifications: Notification[];
@@ -51,7 +52,7 @@ export function NotificationsPage({ notifications, unreadCount, readingNotificat
       </Row>
 
       <Card title="Notification Queue">
-        <Table
+        <OperationsGridTable
           rowKey="id"
           dataSource={notifications}
           pagination={false}

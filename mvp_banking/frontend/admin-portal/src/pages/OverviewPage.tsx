@@ -1,5 +1,6 @@
-import { Alert, Card, Col, Descriptions, List, Row, Statistic, Table, Tag, Typography } from "antd";
+import { Alert, Card, Col, Descriptions, List, Row, Statistic, Tag, Typography } from "antd";
 import type { AdminOverview, Announcement, Approval, AuditLog, FundingRequest } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type OverviewPageProps = {
   overview: AdminOverview;
@@ -10,8 +11,8 @@ type OverviewPageProps = {
 };
 
 export function OverviewPage({ overview, fundingRequests, announcements, approvals, auditLogs }: OverviewPageProps) {
-  const visibleAnnouncements = announcements.filter((item) => item.status === "PUBLISHED").slice(0, 4);
-  const recentFundingRequests = fundingRequests.slice(0, 5);
+  const visibleAnnouncements = announcements.filter((item) => item.status === "PUBLISHED");
+  const recentFundingRequests = fundingRequests;
 
   return (
     <>
@@ -121,9 +122,9 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24} xl={12}>
           <Card title="Pending Approval Snapshot">
-            <Table
+            <OperationsGridTable
               rowKey="id"
-              dataSource={approvals.slice(0, 5)}
+              dataSource={approvals}
               pagination={false}
               columns={[
                 { title: "Title", dataIndex: "title" },
@@ -141,7 +142,7 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
         </Col>
         <Col xs={24} xl={12}>
           <Card title="Recent Funding Requests">
-            <Table
+            <OperationsGridTable
               rowKey="id"
               dataSource={recentFundingRequests}
               pagination={false}
@@ -186,9 +187,9 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
       <Row gutter={[16, 16]} style={{ marginTop: 8 }}>
         <Col xs={24} xl={12}>
           <Card title="Recent Audit Activity">
-            <Table
+            <OperationsGridTable
               rowKey="id"
-              dataSource={auditLogs.slice(0, 5)}
+              dataSource={auditLogs}
               pagination={false}
               columns={[
                 { title: "Actor", dataIndex: "actorEmail" },
@@ -200,7 +201,7 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
         </Col>
         <Col xs={24} xl={12}>
           <Card title="Service Announcements">
-            <Table
+            <OperationsGridTable
               rowKey="id"
               dataSource={visibleAnnouncements}
               pagination={false}

@@ -1,5 +1,6 @@
-import { Card, Table, Tag } from "antd";
+import { Card, Tag } from "antd";
 import type { ExchangeRequest } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type ExchangeRequestsPageProps = {
   exchangeRequests: ExchangeRequest[];
@@ -8,7 +9,7 @@ type ExchangeRequestsPageProps = {
 export function ExchangeRequestsPage({ exchangeRequests }: ExchangeRequestsPageProps) {
   return (
     <Card title="Exchange Requests">
-      <Table
+      <OperationsGridTable
         rowKey="id"
         dataSource={exchangeRequests}
         pagination={false}

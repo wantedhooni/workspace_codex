@@ -1,5 +1,6 @@
-import { Button, Card, Col, Form, Input, Row, Select, Space, Switch, Table, Tag, Typography } from "antd";
+import { Button, Card, Col, Form, Input, Row, Select, Space, Switch, Tag, Typography } from "antd";
 import type { Announcement, CreateAnnouncementPayload } from "../api";
+import { OperationsGridTable } from "../components/OperationsGridTable";
 
 type AnnouncementsPageProps = {
   announcements: Announcement[];
@@ -162,7 +163,7 @@ export function AnnouncementsPage({
       </Card>
 
       <Card title="Announcement Queue">
-        <Table
+        <OperationsGridTable
           rowKey="id"
           dataSource={announcements}
           pagination={false}

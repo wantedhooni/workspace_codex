@@ -84,3 +84,9 @@
 - [x] 코드 기반 초기 데모 시딩(`InitialDataConfig`) 제거 및 Flyway DB 시드(`V28`)로 이관
 - [x] admin/user API 컨트롤러를 도메인 기준으로 각 서버 모듈에 분리하고, admin-portal API 레이어를 도메인 모듈 구조로 재편
 - [x] `AdminOverviewService` 비대 로직을 데이터로더/메트릭 계산기/알림 팩토리로 분리 리팩터링
+- [x] admin-portal 전체 테이블을 실무형 공통 `OperationsGridTable`로 통일하고 운영 가독성 스타일(헤더/지브라/hover/페이지네이션)을 적용
+- [x] admin-portal 공통 grid table 기본 스크롤을 높이 500 기준으로 고정하고 가로/세로 스크롤을 동시에 적용
+- [x] admin 고객/계좌/거래 화면에 Search/Reset 버튼을 추가하고 검색 실행 시 URL query parameter 동기화(페이지네이션 포함) 적용
+- [x] `/customers|accounts|transactions` URL query 직접 진입 시 첫 렌더부터 해당 조건을 즉시 반영해 검색 수행하도록 초기 필터/적용 필터 동기화 개선
+- [x] admin 모든 grid에 공통 sortable 컬럼(dataIndex 기반)과 페이지네이션을 기본 적용하고, 필터는 서버 API 기반 화면으로 일원화
+- [x] 공통 grid의 클라이언트 quick filter를 제거하고 필터는 서버 API 기반 화면(고객/계좌/거래)에서만 수행하도록 정책 정렬

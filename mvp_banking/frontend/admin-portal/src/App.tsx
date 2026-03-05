@@ -1,7 +1,7 @@
-import { Suspense, lazy, startTransition, useDeferredValue, useEffect, useState } from "react";
+import { Suspense, lazy, startTransition, useEffect, useState } from "react";
 import { Refine } from "@refinedev/core";
 import { App as AntdApp, ConfigProvider, Spin, message } from "antd";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   adminApi,
   type Account,
@@ -78,8 +78,178 @@ type TransactionFilter = {
 };
 
 const ADMIN_TOKEN_KEY = "mvp-banking-admin-token";
+const DEFAULT_CUSTOMER_FILTER: CustomerFilter = {
+  query: "",
+  sortBy: "createdAt",
+  sortDir: "desc",
+  page: 0,
+  size: 5,
+};
+const DEFAULT_ACCOUNT_FILTER: AccountFilter = {
+  query: "",
+  sortBy: "createdAt",
+  sortDir: "desc",
+  page: 0,
+  size: 5,
+};
+const DEFAULT_TRANSACTION_FILTER: TransactionFilter = {
+  query: "",
+  sortBy: "occurredAt",
+  sortDir: "desc",
+  page: 0,
+  size: 5,
+};
+
+function parseOptionalParam(params: URLSearchParams, key: string): string | undefined {
+  const value = params.get(key);
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+}
+
+function buildCustomerSearch(filter: CustomerFilter) {
+  const params = new URLSearchParams();
+  if (filter.query.trim()) {
+    params.set("query", filter.query.trim());
+  }
+  if (filter.status) {
+    params.set("status", filter.status);
+  }
+  if (filter.createdFrom) {
+    params.set("createdFrom", filter.createdFrom);
+  }
+  if (filter.createdTo) {
+    params.set("createdTo", filter.createdTo);
+  }
+  params.set("sortBy", filter.sortBy);
+  params.set("sortDir", filter.sortDir);
+  params.set("page", String(filter.page + 1));
+  params.set("size", String(filter.size));
+  return params.toString();
+}
+
+function buildAccountSearch(filter: AccountFilter) {
+  const params = new URLSearchParams();
+  if (filter.query.trim()) {
+    params.set("query", filter.query.trim());
+  }
+  if (filter.status) {
+    params.set("status", filter.status);
+  }
+  if (filter.accountType) {
+    params.set("accountType", filter.accountType);
+  }
+  if (filter.minBalance) {
+    params.set("minBalance", filter.minBalance);
+  }
+  if (filter.maxBalance) {
+    params.set("maxBalance", filter.maxBalance);
+  }
+  params.set("sortBy", filter.sortBy);
+  params.set("sortDir", filter.sortDir);
+  params.set("page", String(filter.page + 1));
+  params.set("size", String(filter.size));
+  return params.toString();
+}
+
+function buildTransactionSearch(filter: TransactionFilter) {
+  const params = new URLSearchParams();
+  if (filter.query.trim()) {
+    params.set("query", filter.query.trim());
+  }
+  if (filter.status) {
+    params.set("status", filter.status);
+  }
+  if (filter.transactionType) {
+    params.set("transactionType", filter.transactionType);
+  }
+  if (filter.minAmount) {
+    params.set("minAmount", filter.minAmount);
+  }
+  if (filter.maxAmount) {
+    params.set("maxAmount", filter.maxAmount);
+  }
+  if (filter.occurredFrom) {
+    params.set("occurredFrom", filter.occurredFrom);
+  }
+  if (filter.occurredTo) {
+    params.set("occurredTo", filter.occurredTo);
+  }
+  params.set("sortBy", filter.sortBy);
+  params.set("sortDir", filter.sortDir);
+  params.set("page", String(filter.page + 1));
+  params.set("size", String(filter.size));
+  return params.toString();
+}
+
+function parseCustomerFilter(search: string): CustomerFilter {
+  const params = new URLSearchParams(search);
+  const page = parsePositiveInt(parseOptionalParam(params, "page"), DEFAULT_CUSTOMER_FILTER.page + 1) - 1;
+  const size = parsePositiveInt(parseOptionalParam(params, "size"), DEFAULT_CUSTOMER_FILTER.size);
+  return {
+    query: parseOptionalParam(params, "query") ?? DEFAULT_CUSTOMER_FILTER.query,
+    status: parseOptionalParam(params, "status"),
+    createdFrom: parseOptionalParam(params, "createdFrom"),
+    createdTo: parseOptionalParam(params, "createdTo"),
+    sortBy: parseOptionalParam(params, "sortBy") ?? DEFAULT_CUSTOMER_FILTER.sortBy,
+    sortDir: parseOptionalParam(params, "sortDir") ?? DEFAULT_CUSTOMER_FILTER.sortDir,
+    page,
+    size,
+  };
+}
+
+function parseAccountFilter(search: string): AccountFilter {
+  const params = new URLSearchParams(search);
+  const page = parsePositiveInt(parseOptionalParam(params, "page"), DEFAULT_ACCOUNT_FILTER.page + 1) - 1;
+  const size = parsePositiveInt(parseOptionalParam(params, "size"), DEFAULT_ACCOUNT_FILTER.size);
+  return {
+    query: parseOptionalParam(params, "query") ?? DEFAULT_ACCOUNT_FILTER.query,
+    status: parseOptionalParam(params, "status"),
+    accountType: parseOptionalParam(params, "accountType"),
+    minBalance: parseOptionalParam(params, "minBalance"),
+    maxBalance: parseOptionalParam(params, "maxBalance"),
+    sortBy: parseOptionalParam(params, "sortBy") ?? DEFAULT_ACCOUNT_FILTER.sortBy,
+    sortDir: parseOptionalParam(params, "sortDir") ?? DEFAULT_ACCOUNT_FILTER.sortDir,
+    page,
+    size,
+  };
+}
+
+function parseTransactionFilter(search: string): TransactionFilter {
+  const params = new URLSearchParams(search);
+  const page = parsePositiveInt(parseOptionalParam(params, "page"), DEFAULT_TRANSACTION_FILTER.page + 1) - 1;
+  const size = parsePositiveInt(parseOptionalParam(params, "size"), DEFAULT_TRANSACTION_FILTER.size);
+  return {
+    query: parseOptionalParam(params, "query") ?? DEFAULT_TRANSACTION_FILTER.query,
+    status: parseOptionalParam(params, "status"),
+    transactionType: parseOptionalParam(params, "transactionType"),
+    minAmount: parseOptionalParam(params, "minAmount"),
+    maxAmount: parseOptionalParam(params, "maxAmount"),
+    occurredFrom: parseOptionalParam(params, "occurredFrom"),
+    occurredTo: parseOptionalParam(params, "occurredTo"),
+    sortBy: parseOptionalParam(params, "sortBy") ?? DEFAULT_TRANSACTION_FILTER.sortBy,
+    sortDir: parseOptionalParam(params, "sortDir") ?? DEFAULT_TRANSACTION_FILTER.sortDir,
+    page,
+    size,
+  };
+}
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(ADMIN_TOKEN_KEY));
   const [submitting, setSubmitting] = useState(false);
   const [shellLoading, setShellLoading] = useState(false);
@@ -104,37 +274,21 @@ function App() {
   const [customersPage, setCustomersPage] = useState<PageResponse<Customer> | null>(null);
   const [accountsPage, setAccountsPage] = useState<PageResponse<Account> | null>(null);
   const [transactionsPage, setTransactionsPage] = useState<PageResponse<Transaction> | null>(null);
-  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>({
-    query: "",
-    sortBy: "createdAt",
-    sortDir: "desc",
-    page: 0,
-    size: 5,
-  });
-  const [accountFilter, setAccountFilter] = useState<AccountFilter>({
-    query: "",
-    sortBy: "createdAt",
-    sortDir: "desc",
-    page: 0,
-    size: 5,
-  });
-  const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>({
-    query: "",
-    sortBy: "occurredAt",
-    sortDir: "desc",
-    page: 0,
-    size: 5,
-  });
+  const initialCustomerFilter = location.pathname === "/customers" ? parseCustomerFilter(location.search) : DEFAULT_CUSTOMER_FILTER;
+  const initialAccountFilter = location.pathname === "/accounts" ? parseAccountFilter(location.search) : DEFAULT_ACCOUNT_FILTER;
+  const initialTransactionFilter = location.pathname === "/transactions" ? parseTransactionFilter(location.search) : DEFAULT_TRANSACTION_FILTER;
+  const [customerFilter, setCustomerFilter] = useState<CustomerFilter>(initialCustomerFilter);
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>(initialAccountFilter);
+  const [transactionFilter, setTransactionFilter] = useState<TransactionFilter>(initialTransactionFilter);
+  const [customerSearchFilter, setCustomerSearchFilter] = useState<CustomerFilter>(initialCustomerFilter);
+  const [accountSearchFilter, setAccountSearchFilter] = useState<AccountFilter>(initialAccountFilter);
+  const [transactionSearchFilter, setTransactionSearchFilter] = useState<TransactionFilter>(initialTransactionFilter);
   const [approvalModal, setApprovalModal] = useState<{ id: string; action: "approve" | "reject" } | null>(null);
   const [approvalReason, setApprovalReason] = useState("");
   const [readingNotificationId, setReadingNotificationId] = useState<string | null>(null);
   const [creatingAnnouncement, setCreatingAnnouncement] = useState(false);
   const [actingAnnouncementId, setActingAnnouncementId] = useState<string | null>(null);
   const [messageApi, contextHolder] = message.useMessage();
-
-  const deferredCustomerQuery = useDeferredValue(customerFilter.query);
-  const deferredAccountQuery = useDeferredValue(accountFilter.query);
-  const deferredTransactionQuery = useDeferredValue(transactionFilter.query);
 
   async function loadShell(currentToken: string) {
     setShellLoading(true);
@@ -344,6 +498,49 @@ function App() {
     startTransition(() => setTransactionsPage(response));
   }
 
+  function navigateWithSearch(pathname: string, search: string) {
+    navigate({
+      pathname,
+      search: search ? `?${search}` : "",
+    });
+  }
+
+  function handleCustomerSearch() {
+    navigateWithSearch("/customers", buildCustomerSearch({ ...customerFilter, page: 0 }));
+  }
+
+  function handleCustomerReset() {
+    navigateWithSearch("/customers", "");
+  }
+
+  function handleCustomerPageChange(page: number, size: number) {
+    navigateWithSearch("/customers", buildCustomerSearch({ ...customerSearchFilter, page: page - 1, size }));
+  }
+
+  function handleAccountSearch() {
+    navigateWithSearch("/accounts", buildAccountSearch({ ...accountFilter, page: 0 }));
+  }
+
+  function handleAccountReset() {
+    navigateWithSearch("/accounts", "");
+  }
+
+  function handleAccountPageChange(page: number, size: number) {
+    navigateWithSearch("/accounts", buildAccountSearch({ ...accountSearchFilter, page: page - 1, size }));
+  }
+
+  function handleTransactionSearch() {
+    navigateWithSearch("/transactions", buildTransactionSearch({ ...transactionFilter, page: 0 }));
+  }
+
+  function handleTransactionReset() {
+    navigateWithSearch("/transactions", "");
+  }
+
+  function handleTransactionPageChange(page: number, size: number) {
+    navigateWithSearch("/transactions", buildTransactionSearch({ ...transactionSearchFilter, page: page - 1, size }));
+  }
+
   useEffect(() => {
     if (token) {
       void loadShell(token);
@@ -351,60 +548,46 @@ function App() {
   }, [token]);
 
   useEffect(() => {
-    if (!token) {
+    if (location.pathname === "/customers") {
+      const nextFilter = parseCustomerFilter(location.search);
+      setCustomerFilter(nextFilter);
+      setCustomerSearchFilter(nextFilter);
       return;
     }
-    void loadCustomers(token, { ...customerFilter, query: deferredCustomerQuery });
-    void loadCustomerSummary(token, { ...customerFilter, query: deferredCustomerQuery });
-  }, [
-    token,
-    deferredCustomerQuery,
-    customerFilter.status,
-    customerFilter.createdFrom,
-    customerFilter.createdTo,
-    customerFilter.sortBy,
-    customerFilter.sortDir,
-    customerFilter.page,
-    customerFilter.size,
-  ]);
+    if (location.pathname === "/accounts") {
+      const nextFilter = parseAccountFilter(location.search);
+      setAccountFilter(nextFilter);
+      setAccountSearchFilter(nextFilter);
+      return;
+    }
+    if (location.pathname === "/transactions") {
+      const nextFilter = parseTransactionFilter(location.search);
+      setTransactionFilter(nextFilter);
+      setTransactionSearchFilter(nextFilter);
+    }
+  }, [location.pathname, location.search, token]);
 
   useEffect(() => {
     if (!token) {
       return;
     }
-    void loadAccounts(token, { ...accountFilter, query: deferredAccountQuery });
-  }, [
-    token,
-    deferredAccountQuery,
-    accountFilter.status,
-    accountFilter.accountType,
-    accountFilter.minBalance,
-    accountFilter.maxBalance,
-    accountFilter.sortBy,
-    accountFilter.sortDir,
-    accountFilter.page,
-    accountFilter.size,
-  ]);
+    void loadCustomers(token, customerSearchFilter);
+    void loadCustomerSummary(token, customerSearchFilter);
+  }, [token, customerSearchFilter]);
 
   useEffect(() => {
     if (!token) {
       return;
     }
-    void loadTransactions(token, { ...transactionFilter, query: deferredTransactionQuery });
-  }, [
-    token,
-    deferredTransactionQuery,
-    transactionFilter.status,
-    transactionFilter.transactionType,
-    transactionFilter.minAmount,
-    transactionFilter.maxAmount,
-    transactionFilter.occurredFrom,
-    transactionFilter.occurredTo,
-    transactionFilter.sortBy,
-    transactionFilter.sortDir,
-    transactionFilter.page,
-    transactionFilter.size,
-  ]);
+    void loadAccounts(token, accountSearchFilter);
+  }, [token, accountSearchFilter]);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+    void loadTransactions(token, transactionSearchFilter);
+  }, [token, transactionSearchFilter]);
 
   async function handleLogin(values: { email: string; password: string }) {
     setSubmitting(true);
@@ -514,6 +697,12 @@ function App() {
     setCustomersPage(null);
     setAccountsPage(null);
     setTransactionsPage(null);
+    setCustomerFilter(DEFAULT_CUSTOMER_FILTER);
+    setAccountFilter(DEFAULT_ACCOUNT_FILTER);
+    setTransactionFilter(DEFAULT_TRANSACTION_FILTER);
+    setCustomerSearchFilter(DEFAULT_CUSTOMER_FILTER);
+    setAccountSearchFilter(DEFAULT_ACCOUNT_FILTER);
+    setTransactionSearchFilter(DEFAULT_TRANSACTION_FILTER);
   }
 
   return (
@@ -561,6 +750,9 @@ function App() {
                       data={customersPage}
                       filter={customerFilter}
                       setFilter={setCustomerFilter}
+                      onSearch={handleCustomerSearch}
+                      onReset={handleCustomerReset}
+                      onPageChange={handleCustomerPageChange}
                     />
                   }
                 />
@@ -571,6 +763,9 @@ function App() {
                       data={accountsPage}
                       filter={accountFilter}
                       setFilter={setAccountFilter}
+                      onSearch={handleAccountSearch}
+                      onReset={handleAccountReset}
+                      onPageChange={handleAccountPageChange}
                     />
                   }
                 />
@@ -581,6 +776,9 @@ function App() {
                       data={transactionsPage}
                       filter={transactionFilter}
                       setFilter={setTransactionFilter}
+                      onSearch={handleTransactionSearch}
+                      onReset={handleTransactionReset}
+                      onPageChange={handleTransactionPageChange}
                     />
                   }
                 />
