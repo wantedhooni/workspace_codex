@@ -54,3 +54,5 @@
 - `bllue-green-docker/docker-compose.yml`에 `app-blue`, `app-green`, `nginx` 3컨테이너 배포 흐름 구성 완료
 - `bllue-green-docker/README.md`에 실행 절차와 검증 방법 문서화 완료
 - `bllue-green-docker/runtime/versions` 기반 슬롯별 배포 버전 추적 및 롤백 버전 복원 로직 반영 완료
+- 루트 `README.md`를 현재 폴더 구조(`blue-green-nginx`, `bllue-green-docker`) 기준으로 정리하고 문서 링크/검증 명령 최신화 완료
+- `blue-green-nginx/README.md`, `bllue-green-docker/README.md`에 운영 시 주의사항(nginx reload override, 비활성 슬롯 응답 정책) 보강 완료

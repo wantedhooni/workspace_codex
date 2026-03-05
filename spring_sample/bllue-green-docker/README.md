@@ -39,6 +39,8 @@ DEPLOY_VERSION=v2026.03.05 ./scripts/deploy.sh
 ./scripts/down.sh
 ```
 
+`status.sh`에서 현재 비활성 슬롯 응답이 없는 것은 정상이다(의도적으로 이전 슬롯을 중지함).
+
 ## 엔드포인트
 
 - Ingress: `http://127.0.0.1:8098/api/deployment`

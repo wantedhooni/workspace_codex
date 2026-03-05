@@ -3,8 +3,8 @@
 Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독립 실행형 프로젝트이며, 웹/API, 보안, AI, 배치, 이벤트 드리븐, 실시간 통신, 게이트웨이, Native Image, 배포 자동화까지 주제별로 분리했다.
 
 최근 추가된 `r2dbc`, `r2dbc-auditlog`, `webflux`, `apigateway-webflux`는 반응형 데이터 처리, 감사 로그, SSE, API Gateway를 한 번에 확인할 수 있는 reactive 샘플 묶음이다.
-`blue-green`은 Nginx + Docker Compose 기반 Blue-Green 배포와 롤백 자동화 스크립트를 포함한 운영 배포 샘플이다.
 `blue-green-nginx`는 Docker 없이 Nginx + 로컬 프로세스 기반 Blue-Green 배포를 `sh` 스크립트로 운영하는 샘플이다.
+`bllue-green-docker`는 Docker Compose + Nginx 업스트림 전환 기반 Blue-Green 배포/롤백 샘플이다.
 
 ## 프로젝트 지도
 
@@ -32,8 +32,8 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | `sample_grafana_prometheus` | Prometheus 수집과 Grafana 대시보드 프로비저닝 샘플 | Spring Boot, Micrometer, Prometheus, Grafana |
 | `r2dbc` | PostgreSQL 기반 반응형 고객 계정 CRUD 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
 | `r2dbc-auditlog` | 승인 요청과 감사 로그를 함께 저장하는 반응형 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
-| `blue-green` | Nginx 업스트림 스위칭 기반 Blue-Green 배포/롤백 샘플 | Spring Boot, Docker Compose, Nginx, Bash |
 | `blue-green-nginx` | Docker 없이 로컬 프로세스 Blue-Green 배포/롤백 샘플 | Spring Boot, Nginx, POSIX Shell |
+| `bllue-green-docker` | Docker Compose 기반 Blue-Green 배포/롤백 샘플 | Spring Boot, Docker Compose, Nginx, Bash |
 
 ### 아키텍처 / 메시징 / AI Tooling
 
@@ -93,7 +93,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bo
 
 위 명령은 동시 실행 기준 예시다. 개별 프로젝트만 실행할 때는 각 프로젝트 `README.md`의 기본 포트를 그대로 사용하면 된다.
 
-### Blue-Green (Nginx, Non-Docker) 실행
+### Blue-Green (Nginx + Local Process) 실행
 
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/blue-green-nginx
@@ -125,6 +125,17 @@ curl http://localhost:8088/api/deployment
 - Nginx ingress 주소: `http://localhost:8088`
 - Blue 직접 확인: `http://localhost:18081/api/deployment`
 - Green 직접 확인: `http://localhost:18082/api/deployment`
+
+### Blue-Green (Docker Compose) 실행
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample/bllue-green-docker
+./scripts/deploy.sh blue
+./scripts/status.sh
+DEPLOY_VERSION=v2026.03.05 ./scripts/deploy.sh
+./scripts/rollback.sh
+./scripts/down.sh
+```
 
 ### MCP 서버/클라이언트 실행
 
@@ -158,8 +169,8 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | `r2dbc-auditlog` | `8082` |
 | `webflux` | `8083` |
 | `apigateway-webflux` | `8084` |
-| `blue-green` | `8088` (Nginx ingress), `18081` (blue), `18082` (green) |
 | `blue-green-nginx` | `8088` (Nginx ingress), `18081` (blue), `18082` (green) |
+| `bllue-green-docker` | `8098` (Nginx ingress), `19081` (blue), `19082` (green) |
 
 여러 프로젝트를 동시에 실행하려면 `--server.port=` 로 포트를 조정해야 한다. 위 빠른 시작 예시는 신규 reactive 샘플의 기본 포트 `8081`~`8084`를 우선 유지하도록 맞췄다.
 
@@ -195,8 +206,8 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 - [r2dbc-auditlog/README.md](/Users/revy/workspace_codex/spring_sample/r2dbc-auditlog/README.md)
 - [webflux/README.md](/Users/revy/workspace_codex/spring_sample/webflux/README.md)
 - [apigateway-webflux/README.md](/Users/revy/workspace_codex/spring_sample/apigateway-webflux/README.md)
-- [blue-green/README.md](/Users/revy/workspace_codex/spring_sample/blue-green/README.md)
 - [blue-green-nginx/README.md](/Users/revy/workspace_codex/spring_sample/blue-green-nginx/README.md)
+- [bllue-green-docker/README.md](/Users/revy/workspace_codex/spring_sample/bllue-green-docker/README.md)
 
 ## 검증 명령
 
@@ -222,16 +233,17 @@ cd /Users/revy/workspace_codex/spring_sample/r2dbc && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/r2dbc-auditlog && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/webflux && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/apigateway-webflux && ./gradlew test
-cd /Users/revy/workspace_codex/spring_sample/blue-green/app && ./gradlew test
-bash -n /Users/revy/workspace_codex/spring_sample/blue-green/scripts/lib.sh
-bash -n /Users/revy/workspace_codex/spring_sample/blue-green/scripts/deploy.sh
-bash -n /Users/revy/workspace_codex/spring_sample/blue-green/scripts/rollback.sh
-bash -n /Users/revy/workspace_codex/spring_sample/blue-green/scripts/status.sh
 cd /Users/revy/workspace_codex/spring_sample/blue-green-nginx/app && ./gradlew test
 sh -n /Users/revy/workspace_codex/spring_sample/blue-green-nginx/scripts/common.sh
 sh -n /Users/revy/workspace_codex/spring_sample/blue-green-nginx/scripts/deploy.sh
 sh -n /Users/revy/workspace_codex/spring_sample/blue-green-nginx/scripts/rollback.sh
 sh -n /Users/revy/workspace_codex/spring_sample/blue-green-nginx/scripts/status.sh
+cd /Users/revy/workspace_codex/spring_sample/bllue-green-docker/app && ./gradlew test
+bash -n /Users/revy/workspace_codex/spring_sample/bllue-green-docker/scripts/common.sh
+bash -n /Users/revy/workspace_codex/spring_sample/bllue-green-docker/scripts/deploy.sh
+bash -n /Users/revy/workspace_codex/spring_sample/bllue-green-docker/scripts/rollback.sh
+bash -n /Users/revy/workspace_codex/spring_sample/bllue-green-docker/scripts/status.sh
+docker compose -f /Users/revy/workspace_codex/spring_sample/bllue-green-docker/docker-compose.yml config
 ```
 
 `sample_redisson`, `sample_batch`, `sample_rabbitmq_integration`, `sample_batch_quartz_dashboard` 일부 테스트는 Testcontainers를 사용하므로 Docker 데몬에 연결할 수 없는 환경에서는 자동 스킵될 수 있다. `r2dbc`, `r2dbc-auditlog`는 실행 시 로컬 PostgreSQL 컨테이너가 필요하지만 현재 테스트는 DB 연결 없이 통과하도록 구성했다.

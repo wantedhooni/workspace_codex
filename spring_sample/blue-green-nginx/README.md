@@ -38,6 +38,12 @@ cd /Users/revy/workspace_codex/spring_sample/blue-green-nginx
 DEPLOY_VERSION=v2026.03.05 ./scripts/deploy.sh
 ```
 
+Nginx reload 명령이 환경마다 다르면 `NGINX_RELOAD_CMD`로 오버라이드할 수 있다.
+
+```bash
+NGINX_RELOAD_CMD="sudo nginx -s reload" ./scripts/deploy.sh
+```
+
 ## 롤백 및 상태 확인
 
 ```bash
@@ -45,6 +51,8 @@ DEPLOY_VERSION=v2026.03.05 ./scripts/deploy.sh
 ./scripts/rollback.sh
 ./scripts/stop-all.sh
 ```
+
+`status.sh`에서 ingress 응답이 없으면 Nginx 설정 include 경로 반영 여부와 `nginx -t` 결과를 먼저 확인한다.
 
 ## 엔드포인트
 
