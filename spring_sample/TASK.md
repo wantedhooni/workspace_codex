@@ -37,3 +37,20 @@
 - 신규 4개 프로젝트 `README.md`, Gradle wrapper, 테스트 검증 완료
 - 루트 `README.md`, `PLANS.md`를 신규 4개 프로젝트 기준으로 최신화 완료
 - 루트 `README.md`에 신규 reactive 샘플 빠른 시작, 포트 정책, 비교 표를 반영해 문서 가독성 개선 완료
+- `blue-green` 폴더에 Spring Boot 앱 + Docker Compose + Nginx 기반 Blue-Green 배포 샘플 생성 완료
+- `blue-green/scripts/deploy.sh`에 빌드, 대상 슬롯 기동, 헬스체크, Nginx 업스트림 전환 자동화 추가 완료
+- `blue-green/scripts/rollback.sh`, `status.sh`에 롤백 및 운영 상태 점검 스크립트 추가 완료
+- `blue-green/nginx/upstreams/active-upstream.conf` 기반 트래픽 스위칭 및 `nginx -s reload` 무중단 반영 구성 완료
+- 루트 `README.md`, `PLANS.md`에 Blue-Green 프로젝트 실행/검증 가이드 반영 완료
+- 루트 `README.md`에 Blue-Green 실무 배포 절차 예시(배포/상태 확인/롤백)와 스크립트 문법 검증 명령 추가 완료
+- `blue-green-nginx` 폴더에 Docker 없는 Nginx + 로컬 프로세스 Blue-Green 샘플 프로젝트 생성 완료
+- `blue-green-nginx/scripts/deploy.sh`를 POSIX `sh`로 작성해 빌드/슬롯기동/헬스체크/트래픽 전환 자동화 완료
+- `blue-green-nginx/scripts/rollback.sh`, `status.sh`, `stop-all.sh`를 POSIX `sh`로 작성해 롤백/상태점검/중지 자동화 완료
+- `blue-green-nginx/runtime`에 슬롯별 배포 파일, PID, 로그, 버전 관리 구조 반영 완료
+- 루트 `README.md`, `PLANS.md`, `TASK.md`를 `blue-green-nginx`(non-docker) 기준으로 최신화 완료
+- `bllue-green-docker` 폴더에 Docker + Nginx 기반 Blue-Green 배포 샘플 프로젝트 생성 완료
+- `bllue-green-docker/scripts/deploy.sh`에 빌드/슬롯기동/헬스체크/업스트림 전환 자동화 추가 완료
+- `bllue-green-docker/scripts/rollback.sh`, `status.sh`, `down.sh`에 롤백/상태점검/정리 자동화 추가 완료
+- `bllue-green-docker/docker-compose.yml`에 `app-blue`, `app-green`, `nginx` 3컨테이너 배포 흐름 구성 완료
+- `bllue-green-docker/README.md`에 실행 절차와 검증 방법 문서화 완료
+- `bllue-green-docker/runtime/versions` 기반 슬롯별 배포 버전 추적 및 롤백 버전 복원 로직 반영 완료

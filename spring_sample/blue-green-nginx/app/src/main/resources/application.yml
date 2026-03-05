@@ -1,0 +1,16 @@
+server:
+  port: ${SERVER_PORT:18081}
+
+spring:
+  application:
+    name: blue-green-nginx-app
+
+deploy:
+  color: ${DEPLOY_COLOR:unknown}
+  version: ${DEPLOY_VERSION:local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
