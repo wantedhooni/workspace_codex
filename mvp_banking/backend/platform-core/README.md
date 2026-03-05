@@ -4,12 +4,16 @@ Shared backend module used by `admin-api` and `user-api`.
 
 Contains:
 - domain models
-- application services
+- shared application services (admin/user 공통 유스케이스)
 - security and JWT infrastructure
 - JPA, Querydsl, Redis integration
 - Flyway migrations
 - shared API response models
 - exchange fee / net settlement and stock fee / tax / net settlement domain logic
+
+Channel split rule:
+- admin 전용 서비스/컨트롤러는 `../admin-api`에 위치
+- user 전용 서비스/컨트롤러는 `../user-api`에 위치
 
 Key paths:
 - `src/main/java/com/revy/mvpbanking`

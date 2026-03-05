@@ -11,6 +11,12 @@ Responsibilities:
 - FX rates and exchange requests
 - stock orders and stock positions
 
+Server-local services/controllers:
+- `com.revy.mvpbanking.auth.application.UserAuthService`
+- `com.revy.mvpbanking.user.application.UserDashboardInsightService`
+- `com.revy.mvpbanking.auth.presentation.UserAuthController`
+- `com.revy.mvpbanking.user.presentation.UserDashboardController`
+
 Defaults:
 - app name: `mvp-banking-user-api`
 - port: `8082`

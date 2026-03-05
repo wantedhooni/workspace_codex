@@ -13,6 +13,14 @@ Responsibilities:
 - exchange fee / net settlement and stock fee / tax / net settlement monitoring
 - partial fill order monitoring and `complete-fill` execution endpoint
 
+Server-local services/controllers:
+- `com.revy.mvpbanking.auth.application.AdminAuthService`
+- `com.revy.mvpbanking.admin.application.AdminOverviewService`
+- `com.revy.mvpbanking.customer.application.CustomerQueryService`
+- `com.revy.mvpbanking.auth.presentation.AdminAuthController`
+- `com.revy.mvpbanking.admin.presentation.AdminOverviewController`
+- `com.revy.mvpbanking.customer.presentation.AdminCustomerController`
+
 Defaults:
 - app name: `mvp-banking-admin-api`
 - port: `8081`
