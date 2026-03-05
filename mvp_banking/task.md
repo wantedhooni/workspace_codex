@@ -82,3 +82,5 @@
 - [x] 루트 README.md 전체 한글화(실행 가이드/구성/스크립트/API 설명 포함)
 - [x] admin/user 전용 서비스·컨트롤러를 `platform-core`에서 각 서버 모듈(`admin-api`, `user-api`)로 분리
 - [x] 코드 기반 초기 데모 시딩(`InitialDataConfig`) 제거 및 Flyway DB 시드(`V28`)로 이관
+- [x] admin/user API 컨트롤러를 도메인 기준으로 각 서버 모듈에 분리하고, admin-portal API 레이어를 도메인 모듈 구조로 재편
+- [x] `AdminOverviewService` 비대 로직을 데이터로더/메트릭 계산기/알림 팩토리로 분리 리팩터링

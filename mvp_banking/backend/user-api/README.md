@@ -16,6 +16,8 @@ Server-local services/controllers:
 - `com.revy.mvpbanking.user.application.UserDashboardInsightService`
 - `com.revy.mvpbanking.auth.presentation.UserAuthController`
 - `com.revy.mvpbanking.user.presentation.UserDashboardController`
+- user 도메인 컨트롤러 전량(`account`, `transaction`, `fx`, `funding`, `exchange`, `stock`, `linkedaccount`, `notification`, `announcement`)
+- `com.revy.mvpbanking.config.UserSecurityConfig`
 
 Defaults:
 - app name: `mvp-banking-user-api`

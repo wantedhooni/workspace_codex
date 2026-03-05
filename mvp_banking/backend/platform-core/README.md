@@ -15,6 +15,7 @@ Contains:
 Channel split rule:
 - admin 전용 서비스/컨트롤러는 `../admin-api`에 위치
 - user 전용 서비스/컨트롤러는 `../user-api`에 위치
+- `platform-core`는 도메인 엔티티/리포지토리/공통 서비스/인증 인프라/공통 응답 모델만 유지
 
 Key paths:
 - `src/main/java/com/revy/mvpbanking`

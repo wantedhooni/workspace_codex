@@ -20,6 +20,8 @@ Server-local services/controllers:
 - `com.revy.mvpbanking.auth.presentation.AdminAuthController`
 - `com.revy.mvpbanking.admin.presentation.AdminOverviewController`
 - `com.revy.mvpbanking.customer.presentation.AdminCustomerController`
+- admin 도메인 컨트롤러 전량(`account`, `transaction`, `fx`, `funding`, `exchange`, `stock`, `approval`, `audit`, `linkedaccount`, `notification`, `announcement`)
+- `com.revy.mvpbanking.config.AdminSecurityConfig`
 
 Defaults:
 - app name: `mvp-banking-admin-api`

@@ -15,6 +15,7 @@ Responsibilities:
 - FX, exchange source/destination leg monitoring with gross / fee / net settlement visibility
 - stock order execution / partial fill / remaining fill completion monitoring with fee / tax / net settlement visibility
 - stock position mark-to-market monitoring
+- domain-based API modules (`src/domains/*/api.ts`) + aggregator (`src/api.ts`)
 
 Defaults:
 - URL: `http://localhost:5173`
