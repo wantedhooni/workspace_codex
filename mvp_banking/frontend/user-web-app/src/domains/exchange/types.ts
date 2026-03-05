@@ -11,6 +11,14 @@ export type ExchangeRequest = {
   toAmount: number;
   exchangeFeeAmount: number;
   netToAmount: number;
+  appliedRateEffectiveAt: string;
+  requestMemo: string | null;
+  sameDaySettlementEligible: boolean;
+  expectedSettlementAt: string | null;
+  manualReviewRequired: boolean;
+  manualReviewReason: string | null;
+  cancellationReason: string | null;
+  canceledAt: string | null;
   status: string;
   sourceTransactionNumber: string | null;
   destinationTransactionNumber: string | null;
@@ -22,4 +30,9 @@ export type CreateExchangeRequestPayload = {
   sourceAccountId: string;
   destinationAccountId: string;
   fromAmount: number;
+  requestMemo?: string;
+};
+
+export type CancelExchangeRequestPayload = {
+  reason?: string;
 };

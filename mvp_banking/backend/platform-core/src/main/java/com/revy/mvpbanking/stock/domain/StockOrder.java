@@ -78,6 +78,47 @@ public class StockOrder extends BaseJpaEntity {
     @Column(name = "settlement_transaction_number", length = 50)
     private String settlementTransactionNumber;
 
+    @Column(name = "order_memo", length = 200)
+    private String orderMemo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "time_in_force", nullable = false, length = 20)
+    private StockOrderTimeInForce timeInForce;
+
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "market_session", nullable = false, length = 30)
+    private StockOrderMarketSession marketSession;
+
+    @Column(name = "expected_execution_at", nullable = false)
+    private Instant expectedExecutionAt;
+
+    @Column(name = "manual_review_required", nullable = false)
+    private boolean manualReviewRequired;
+
+    @Column(name = "manual_review_reason", length = 255)
+    private String manualReviewReason;
+
+    @Column(name = "reference_price", precision = 19, scale = 4)
+    private BigDecimal referencePrice;
+
+    @Column(name = "price_deviation_rate", precision = 19, scale = 6)
+    private BigDecimal priceDeviationRate;
+
+    @Column(name = "quote_effective_at")
+    private Instant quoteEffectiveAt;
+
+    @Column(name = "quote_source", length = 80)
+    private String quoteSource;
+
+    @Column(name = "cancellation_reason", length = 255)
+    private String cancellationReason;
+
+    @Column(name = "canceled_at")
+    private Instant canceledAt;
+
     @Column(name = "settled_at")
     private Instant settledAt;
 
@@ -97,6 +138,86 @@ public class StockOrder extends BaseJpaEntity {
             String currency,
             StockOrderStatus status
     ) {
+        this(
+                customerId,
+                accountId,
+                orderNumber,
+                symbol,
+                market,
+                side,
+                quantity,
+                limitPrice,
+                grossAmount,
+                currency,
+                status,
+                null
+        );
+    }
+
+    public StockOrder(
+            UUID customerId,
+            UUID accountId,
+            String orderNumber,
+            String symbol,
+            String market,
+            StockOrderSide side,
+            BigDecimal quantity,
+            BigDecimal limitPrice,
+            BigDecimal grossAmount,
+            String currency,
+            StockOrderStatus status,
+            String orderMemo
+    ) {
+        this(
+                customerId,
+                accountId,
+                orderNumber,
+                symbol,
+                market,
+                side,
+                quantity,
+                limitPrice,
+                grossAmount,
+                currency,
+                status,
+                orderMemo,
+                StockOrderTimeInForce.DAY,
+                Instant.now().plusSeconds(86_400),
+                StockOrderMarketSession.REGULAR,
+                Instant.now().plusSeconds(300),
+                false,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    public StockOrder(
+            UUID customerId,
+            UUID accountId,
+            String orderNumber,
+            String symbol,
+            String market,
+            StockOrderSide side,
+            BigDecimal quantity,
+            BigDecimal limitPrice,
+            BigDecimal grossAmount,
+            String currency,
+            StockOrderStatus status,
+            String orderMemo,
+            StockOrderTimeInForce timeInForce,
+            Instant expiresAt,
+            StockOrderMarketSession marketSession,
+            Instant expectedExecutionAt,
+            boolean manualReviewRequired,
+            String manualReviewReason,
+            BigDecimal referencePrice,
+            BigDecimal priceDeviationRate,
+            Instant quoteEffectiveAt,
+            String quoteSource
+    ) {
         this.customerId = customerId;
         this.accountId = accountId;
         this.orderNumber = orderNumber;
@@ -112,6 +233,17 @@ public class StockOrder extends BaseJpaEntity {
         this.feeAmount = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
         this.taxAmount = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
         this.netSettlementAmount = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+        this.orderMemo = orderMemo;
+        this.timeInForce = timeInForce;
+        this.expiresAt = expiresAt;
+        this.marketSession = marketSession;
+        this.expectedExecutionAt = expectedExecutionAt;
+        this.manualReviewRequired = manualReviewRequired;
+        this.manualReviewReason = manualReviewReason;
+        this.referencePrice = referencePrice;
+        this.priceDeviationRate = priceDeviationRate;
+        this.quoteEffectiveAt = quoteEffectiveAt;
+        this.quoteSource = quoteSource;
     }
 
     public void applyExecution(
@@ -155,6 +287,21 @@ public class StockOrder extends BaseJpaEntity {
         this.settledAt = null;
     }
 
+    public void cancel(String cancellationReason) {
+        if (this.status == StockOrderStatus.CANCELED) {
+            return;
+        }
+        if (this.status == StockOrderStatus.APPROVED) {
+            throw new IllegalStateException("Approved stock order cannot be canceled");
+        }
+        if (this.status == StockOrderStatus.REJECTED) {
+            throw new IllegalStateException("Rejected stock order cannot be canceled");
+        }
+        this.status = StockOrderStatus.CANCELED;
+        this.cancellationReason = cancellationReason;
+        this.canceledAt = Instant.now();
+    }
+
     public UUID getId() { return id; }
     public UUID getCustomerId() { return customerId; }
     public UUID getAccountId() { return accountId; }
@@ -174,5 +321,18 @@ public class StockOrder extends BaseJpaEntity {
     public BigDecimal getTaxAmount() { return taxAmount; }
     public BigDecimal getNetSettlementAmount() { return netSettlementAmount; }
     public String getSettlementTransactionNumber() { return settlementTransactionNumber; }
+    public String getOrderMemo() { return orderMemo; }
+    public StockOrderTimeInForce getTimeInForce() { return timeInForce; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public StockOrderMarketSession getMarketSession() { return marketSession; }
+    public Instant getExpectedExecutionAt() { return expectedExecutionAt; }
+    public boolean isManualReviewRequired() { return manualReviewRequired; }
+    public String getManualReviewReason() { return manualReviewReason; }
+    public BigDecimal getReferencePrice() { return referencePrice; }
+    public BigDecimal getPriceDeviationRate() { return priceDeviationRate; }
+    public Instant getQuoteEffectiveAt() { return quoteEffectiveAt; }
+    public String getQuoteSource() { return quoteSource; }
+    public String getCancellationReason() { return cancellationReason; }
+    public Instant getCanceledAt() { return canceledAt; }
     public Instant getSettledAt() { return settledAt; }
 }

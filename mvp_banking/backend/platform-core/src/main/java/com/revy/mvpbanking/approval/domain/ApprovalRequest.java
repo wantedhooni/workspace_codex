@@ -88,6 +88,19 @@ public class ApprovalRequest extends BaseJpaEntity {
         this.decidedAt = Instant.now();
     }
 
+    public void cancel(String actorEmail, String reason) {
+        if (status == ApprovalStatus.CANCELED) {
+            return;
+        }
+        if (status != ApprovalStatus.PENDING) {
+            throw new IllegalStateException("Approval request is not pending");
+        }
+        this.status = ApprovalStatus.CANCELED;
+        this.decisionByEmail = actorEmail;
+        this.decisionReason = reason;
+        this.decidedAt = Instant.now();
+    }
+
     public UUID getId() {
         return id;
     }

@@ -17,22 +17,33 @@ import com.revy.mvpbanking.notification.domain.NotificationSeverity;
 import com.revy.mvpbanking.stock.domain.StockOrder;
 import com.revy.mvpbanking.stock.domain.StockOrderExecution;
 import com.revy.mvpbanking.stock.domain.StockOrderExecutionRepository;
+import com.revy.mvpbanking.stock.domain.StockOrderMarketSession;
 import com.revy.mvpbanking.stock.domain.StockOrderRepository;
+import com.revy.mvpbanking.stock.domain.StockOrderTimeInForce;
 import com.revy.mvpbanking.stock.domain.StockPosition;
 import com.revy.mvpbanking.stock.domain.StockPositionRepository;
 import com.revy.mvpbanking.stock.domain.StockOrderSide;
 import com.revy.mvpbanking.stock.domain.StockOrderStatus;
+import com.revy.mvpbanking.stock.domain.StockQuote;
+import com.revy.mvpbanking.stock.domain.StockQuoteRepository;
 import com.revy.mvpbanking.transaction.domain.TransactionEntry;
 import com.revy.mvpbanking.transaction.domain.TransactionEntryRepository;
 import com.revy.mvpbanking.transaction.domain.TransactionStatus;
 import com.revy.mvpbanking.transaction.domain.TransactionType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,11 +60,20 @@ public class StockOrderService {
 
     private static final BigDecimal TRADING_FEE_RATE = new BigDecimal("0.0015");
     private static final BigDecimal SELL_TAX_RATE = new BigDecimal("0.0023");
+    private static final int MAX_ORDER_MEMO_LENGTH = 200;
+    private static final int MAX_CANCEL_REASON_LENGTH = 255;
+    private static final BigDecimal LARGE_NOTIONAL_REVIEW_THRESHOLD = new BigDecimal("50000.0000");
+    private static final BigDecimal PRICE_DEVIATION_REVIEW_THRESHOLD = new BigDecimal("0.0300");
+    private static final long QUOTE_STALENESS_REVIEW_MINUTES = 20;
+    private static final ZoneId US_MARKET_ZONE = ZoneId.of("America/New_York");
+    private static final LocalTime REGULAR_SESSION_OPEN = LocalTime.of(9, 30);
+    private static final LocalTime REGULAR_SESSION_CLOSE = LocalTime.of(16, 0);
 
     private final StockOrderRepository stockOrderRepository;
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final ApprovalRequestRepository approvalRequestRepository;
+    private final StockQuoteRepository stockQuoteRepository;
     private final StockOrderExecutionRepository stockOrderExecutionRepository;
     private final StockPositionRepository stockPositionRepository;
     private final TransactionEntryRepository transactionEntryRepository;
@@ -65,6 +85,7 @@ public class StockOrderService {
             CustomerRepository customerRepository,
             AccountRepository accountRepository,
             ApprovalRequestRepository approvalRequestRepository,
+            StockQuoteRepository stockQuoteRepository,
             StockOrderExecutionRepository stockOrderExecutionRepository,
             StockPositionRepository stockPositionRepository,
             TransactionEntryRepository transactionEntryRepository,
@@ -75,6 +96,7 @@ public class StockOrderService {
         this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
         this.approvalRequestRepository = approvalRequestRepository;
+        this.stockQuoteRepository = stockQuoteRepository;
         this.stockOrderExecutionRepository = stockOrderExecutionRepository;
         this.stockPositionRepository = stockPositionRepository;
         this.transactionEntryRepository = transactionEntryRepository;
@@ -105,7 +127,9 @@ public class StockOrderService {
             StockOrderSide side,
             BigDecimal quantity,
             BigDecimal limitPrice,
-            String currency
+            String currency,
+            String orderMemo,
+            StockOrderTimeInForce timeInForce
     ) {
         var customer = customerRepository.findByEndUserId(endUserId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Customer not found"));
@@ -121,6 +145,9 @@ public class StockOrderService {
         if (quantity == null || quantity.signum() <= 0 || limitPrice == null || limitPrice.signum() <= 0) {
             throw new ResponseStatusException(BAD_REQUEST, "Quantity and price must be positive");
         }
+        String normalizedSymbol = symbol.trim().toUpperCase();
+        String normalizedMarket = market.trim().toUpperCase();
+        String normalizedCurrency = currency.trim().toUpperCase();
 
         BigDecimal grossAmount = quantity.multiply(limitPrice).setScale(4, RoundingMode.HALF_UP);
         BigDecimal estimatedCashImpact = calculateSettlementAmounts(grossAmount, side).netSettlementAmount();
@@ -128,11 +155,30 @@ public class StockOrderService {
             throw new ResponseStatusException(BAD_REQUEST, "Insufficient cash balance for buy order");
         }
         if (side == StockOrderSide.SELL) {
-            StockPosition position = stockPositionRepository.findByAccountIdAndSymbolIgnoreCase(accountId, symbol)
+            StockPosition position = stockPositionRepository.findByAccountIdAndSymbolIgnoreCase(accountId, normalizedSymbol)
                     .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "No stock position available for sell order"));
             if (position.getQuantity().compareTo(quantity) < 0) {
                 throw new ResponseStatusException(BAD_REQUEST, "Insufficient stock position quantity");
             }
+        }
+        String sanitizedOrderMemo = sanitizeMemo(orderMemo, "Order memo");
+        StockOrderTimeInForce normalizedTimeInForce = timeInForce == null
+                ? StockOrderTimeInForce.DAY
+                : timeInForce;
+        Instant requestedAt = Instant.now();
+        Optional<StockQuote> latestQuote = stockQuoteRepository
+                .findTopBySymbolIgnoreCaseAndMarketIgnoreCaseOrderByEffectiveAtDesc(normalizedSymbol, normalizedMarket);
+        StockOrderPolicyDecision policyDecision = evaluatePolicy(
+                normalizedTimeInForce,
+                normalizedMarket,
+                grossAmount,
+                limitPrice.setScale(4, RoundingMode.HALF_UP),
+                requestedAt,
+                latestQuote
+        );
+        if (policyDecision.timeInForce() == StockOrderTimeInForce.IOC
+                && policyDecision.marketSession() != StockOrderMarketSession.REGULAR) {
+            throw new ResponseStatusException(BAD_REQUEST, "IOC orders are only allowed during regular market session");
         }
 
         StockOrder order = stockOrderRepository.save(
@@ -140,14 +186,25 @@ public class StockOrderService {
                         customer.getId(),
                         accountId,
                         "ORD-" + System.currentTimeMillis(),
-                        symbol.toUpperCase(),
-                        market.toUpperCase(),
+                        normalizedSymbol,
+                        normalizedMarket,
                         side,
                         quantity.setScale(4, RoundingMode.HALF_UP),
                         limitPrice.setScale(4, RoundingMode.HALF_UP),
                         grossAmount,
-                        currency.toUpperCase(),
-                        StockOrderStatus.PENDING_APPROVAL
+                        normalizedCurrency,
+                        StockOrderStatus.PENDING_APPROVAL,
+                        sanitizedOrderMemo,
+                        policyDecision.timeInForce(),
+                        policyDecision.expiresAt(),
+                        policyDecision.marketSession(),
+                        policyDecision.expectedExecutionAt(),
+                        policyDecision.manualReviewRequired(),
+                        policyDecision.manualReviewReason(),
+                        policyDecision.referencePrice(),
+                        policyDecision.priceDeviationRate(),
+                        policyDecision.quoteEffectiveAt(),
+                        policyDecision.quoteSource()
                 )
         );
 
@@ -156,7 +213,7 @@ public class StockOrderService {
                         ApprovalTargetType.STOCK_ORDER,
                         order.getId(),
                         "Stock order " + order.getOrderNumber(),
-                        order.getSide().name() + " " + order.getSymbol() + " on " + order.getMarket(),
+                        buildApprovalDescription(order, policyDecision),
                         ApprovalStatus.PENDING,
                         customer.getEmail()
                 )
@@ -193,6 +250,53 @@ public class StockOrderService {
     }
 
     @Transactional
+    public StockOrder cancelByUser(UUID endUserId, UUID orderId, String cancelReason) {
+        var customer = customerRepository.findByEndUserId(endUserId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Customer not found"));
+        StockOrder stockOrder = stockOrderRepository.findByIdAndCustomerId(orderId, customer.getId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Stock order not found"));
+
+        String normalizedReason = sanitizeText(cancelReason, "Cancel reason", MAX_CANCEL_REASON_LENGTH);
+        if (normalizedReason == null) {
+            normalizedReason = "사용자 요청 취소";
+        }
+        try {
+            stockOrder.cancel(normalizedReason);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(CONFLICT, exception.getMessage());
+        }
+
+        final String decisionReason = normalizedReason;
+        approvalRequestRepository.findByTargetTypeAndTargetIdAndStatus(
+                        ApprovalTargetType.STOCK_ORDER,
+                        stockOrder.getId(),
+                        ApprovalStatus.PENDING
+                )
+                .ifPresent(approvalRequest -> approvalRequest.cancel(
+                        customer.getEmail(),
+                        "사용자 취소: " + decisionReason
+                ));
+
+        auditLogService.logCurrentActor(
+                AuditActionType.STOCK_ORDER_CANCELED,
+                "STOCK_ORDER",
+                stockOrder.getId().toString(),
+                "Canceled stock order " + stockOrder.getOrderNumber()
+        );
+        notificationService.notifyActiveAdmins(
+                "ADMIN-STOCK-ORDER-CANCELED:" + stockOrder.getId(),
+                NotificationCategory.STOCK_ORDER,
+                NotificationSeverity.INFO,
+                "사용자 주식 주문 취소",
+                stockOrder.getOrderNumber() + " 주문이 사용자 요청으로 취소되었습니다.",
+                "/stock-orders",
+                "STOCK_ORDER",
+                stockOrder.getId()
+        );
+        return stockOrder;
+    }
+
+    @Transactional
     public void markApproved(UUID orderId) {
         StockOrder order = stockOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Stock order not found"));
@@ -201,6 +305,9 @@ public class StockOrderService {
         }
         if (order.getStatus() == StockOrderStatus.PARTIALLY_FILLED) {
             throw new ResponseStatusException(CONFLICT, "Order already approved and waiting for remaining fill");
+        }
+        if (order.getStatus() == StockOrderStatus.CANCELED) {
+            throw new ResponseStatusException(CONFLICT, "Canceled order cannot be approved");
         }
         executeOrder(order, determineInitialExecutionQuantity(order), Instant.now());
     }
@@ -219,6 +326,9 @@ public class StockOrderService {
     public void markRejected(UUID orderId) {
         StockOrder stockOrder = stockOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Stock order not found"));
+        if (stockOrder.getStatus() == StockOrderStatus.CANCELED) {
+            throw new ResponseStatusException(CONFLICT, "Canceled order cannot be rejected");
+        }
         stockOrder.reject();
         customerRepository.findById(stockOrder.getCustomerId())
                 .map(customer -> customer.getEndUserId())
@@ -256,6 +366,9 @@ public class StockOrderService {
     private void executeOrder(StockOrder order, BigDecimal quantityToExecute, Instant settledAt) {
         if (order.getStatus() == StockOrderStatus.REJECTED) {
             throw new ResponseStatusException(CONFLICT, "Rejected order cannot be executed");
+        }
+        if (order.getStatus() == StockOrderStatus.CANCELED) {
+            throw new ResponseStatusException(CONFLICT, "Canceled order cannot be executed");
         }
         if (quantityToExecute == null || quantityToExecute.signum() <= 0) {
             throw new ResponseStatusException(BAD_REQUEST, "Execution quantity must be positive");
@@ -538,6 +651,158 @@ public class StockOrderService {
                 .reduce(BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP), BigDecimal::add);
     }
 
+    private static String sanitizeMemo(String memo, String label) {
+        return sanitizeText(memo, label, MAX_ORDER_MEMO_LENGTH);
+    }
+
+    private static String sanitizeText(String input, String label, int maxLength) {
+        if (input == null) {
+            return null;
+        }
+        String normalized = input.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        if (normalized.length() > maxLength) {
+            throw new ResponseStatusException(BAD_REQUEST, label + " must be " + maxLength + " characters or less");
+        }
+        return normalized;
+    }
+
+    private static StockOrderPolicyDecision evaluatePolicy(
+            StockOrderTimeInForce timeInForce,
+            String market,
+            BigDecimal grossAmount,
+            BigDecimal limitPrice,
+            Instant requestedAt,
+            Optional<StockQuote> latestQuote
+    ) {
+        StockOrderMarketSession marketSession = resolveMarketSession(market, requestedAt);
+        Instant expectedExecutionAt = resolveExpectedExecutionAt(marketSession, market, requestedAt);
+        Instant expiresAt = resolveExpiresAt(timeInForce, marketSession, market, requestedAt);
+        List<String> reviewReasons = new ArrayList<>();
+
+        if (grossAmount.compareTo(LARGE_NOTIONAL_REVIEW_THRESHOLD) >= 0) {
+            reviewReasons.add("고액 주문 심사");
+        }
+        if (marketSession != StockOrderMarketSession.REGULAR) {
+            reviewReasons.add("장외 시간 주문");
+        }
+
+        BigDecimal referencePrice = null;
+        BigDecimal priceDeviationRate = null;
+        Instant quoteEffectiveAt = null;
+        String quoteSource = null;
+
+        if (latestQuote.isPresent()) {
+            StockQuote quote = latestQuote.get();
+            referencePrice = quote.getPrice();
+            quoteEffectiveAt = quote.getEffectiveAt();
+            quoteSource = quote.getSource();
+            priceDeviationRate = calculatePriceDeviationRate(limitPrice, referencePrice);
+            if (priceDeviationRate != null && priceDeviationRate.compareTo(PRICE_DEVIATION_REVIEW_THRESHOLD) >= 0) {
+                reviewReasons.add("시세 대비 지정가 괴리");
+            }
+            long quoteAgeMinutes = Math.max(0, ChronoUnit.MINUTES.between(quote.getEffectiveAt(), requestedAt));
+            if (quoteAgeMinutes >= QUOTE_STALENESS_REVIEW_MINUTES) {
+                reviewReasons.add("시세 지연 확인");
+            }
+        } else {
+            reviewReasons.add("실시간 시세 미확인");
+        }
+
+        boolean manualReviewRequired = !reviewReasons.isEmpty();
+        String manualReviewReason = manualReviewRequired ? String.join(" / ", reviewReasons) : null;
+        return new StockOrderPolicyDecision(
+                timeInForce,
+                expiresAt,
+                marketSession,
+                expectedExecutionAt,
+                manualReviewRequired,
+                manualReviewReason,
+                referencePrice,
+                priceDeviationRate,
+                quoteEffectiveAt,
+                quoteSource
+        );
+    }
+
+    private static StockOrderMarketSession resolveMarketSession(String market, Instant requestedAt) {
+        ZoneId zoneId = resolveMarketZone(market);
+        if (zoneId == null) {
+            return StockOrderMarketSession.REGULAR;
+        }
+        ZonedDateTime marketNow = requestedAt.atZone(zoneId);
+        if (!isBusinessDay(marketNow.toLocalDate())) {
+            return StockOrderMarketSession.CLOSED;
+        }
+        LocalTime current = marketNow.toLocalTime();
+        if (current.isBefore(REGULAR_SESSION_OPEN)) {
+            return StockOrderMarketSession.PRE_MARKET;
+        }
+        if (current.isBefore(REGULAR_SESSION_CLOSE)) {
+            return StockOrderMarketSession.REGULAR;
+        }
+        return StockOrderMarketSession.AFTER_HOURS;
+    }
+
+    private static Instant resolveExpectedExecutionAt(StockOrderMarketSession marketSession, String market, Instant requestedAt) {
+        ZoneId zoneId = resolveMarketZone(market);
+        if (zoneId == null || marketSession == StockOrderMarketSession.REGULAR) {
+            return requestedAt.plusSeconds(30);
+        }
+
+        ZonedDateTime marketNow = requestedAt.atZone(zoneId);
+        if (marketSession == StockOrderMarketSession.PRE_MARKET) {
+            return marketNow.toLocalDate().atTime(REGULAR_SESSION_OPEN).atZone(zoneId).toInstant();
+        }
+        LocalDate nextOpenDate = nextBusinessDay(marketNow.toLocalDate());
+        return nextOpenDate.atTime(REGULAR_SESSION_OPEN).atZone(zoneId).toInstant();
+    }
+
+    private static ZoneId resolveMarketZone(String market) {
+        if ("NASDAQ".equalsIgnoreCase(market) || "NYSE".equalsIgnoreCase(market)) {
+            return US_MARKET_ZONE;
+        }
+        return null;
+    }
+
+    private static LocalDate nextBusinessDay(LocalDate baseDate) {
+        LocalDate next = baseDate.plusDays(1);
+        while (!isBusinessDay(next)) {
+            next = next.plusDays(1);
+        }
+        return next;
+    }
+
+    private static boolean isBusinessDay(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
+    }
+
+    private static BigDecimal calculatePriceDeviationRate(BigDecimal limitPrice, BigDecimal referencePrice) {
+        if (referencePrice == null || referencePrice.signum() == 0) {
+            return null;
+        }
+        return limitPrice.subtract(referencePrice).abs().divide(referencePrice, 6, RoundingMode.HALF_UP);
+    }
+
+    private static String buildApprovalDescription(StockOrder order, StockOrderPolicyDecision policyDecision) {
+        StringBuilder description = new StringBuilder()
+                .append(order.getSide().name())
+                .append(" ")
+                .append(order.getSymbol())
+                .append(" on ")
+                .append(order.getMarket());
+        description.append(" / tif: ").append(policyDecision.timeInForce().name());
+        description.append(" / expires: ").append(policyDecision.expiresAt());
+        description.append(" / session: ").append(policyDecision.marketSession().name());
+        if (policyDecision.manualReviewRequired()) {
+            description.append(" / review: ").append(policyDecision.manualReviewReason());
+        }
+        return description.toString();
+    }
+
     private static SettlementAmounts calculateSettlementAmounts(BigDecimal executedGrossAmount, StockOrderSide side) {
         BigDecimal feeAmount = executedGrossAmount.multiply(TRADING_FEE_RATE).setScale(4, RoundingMode.HALF_UP);
         BigDecimal taxAmount = side == StockOrderSide.SELL
@@ -580,5 +845,47 @@ public class StockOrderService {
             BigDecimal taxAmount,
             BigDecimal netSettlementAmount
     ) {
+    }
+
+    private record StockOrderPolicyDecision(
+            StockOrderTimeInForce timeInForce,
+            Instant expiresAt,
+            StockOrderMarketSession marketSession,
+            Instant expectedExecutionAt,
+            boolean manualReviewRequired,
+            String manualReviewReason,
+            BigDecimal referencePrice,
+            BigDecimal priceDeviationRate,
+            Instant quoteEffectiveAt,
+            String quoteSource
+    ) {
+    }
+
+    private static Instant resolveExpiresAt(
+            StockOrderTimeInForce timeInForce,
+            StockOrderMarketSession marketSession,
+            String market,
+            Instant requestedAt
+    ) {
+        if (timeInForce == StockOrderTimeInForce.IOC) {
+            return requestedAt.plus(2, ChronoUnit.MINUTES);
+        }
+        if (timeInForce == StockOrderTimeInForce.GTC) {
+            return requestedAt.plus(30, ChronoUnit.DAYS);
+        }
+
+        ZoneId zoneId = resolveMarketZone(market);
+        if (zoneId == null) {
+            return requestedAt.plus(1, ChronoUnit.DAYS);
+        }
+
+        ZonedDateTime marketNow = requestedAt.atZone(zoneId);
+        LocalDate expiryDate = marketNow.toLocalDate();
+        if (!isBusinessDay(expiryDate)
+                || marketSession == StockOrderMarketSession.AFTER_HOURS
+                || marketSession == StockOrderMarketSession.CLOSED) {
+            expiryDate = nextBusinessDay(expiryDate);
+        }
+        return expiryDate.atTime(REGULAR_SESSION_CLOSE).atZone(zoneId).toInstant();
     }
 }

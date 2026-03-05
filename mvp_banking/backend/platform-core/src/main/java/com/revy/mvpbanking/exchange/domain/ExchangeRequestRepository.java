@@ -8,5 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ExchangeRequestRepository extends JpaRepository<ExchangeRequest, UUID> {
     List<ExchangeRequest> findAllByOrderByCreatedAtDesc();
     List<ExchangeRequest> findByCustomerIdOrderByCreatedAtDesc(UUID customerId);
+    Optional<ExchangeRequest> findByIdAndCustomerId(UUID id, UUID customerId);
     Optional<ExchangeRequest> findByRequestNumber(String requestNumber);
 }

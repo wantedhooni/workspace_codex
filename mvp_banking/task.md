@@ -61,3 +61,20 @@
 - [x] admin / user 공지 도메인 및 서비스 배너 UI 추가
 - [x] 입출금 요청 `funding` 도메인 및 admin / user 화면 추가
 - [x] 운영 overview / 사용자 dashboard에 입출금 대기 물량 반영
+- [x] 외부 출금 연결 계좌 도메인 및 admin / user 관리 화면 추가
+- [x] 연결 계좌 기본 출금 전환 / 운영 차단 액션 및 출금 티켓 UX 개선
+- [x] 입출금 컷오프 / 일일 한도 / 수동 심사 정책 스냅샷 도메인 추가
+- [x] admin / user 입출금 화면에 심사 플래그 및 예상 정산 시각 UI 개선
+- [x] 연결 계좌 소액이체 인증 문구 / 사용자 검증 완료 / 운영 활성화 오버라이드 흐름 추가
+- [x] user 연결 계좌 화면에 검증 티켓 UI 및 funding 출금 목적지 안내 개선
+- [x] 연결 계좌 검증 만료 / 인증 문구 재발송 / stale verification 운영 가시성 추가
+- [x] 연결 계좌 재발송 cooldown / 다음 가능 시각 / admin stale queue 우선 정렬 추가
+- [x] 환전/주식 주문 요청 메모 도메인 추가 및 user/admin 화면 메모 가시성 UI 개선
+- [x] 환전 요청 정산 정책 스냅샷(당일정산/예상시각/수동심사) 도메인 및 admin/user UI 가시성 확장
+- [x] 주식 주문 정책 스냅샷(시장세션/예상체결/수동심사/시세괴리) 도메인 및 admin/user UI 가시성 확장
+- [x] 주식 주문 TIF(DAY/GTC/IOC)/만료시각 정책 스냅샷 도메인 확장 및 user/admin 주문 UX 가독성 개선
+- [x] 주식 주문 사용자 취소(CANCEL) 도메인/승인 연동 확장 및 user/admin 주문 화면 액션 UX 개선
+- [x] 환전 요청 사용자 취소(CANCEL) 도메인/승인 연동 확장 및 user/admin 환전 화면 액션 UX 개선
+- [x] 입출금 요청 사용자 취소(CANCEL) 도메인/승인 연동 확장 및 user/admin funding 화면 상태 필터/액션 UX 개선
+- [x] 입출금 출금 수수료/총 차감액 정책 스냅샷 도메인 확장 및 user/admin funding 금액 가시성 UX 개선
+- [x] 입출금 우선처리(priority) 정책/수수료 도메인 확장 마무리 및 user/admin funding 화면 컷오프·수수료·정책 태그 UX 개선

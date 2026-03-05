@@ -15,6 +15,9 @@ import com.revy.mvpbanking.exchange.domain.ExchangeRequestStatus;
 import com.revy.mvpbanking.exchange.domain.ExchangeRequest;
 import com.revy.mvpbanking.exchange.domain.ExchangeRequestRepository;
 import com.revy.mvpbanking.admin.domain.AdminUserRepository;
+import com.revy.mvpbanking.customer.domain.CustomerRepository;
+import com.revy.mvpbanking.linkedaccount.domain.LinkedBankAccount;
+import com.revy.mvpbanking.linkedaccount.domain.LinkedBankAccountRepository;
 import com.revy.mvpbanking.notification.domain.Notification;
 import com.revy.mvpbanking.notification.domain.NotificationCategory;
 import com.revy.mvpbanking.notification.domain.NotificationRecipientType;
@@ -88,6 +91,12 @@ class AdminApiIsolationIntegrationTest {
 
     @Autowired
     private AdminUserRepository adminUserRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private LinkedBankAccountRepository linkedBankAccountRepository;
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -167,6 +176,10 @@ class AdminApiIsolationIntegrationTest {
         }
 
         assertThat(hasExecutedOrder).isTrue();
+        assertThat(orders.isArray()).isTrue();
+        assertThat(orders.size()).isGreaterThan(0);
+        assertThat(orders.get(0).path("timeInForce").asText()).isNotBlank();
+        assertThat(orders.get(0).path("expiresAt").asText()).isNotBlank();
     }
 
     @Test
@@ -277,6 +290,86 @@ class AdminApiIsolationIntegrationTest {
         assertThat(requests.size()).isGreaterThan(0);
         assertThat(requests.get(0).path("requestType").asText()).isNotBlank();
         assertThat(requests.get(0).path("accountNumber").asText()).isNotBlank();
+        assertThat(requests.get(0).has("serviceFeeAmount")).isTrue();
+        assertThat(requests.get(0).has("totalDebitAmount")).isTrue();
+        assertThat(requests.get(0).has("sameDaySettlementEligible")).isTrue();
+        assertThat(requests.get(0).has("manualReviewRequired")).isTrue();
+        assertThat(requests.get(0).has("dailyLimitExceeded")).isTrue();
+    }
+
+    @Test
+    void adminApiExposesLinkedBankAccounts() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsAdmin();
+        String content = mockMvc.perform(get("/api/admin/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode linkedAccounts = objectMapper.readTree(content).path("data");
+        assertThat(linkedAccounts.isArray()).isTrue();
+        assertThat(linkedAccounts.size()).isGreaterThan(0);
+        assertThat(linkedAccounts.get(0).path("bankName").asText()).isNotBlank();
+        assertThat(linkedAccounts.get(0).path("maskedAccountNumber").asText()).isNotBlank();
+    }
+
+    @Test
+    void adminApiBlocksLinkedBankAccount() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        var customer = customerRepository.findByCustomerNumber("CUST-100001").orElseThrow();
+        LinkedBankAccount linkedBankAccount = linkedBankAccountRepository.save(
+                new LinkedBankAccount(
+                        customer.getId(),
+                        customer.getEmail(),
+                        "Woori Bank",
+                        "테스트 출금 계좌",
+                        "MVP User",
+                        "020-555-" + UUID.randomUUID().toString().substring(0, 6),
+                        false
+                )
+        );
+
+        String token = loginAsAdmin();
+        mockMvc.perform(post("/api/admin/linked-bank-accounts/{linkedBankAccountId}/block", linkedBankAccount.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(linkedBankAccount.getId().toString()))
+                .andExpect(jsonPath("$.data.status").value("BLOCKED"))
+                .andExpect(jsonPath("$.data.blockReasonCode").value("OPS_BLOCKED"))
+                .andExpect(jsonPath("$.data.blockedAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.primaryWithdrawal").value(false));
+    }
+
+    @Test
+    void adminApiActivatesPendingLinkedBankAccount() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        var customer = customerRepository.findByCustomerNumber("CUST-100001").orElseThrow();
+        LinkedBankAccount linkedBankAccount = linkedBankAccountRepository.save(
+                LinkedBankAccount.pendingVerification(
+                        customer.getId(),
+                        customer.getEmail(),
+                        "Kakao Bank",
+                        "급여 수령 계좌",
+                        "MVP User",
+                        "777-000-" + UUID.randomUUID().toString().substring(0, 6),
+                        true,
+                        "MVP-2468"
+                )
+        );
+
+        String token = loginAsAdmin();
+        mockMvc.perform(post("/api/admin/linked-bank-accounts/{linkedBankAccountId}/activate", linkedBankAccount.getId())
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(linkedBankAccount.getId().toString()))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.primaryWithdrawal").value(true))
+                .andExpect(jsonPath("$.data.verifiedAt").isNotEmpty());
     }
 
     @Test

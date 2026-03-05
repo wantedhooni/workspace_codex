@@ -27,6 +27,8 @@ import com.revy.mvpbanking.funding.application.FundingRequestService;
 import com.revy.mvpbanking.funding.domain.FundingRequest;
 import com.revy.mvpbanking.funding.domain.FundingRequestRepository;
 import com.revy.mvpbanking.funding.domain.FundingRequestType;
+import com.revy.mvpbanking.linkedaccount.domain.LinkedBankAccount;
+import com.revy.mvpbanking.linkedaccount.domain.LinkedBankAccountRepository;
 import com.revy.mvpbanking.notification.application.NotificationService;
 import com.revy.mvpbanking.notification.domain.NotificationCategory;
 import com.revy.mvpbanking.notification.domain.NotificationRecipientType;
@@ -78,6 +80,7 @@ public class InitialDataConfig {
             TransactionEntryRepository transactionEntryRepository,
             FxRateRepository fxRateRepository,
             FundingRequestRepository fundingRequestRepository,
+            LinkedBankAccountRepository linkedBankAccountRepository,
             ExchangeRequestRepository exchangeRequestRepository,
             StockOrderRepository stockOrderRepository,
             StockPositionRepository stockPositionRepository,
@@ -161,6 +164,7 @@ public class InitialDataConfig {
                     primaryCustomer,
                     accountRepository,
                     fundingRequestRepository,
+                    linkedBankAccountRepository,
                     fundingRequestService,
                     approvalRequestRepository
             );
@@ -571,6 +575,17 @@ public class InitialDataConfig {
                 "FUNDING_REQUEST",
                 null
         );
+        notificationService.notifyUser(
+                "USER-SEED-LINKED-BANK:" + endUser.getId(),
+                endUser.getId(),
+                NotificationCategory.FUNDING,
+                NotificationSeverity.INFO,
+                "출금 연결 계좌 등록 가능",
+                "외부 은행 연결 계좌를 등록하면 출금 요청 목적지를 직접 선택할 수 있습니다.",
+                "/linked-bank-accounts",
+                "LINKED_BANK_ACCOUNT",
+                null
+        );
     }
 
     private static void seedAnnouncements(AnnouncementRepository announcementRepository) {
@@ -701,9 +716,11 @@ public class InitialDataConfig {
             Customer customer,
             AccountRepository accountRepository,
             FundingRequestRepository fundingRequestRepository,
+            LinkedBankAccountRepository linkedBankAccountRepository,
             FundingRequestService fundingRequestService,
             ApprovalRequestRepository approvalRequestRepository
     ) {
+        Instant seedNow = Instant.now();
         List<Account> accounts = accountRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
         Account krwBankingAccount = accounts.stream()
                 .filter(account -> account.getAccountType() == AccountType.BANKING)
@@ -714,6 +731,35 @@ public class InitialDataConfig {
                 .filter(account -> account.getAccountType() == AccountType.SECURITIES)
                 .findFirst()
                 .orElseThrow();
+
+        LinkedBankAccount primaryWithdrawalAccount = ensureLinkedBankAccount(
+                linkedBankAccountRepository,
+                customer,
+                "Shinhan Bank",
+                "급여 출금 계좌",
+                USER_FULL_NAME,
+                "110-999-123456",
+                true
+        );
+        ensureLinkedBankAccount(
+                linkedBankAccountRepository,
+                customer,
+                "KB Kookmin Bank",
+                "예비 생활비 계좌",
+                USER_FULL_NAME,
+                "004-555-987654",
+                false
+        );
+        ensurePendingLinkedBankAccount(
+                linkedBankAccountRepository,
+                customer,
+                "Toss Bank",
+                "신규 출금 계좌",
+                USER_FULL_NAME,
+                "100-321-654987",
+                false,
+                "MVP-2468"
+        );
 
         FundingRequest pendingWithdrawal = fundingRequestRepository.findByRequestNumber("FND-DEMO-0001")
                 .orElseGet(() -> fundingRequestRepository.save(
@@ -728,6 +774,22 @@ public class InitialDataConfig {
                                 new BigDecimal("1250000.0000"),
                                 krwBankingAccount.getCurrency(),
                                 krwBankingAccount.getBalance(),
+                                new BigDecimal("1000.0000"),
+                                false,
+                                new BigDecimal("0.0000"),
+                                new BigDecimal("1251000.0000"),
+                                primaryWithdrawalAccount.getId(),
+                                primaryWithdrawalAccount.getBankName(),
+                                primaryWithdrawalAccount.getAccountAlias(),
+                                com.revy.mvpbanking.common.support.MaskingUtils.maskAccountNumber(primaryWithdrawalAccount.getAccountNumber()),
+                                primaryWithdrawalAccount.getAccountHolderName(),
+                                new BigDecimal("3000000.0000"),
+                                new BigDecimal("1250000.0000"),
+                                false,
+                                true,
+                                seedNow.plusSeconds(6 * 60 * 60),
+                                true,
+                                "고액 출금 심사",
                                 "월간 운영비 출금 요청"
                         )
                 ));
@@ -754,6 +816,22 @@ public class InitialDataConfig {
                                 new BigDecimal("3500000.0000"),
                                 securitiesAccount.getCurrency(),
                                 securitiesAccount.getBalance(),
+                                new BigDecimal("0.0000"),
+                                false,
+                                new BigDecimal("0.0000"),
+                                new BigDecimal("3500000.0000"),
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                new BigDecimal("20000000.0000"),
+                                new BigDecimal("3500000.0000"),
+                                false,
+                                true,
+                                seedNow.plusSeconds(4 * 60 * 60),
+                                false,
+                                null,
                                 "해외주식 추가 매수용 예탁금 입금"
                         )
                 ));
@@ -761,6 +839,54 @@ public class InitialDataConfig {
         if (approvedDeposit.getStatus() == com.revy.mvpbanking.funding.domain.FundingRequestStatus.PENDING_APPROVAL) {
             fundingRequestService.markApproved(approvedDeposit.getId());
         }
+    }
+
+    private static LinkedBankAccount ensureLinkedBankAccount(
+            LinkedBankAccountRepository linkedBankAccountRepository,
+            Customer customer,
+            String bankName,
+            String accountAlias,
+            String accountHolderName,
+            String accountNumber,
+            boolean primaryWithdrawal
+    ) {
+        return linkedBankAccountRepository.findByCustomerIdAndAccountNumber(customer.getId(), accountNumber)
+                .orElseGet(() -> linkedBankAccountRepository.save(
+                        new LinkedBankAccount(
+                                customer.getId(),
+                                customer.getEmail(),
+                                bankName,
+                                accountAlias,
+                                accountHolderName,
+                                accountNumber,
+                                primaryWithdrawal
+                        )
+                ));
+    }
+
+    private static LinkedBankAccount ensurePendingLinkedBankAccount(
+            LinkedBankAccountRepository linkedBankAccountRepository,
+            Customer customer,
+            String bankName,
+            String accountAlias,
+            String accountHolderName,
+            String accountNumber,
+            boolean primaryWithdrawal,
+            String verificationReference
+    ) {
+        return linkedBankAccountRepository.findByCustomerIdAndAccountNumber(customer.getId(), accountNumber)
+                .orElseGet(() -> linkedBankAccountRepository.save(
+                        LinkedBankAccount.pendingVerification(
+                                customer.getId(),
+                                customer.getEmail(),
+                                bankName,
+                                accountAlias,
+                                accountHolderName,
+                                accountNumber,
+                                primaryWithdrawal,
+                                verificationReference
+                        )
+                ));
     }
 
     private static void ensureStockQuote(

@@ -5,7 +5,8 @@ Spring Boot server for admin portal traffic.
 Responsibilities:
 - admin authentication
 - customer, account, transaction search
-- funding request queue lookup
+- linked bank account registry lookup, stale verification monitoring, verification override activation, and block action
+- funding request queue lookup with manual review and settlement window policy snapshot
 - approvals and audit logs
 - announcement management
 - FX, exchange, stock order, stock position admin operations

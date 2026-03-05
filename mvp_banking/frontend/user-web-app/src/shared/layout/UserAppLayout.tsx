@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Dashboard" },
   { to: "/announcements", label: "Announcements" },
   { to: "/accounts", label: "Accounts" },
+  { to: "/linked-bank-accounts", label: "Linked Banks" },
   { to: "/funding-requests", label: "Funding" },
   { to: "/transactions", label: "Transactions" },
   { to: "/fx-rates", label: "FX Rates" },

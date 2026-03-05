@@ -259,6 +259,15 @@ body {
   margin-top: 16px;
 }
 
+.secondary-button.compact {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .error-text {
   margin: 0;
   color: #c92a2a;
@@ -691,6 +700,10 @@ body {
   gap: 14px;
 }
 
+.trade-form-grid.single-column {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .form-field {
   display: grid;
   gap: 8px;
@@ -909,7 +922,8 @@ body {
 }
 
 .trade-ticket input,
-.trade-ticket select {
+.trade-ticket select,
+.trade-ticket textarea {
   width: 100%;
   border: 1px solid rgba(16, 42, 67, 0.12);
   border-radius: 16px;
@@ -918,10 +932,23 @@ body {
   background: #fff;
 }
 
+.trade-ticket textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
 .trade-toggle-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.trade-toggle-row.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.trade-toggle-row.triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .trade-toggle-row button {
@@ -954,6 +981,331 @@ body {
 .trade-summary-note.warning {
   color: #b54708;
   font-weight: 700;
+}
+
+.trade-summary-memo {
+  grid-column: 1 / -1;
+}
+
+.trade-summary-memo strong {
+  word-break: break-word;
+}
+
+.pending-verification-banner {
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(212, 107, 8, 0.18);
+  background: rgba(255, 247, 230, 0.94);
+}
+
+.pending-verification-banner strong {
+  color: #8a4b00;
+  font-size: 20px;
+}
+
+.pending-verification-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pending-verification-meta div {
+  display: grid;
+  gap: 4px;
+  min-width: 120px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.pending-verification-meta span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a6700;
+}
+
+.pending-verification-banner p {
+  margin: 0;
+  color: #7a5d36;
+  line-height: 1.55;
+}
+
+.verification-ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.verification-ticket-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(212, 107, 8, 0.16);
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.98), rgba(255, 255, 255, 0.94));
+  box-shadow: 0 18px 42px rgba(16, 42, 67, 0.06);
+}
+
+.verification-ticket-card.blocked-ticket-card {
+  border-color: rgba(203, 64, 66, 0.22);
+  background: linear-gradient(180deg, rgba(255, 243, 243, 0.98), rgba(255, 255, 255, 0.94));
+}
+
+.verification-ticket-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.verification-ticket-header strong {
+  display: block;
+  color: #102a43;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.verification-ticket-header p {
+  margin: 0;
+  color: #6b7c93;
+}
+
+.verification-ticket-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.verification-ticket-summary div {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(16, 42, 67, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.verification-ticket-summary span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7b8794;
+}
+
+.verification-ticket-summary strong {
+  color: #102a43;
+  font-size: 16px;
+}
+
+.verification-ticket-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.linked-bank-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.linked-bank-highlight {
+  min-width: 320px;
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 106, 180, 0.14);
+  background: linear-gradient(135deg, rgba(15, 106, 180, 0.12), rgba(255, 255, 255, 0.94));
+}
+
+.linked-bank-highlight strong {
+  color: #102a43;
+  font-size: 22px;
+}
+
+.linked-bank-highlight span {
+  color: #52667a;
+}
+
+.linked-bank-highlight code {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(16, 42, 67, 0.08);
+  color: #102a43;
+  font-size: 13px;
+}
+
+.funding-route-strip {
+  margin-bottom: 18px;
+}
+
+.funding-policy-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.priority-toggle-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 106, 180, 0.14);
+  background: rgba(240, 247, 255, 0.9);
+}
+
+.priority-toggle-card.enabled {
+  border-color: rgba(212, 107, 8, 0.2);
+  background: rgba(255, 247, 230, 0.94);
+}
+
+.priority-toggle-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.priority-toggle-header strong {
+  display: block;
+  margin-top: 6px;
+  color: #102a43;
+  font-size: 20px;
+}
+
+.priority-toggle-card p {
+  margin: 0;
+  color: #52667a;
+  line-height: 1.55;
+}
+
+.priority-toggle-button {
+  border: 0;
+  border-radius: 999px;
+  min-width: 76px;
+  min-height: 36px;
+  padding: 0 14px;
+  background: rgba(16, 42, 67, 0.1);
+  color: #334e68;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.priority-toggle-button.enabled {
+  background: rgba(212, 107, 8, 0.16);
+  color: #8a4b00;
+}
+
+.priority-toggle-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.priority-toggle-meta div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 42, 67, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.priority-toggle-meta span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7b8794;
+}
+
+.priority-toggle-meta strong {
+  color: #102a43;
+  font-size: 14px;
+}
+
+.policy-chip {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(16, 42, 67, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.policy-chip span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b7c93;
+}
+
+.policy-chip strong {
+  color: #102a43;
+  font-size: 17px;
+}
+
+.policy-chip p {
+  margin: 0;
+  color: #607087;
+  line-height: 1.5;
+}
+
+.policy-chip.positive {
+  border-color: rgba(21, 115, 71, 0.16);
+  background: rgba(237, 247, 242, 0.94);
+}
+
+.policy-chip.warning {
+  border-color: rgba(212, 107, 8, 0.18);
+  background: rgba(255, 247, 230, 0.94);
+}
+
+.policy-chip.negative {
+  border-color: rgba(180, 35, 24, 0.18);
+  background: rgba(255, 241, 240, 0.95);
+}
+
+.policy-chip.neutral {
+  border-color: rgba(15, 106, 180, 0.12);
+  background: rgba(240, 247, 255, 0.92);
+}
+
+.funding-guidance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.funding-guidance-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(16, 42, 67, 0.08);
+}
+
+.funding-guidance-card strong {
+  color: #102a43;
+}
+
+.funding-guidance-card p {
+  margin: 0;
+  color: #607087;
+  line-height: 1.55;
 }
 
 .trade-submit-button {
@@ -1035,9 +1387,24 @@ body {
   font-size: 13px;
 }
 
+.table-priority-text {
+  margin: 6px 0 0;
+  color: #b54708;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .table-muted {
   color: #607087;
   font-size: 13px;
+}
+
+.table-note {
+  margin: 0;
+  max-width: 320px;
+  color: #52667a;
+  line-height: 1.45;
 }
 
 .table-empty-row td {
@@ -1442,7 +1809,8 @@ body {
 }
 
 .status-pill.pending,
-.status-pill.pending_approval {
+.status-pill.pending_approval,
+.status-pill.pending_verification {
   background: rgba(255, 193, 7, 0.18);
   color: #9a6700;
 }
@@ -1456,6 +1824,11 @@ body {
 .status-pill.rejected {
   background: rgba(220, 53, 69, 0.14);
   color: #b42318;
+}
+
+.status-pill.canceled {
+  background: rgba(82, 102, 122, 0.18);
+  color: #334e68;
 }
 
 @media (max-width: 860px) {
@@ -1472,8 +1845,17 @@ body {
   .trade-ticket-grid,
   .trade-leg-grid,
   .trade-form-grid,
-  .trade-leg-meta {
+  .trade-leg-meta,
+  .priority-toggle-meta,
+  .funding-policy-strip,
+  .funding-guidance-grid,
+  .verification-ticket-summary,
+  .verification-ticket-form {
     grid-template-columns: 1fr;
+  }
+
+  .linked-bank-hero {
+    flex-direction: column;
   }
 
   .trade-flow-connector {

@@ -14,6 +14,7 @@ import {
   type ExchangeRequest,
   type FxRate,
   type FundingRequest,
+  type LinkedBankAccount,
   type Notification,
   type PageResponse,
   type Profile,
@@ -28,6 +29,7 @@ const CustomersPage = lazy(() => import("./pages/CustomersPage").then((module) =
 const AccountsPage = lazy(() => import("./pages/AccountsPage").then((module) => ({ default: module.AccountsPage })));
 const TransactionsPage = lazy(() => import("./pages/TransactionsPage").then((module) => ({ default: module.TransactionsPage })));
 const FxRatesPage = lazy(() => import("./pages/FxRatesPage").then((module) => ({ default: module.FxRatesPage })));
+const LinkedBankAccountsPage = lazy(() => import("./pages/LinkedBankAccountsPage").then((module) => ({ default: module.LinkedBankAccountsPage })));
 const FundingRequestsPage = lazy(() => import("./pages/FundingRequestsPage").then((module) => ({ default: module.FundingRequestsPage })));
 const ExchangeRequestsPage = lazy(() => import("./pages/ExchangeRequestsPage").then((module) => ({ default: module.ExchangeRequestsPage })));
 const StockOrdersPage = lazy(() => import("./pages/StockOrdersPage").then((module) => ({ default: module.StockOrdersPage })));
@@ -83,6 +85,8 @@ function App() {
   const [shellLoading, setShellLoading] = useState(false);
   const [approvalSubmitting, setApprovalSubmitting] = useState(false);
   const [stockFillSubmittingId, setStockFillSubmittingId] = useState<string | null>(null);
+  const [activatingLinkedBankAccountId, setActivatingLinkedBankAccountId] = useState<string | null>(null);
+  const [blockingLinkedBankAccountId, setBlockingLinkedBankAccountId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -91,6 +95,7 @@ function App() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [fxRates, setFxRates] = useState<FxRate[]>([]);
+  const [linkedBankAccounts, setLinkedBankAccounts] = useState<LinkedBankAccount[]>([]);
   const [fundingRequests, setFundingRequests] = useState<FundingRequest[]>([]);
   const [exchangeRequests, setExchangeRequests] = useState<ExchangeRequest[]>([]);
   const [stockOrders, setStockOrders] = useState<StockOrder[]>([]);
@@ -142,6 +147,7 @@ function App() {
         loadedAuditLogs,
         loadedNotifications,
         loadedFxRates,
+        loadedLinkedBankAccounts,
         loadedFundingRequests,
         loadedExchangeRequests,
         loadedStockOrders,
@@ -154,6 +160,7 @@ function App() {
         adminApi.auditLogs(currentToken),
         adminApi.notifications(currentToken),
         adminApi.fxRates(currentToken),
+        adminApi.linkedBankAccounts(currentToken),
         adminApi.fundingRequests(currentToken),
         adminApi.exchangeRequests(currentToken),
         adminApi.stockOrders(currentToken),
@@ -169,6 +176,7 @@ function App() {
         setNotifications(loadedNotifications.items);
         setUnreadNotificationCount(loadedNotifications.unreadCount);
         setFxRates(loadedFxRates);
+        setLinkedBankAccounts(loadedLinkedBankAccounts);
         setFundingRequests(loadedFundingRequests);
         setExchangeRequests(loadedExchangeRequests);
         setStockOrders(loadedStockOrders);
@@ -185,6 +193,7 @@ function App() {
       setNotifications([]);
       setUnreadNotificationCount(0);
       setFxRates([]);
+      setLinkedBankAccounts([]);
       setFundingRequests([]);
       setExchangeRequests([]);
       setStockOrders([]);
@@ -451,6 +460,40 @@ function App() {
     }
   }
 
+  async function handleBlockLinkedBankAccount(linkedBankAccountId: string) {
+    if (!token) {
+      return;
+    }
+
+    setBlockingLinkedBankAccountId(linkedBankAccountId);
+    try {
+      await adminApi.blockLinkedBankAccount(token, linkedBankAccountId);
+      await loadShell(token);
+      messageApi.success("연결 계좌를 차단했습니다.");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "Linked bank account block failed");
+    } finally {
+      setBlockingLinkedBankAccountId(null);
+    }
+  }
+
+  async function handleActivateLinkedBankAccount(linkedBankAccountId: string) {
+    if (!token) {
+      return;
+    }
+
+    setActivatingLinkedBankAccountId(linkedBankAccountId);
+    try {
+      await adminApi.activateLinkedBankAccount(token, linkedBankAccountId);
+      await loadShell(token);
+      messageApi.success("연결 계좌를 활성화했습니다.");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "Linked bank account activation failed");
+    } finally {
+      setActivatingLinkedBankAccountId(null);
+    }
+  }
+
   function logout() {
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     setToken(null);
@@ -462,6 +505,7 @@ function App() {
     setNotifications([]);
     setUnreadNotificationCount(0);
     setFxRates([]);
+    setLinkedBankAccounts([]);
     setFundingRequests([]);
     setExchangeRequests([]);
     setStockOrders([]);
@@ -541,6 +585,18 @@ function App() {
                   }
                 />
                 <Route path="/fx-rates" element={<FxRatesPage rates={fxRates} />} />
+                <Route
+                  path="/linked-bank-accounts"
+                  element={
+                    <LinkedBankAccountsPage
+                      linkedBankAccounts={linkedBankAccounts}
+                      activatingId={activatingLinkedBankAccountId}
+                      blockingId={blockingLinkedBankAccountId}
+                      onActivate={handleActivateLinkedBankAccount}
+                      onBlock={handleBlockLinkedBankAccount}
+                    />
+                  }
+                />
                 <Route path="/funding-requests" element={<FundingRequestsPage fundingRequests={fundingRequests} />} />
                 <Route path="/exchange-requests" element={<ExchangeRequestsPage exchangeRequests={exchangeRequests} />} />
                 <Route

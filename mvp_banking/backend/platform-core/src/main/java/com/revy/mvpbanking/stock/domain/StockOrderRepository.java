@@ -8,5 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StockOrderRepository extends JpaRepository<StockOrder, UUID> {
     List<StockOrder> findAllByOrderByCreatedAtDesc();
     List<StockOrder> findByCustomerIdOrderByCreatedAtDesc(UUID customerId);
+    Optional<StockOrder> findByIdAndCustomerId(UUID id, UUID customerId);
     Optional<StockOrder> findByOrderNumber(String orderNumber);
 }

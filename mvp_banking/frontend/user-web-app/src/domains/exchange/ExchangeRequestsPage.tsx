@@ -5,23 +5,31 @@ import type { CreateExchangeRequestPayload, ExchangeRequest } from "./types";
 import { formatAmount } from "../../shared/utils/format";
 
 const EXCHANGE_FEE_RATE = 0.0012;
+const EXCHANGE_CUTOFF_HOUR = 16;
+const KRW_MANUAL_REVIEW_THRESHOLD = 5_000_000;
+const FX_MANUAL_REVIEW_THRESHOLD = 5_000;
+const RATE_STALENESS_MANUAL_REVIEW_MINUTES = 30;
 
 type ExchangeRequestsPageProps = {
   loading: boolean;
   submitting: boolean;
+  cancelingRequestId: string | null;
   accounts: Account[];
   fxRates: FxRate[];
   exchangeRequests: ExchangeRequest[];
   onCreate: (payload: CreateExchangeRequestPayload) => Promise<void>;
+  onCancel: (requestId: string, reason?: string) => Promise<void>;
 };
 
 export function ExchangeRequestsPage({
   loading,
   submitting,
+  cancelingRequestId,
   accounts,
   fxRates,
   exchangeRequests,
   onCreate,
+  onCancel,
 }: ExchangeRequestsPageProps) {
   const bankingAccounts = [...accounts]
     .filter((account) => account.accountType === "BANKING")
@@ -30,6 +38,7 @@ export function ExchangeRequestsPage({
     sourceAccountId: "",
     destinationAccountId: "",
     fromAmount: "1000",
+    requestMemo: "투자 포트폴리오 리밸런싱",
   });
   const sourceAccount = bankingAccounts.find((account) => account.id === form.sourceAccountId);
   const destinationCandidates = bankingAccounts.filter(
@@ -48,6 +57,18 @@ export function ExchangeRequestsPage({
   const expectedReceiveAmount = expectedGrossReceiveAmount !== null && expectedFeeAmount !== null
     ? expectedGrossReceiveAmount - expectedFeeAmount
     : null;
+  const sameDaySettlementEligiblePreview = isSameDaySettlementEligibleNow();
+  const expectedSettlementPreview = buildExpectedSettlementPreview(sameDaySettlementEligiblePreview);
+  const rateAgeMinutes = rateSnapshot ? Math.max(0, Math.floor((Date.now() - Date.parse(rateSnapshot.effectiveAt)) / 60_000)) : null;
+  const manualReviewThreshold = resolveManualReviewThreshold(sourceAccount?.currency);
+  const previewManualReviewReasons: string[] = [];
+  if (parsedFromAmount > 0 && parsedFromAmount >= manualReviewThreshold) {
+    previewManualReviewReasons.push("고액 환전 심사");
+  }
+  if (rateAgeMinutes !== null && rateAgeMinutes >= RATE_STALENESS_MANUAL_REVIEW_MINUTES) {
+    previewManualReviewReasons.push("시세 지연 확인");
+  }
+  const previewManualReviewRequired = previewManualReviewReasons.length > 0;
   const canSubmit = Boolean(
     form.sourceAccountId
     && form.destinationAccountId
@@ -97,7 +118,19 @@ export function ExchangeRequestsPage({
       sourceAccountId: form.sourceAccountId,
       destinationAccountId: form.destinationAccountId,
       fromAmount: Number(form.fromAmount),
+      requestMemo: form.requestMemo.trim() || undefined,
     });
+  }
+
+  async function requestCancel(exchangeRequest: ExchangeRequest) {
+    if (!canCancelExchangeRequest(exchangeRequest.status)) {
+      return;
+    }
+    const reasonInput = window.prompt("취소 사유를 입력하세요. (선택)", "환전 계획 변경");
+    if (reasonInput === null) {
+      return;
+    }
+    await onCancel(exchangeRequest.id, reasonInput.trim() || undefined);
   }
 
   if (loading) {
@@ -225,6 +258,24 @@ export function ExchangeRequestsPage({
                 )}
               </div>
 
+              <div className="funding-policy-strip">
+                <article className={`policy-chip ${sameDaySettlementEligiblePreview ? "positive" : "warning"}`}>
+                  <span>정산 윈도우</span>
+                  <strong>{sameDaySettlementEligiblePreview ? "당일 정산 가능" : "익영업일 정산"}</strong>
+                  <p>{expectedSettlementPreview}</p>
+                </article>
+                <article className={`policy-chip ${rateAgeMinutes !== null && rateAgeMinutes >= RATE_STALENESS_MANUAL_REVIEW_MINUTES ? "warning" : "neutral"}`}>
+                  <span>시세 신선도</span>
+                  <strong>{rateAgeMinutes !== null ? `${rateAgeMinutes}분 경과` : "환율 선택 필요"}</strong>
+                  <p>{rateSnapshot ? `기준 시각 ${new Date(rateSnapshot.effectiveAt).toLocaleString()}` : "환율 페어를 선택하면 기준 시각이 표시됩니다."}</p>
+                </article>
+                <article className={`policy-chip ${previewManualReviewRequired ? "negative" : "positive"}`}>
+                  <span>심사 플래그</span>
+                  <strong>{previewManualReviewRequired ? "수동 심사 예상" : "기본 승인 큐"}</strong>
+                  <p>{previewManualReviewRequired ? previewManualReviewReasons.join(" / ") : "현재 입력 조건에서는 추가 심사 사유가 없습니다."}</p>
+                </article>
+              </div>
+
               <div className="trade-form-grid">
                 <label className="form-field">
                   <span>환전 금액</span>
@@ -242,6 +293,16 @@ export function ExchangeRequestsPage({
                       ? `${sourceAccount.currency} 기준으로 입력하세요.`
                       : "출금 계좌 통화 기준으로 요청 금액을 입력하세요."}
                   </small>
+                </label>
+                <label className="form-field">
+                  <span>요청 메모</span>
+                  <textarea
+                    value={form.requestMemo}
+                    maxLength={200}
+                    onChange={(event) => setForm((current) => ({ ...current, requestMemo: event.target.value }))}
+                    placeholder="예: 해외주식 매수 자금 환전"
+                  />
+                  <small className="form-helper">{`${form.requestMemo.length}/200`}</small>
                 </label>
               </div>
             </div>
@@ -290,6 +351,18 @@ export function ExchangeRequestsPage({
                   <span>시세 시각</span>
                   <strong>{rateSnapshot ? new Date(rateSnapshot.effectiveAt).toLocaleString() : "실시간 환율 대기"}</strong>
                 </div>
+                <div>
+                  <span>정산 예상 시각</span>
+                  <strong>{expectedSettlementPreview}</strong>
+                </div>
+                <div>
+                  <span>심사 플래그</span>
+                  <strong>{previewManualReviewRequired ? previewManualReviewReasons.join(" / ") : "추가 심사 없음"}</strong>
+                </div>
+                <div className="trade-summary-memo">
+                  <span>요청 메모</span>
+                  <strong>{form.requestMemo.trim() ? form.requestMemo.trim() : "미입력"}</strong>
+                </div>
               </div>
               <button
                 type="submit"
@@ -322,8 +395,12 @@ export function ExchangeRequestsPage({
                 <th>요청번호</th>
                 <th>흐름</th>
                 <th>환전 금액</th>
+                <th>요청 메모</th>
                 <th>상태</th>
+                <th>정책 플래그</th>
+                <th>예상 정산</th>
                 <th>정산 거래</th>
+                <th>액션</th>
                 <th>생성일시</th>
               </tr>
             </thead>
@@ -348,7 +425,31 @@ export function ExchangeRequestsPage({
                       </div>
                     </td>
                     <td>
+                      <div className="table-cell-stack">
+                        <p className="table-note">{item.requestMemo ?? "미입력"}</p>
+                        {item.status === "CANCELED" ? (
+                          <p className="table-note">{`취소 사유: ${item.cancellationReason ?? "사용자 요청 취소"}`}</p>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td>
                       <b className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</b>
+                    </td>
+                    <td>
+                      <div className="table-cell-stack">
+                        <div>
+                          <strong>{item.sameDaySettlementEligible ? "당일 정산" : "익영업일 정산"}</strong>
+                          <p>{item.manualReviewRequired ? item.manualReviewReason ?? "수동 심사" : "추가 심사 없음"}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="table-cell-stack">
+                        <div>
+                          <strong>{item.expectedSettlementAt ? new Date(item.expectedSettlementAt).toLocaleString() : "-"}</strong>
+                          <p>{`rate ${new Date(item.appliedRateEffectiveAt).toLocaleString()}`}</p>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <div className="table-cell-stack">
@@ -362,12 +463,26 @@ export function ExchangeRequestsPage({
                         </div>
                       </div>
                     </td>
+                    <td>
+                      {canCancelExchangeRequest(item.status) ? (
+                        <button
+                          type="button"
+                          className="secondary-button compact"
+                          disabled={cancelingRequestId === item.id}
+                          onClick={() => void requestCancel(item)}
+                        >
+                          {cancelingRequestId === item.id ? "취소 중..." : "요청 취소"}
+                        </button>
+                      ) : (
+                        <span className="table-muted">-</span>
+                      )}
+                    </td>
                     <td>{new Date(item.createdAt).toLocaleString()}</td>
                   </tr>
                 ))
               ) : (
                 <tr className="table-empty-row">
-                  <td colSpan={6}>
+                  <td colSpan={10}>
                     <strong>환전 요청 내역이 없습니다.</strong>
                     <p>첫 환전 요청을 등록해 보세요.</p>
                   </td>
@@ -414,4 +529,37 @@ function resolveAccountLabel(account: Account | undefined, accountId: string | n
     return `legacy / ${currency}`;
   }
   return `${accountId.slice(0, 8)} / ${currency}`;
+}
+
+function resolveManualReviewThreshold(currency: string | undefined) {
+  return currency?.toUpperCase() === "KRW" ? KRW_MANUAL_REVIEW_THRESHOLD : FX_MANUAL_REVIEW_THRESHOLD;
+}
+
+function canCancelExchangeRequest(status: string) {
+  return status === "PENDING_APPROVAL";
+}
+
+function isSameDaySettlementEligibleNow() {
+  const now = new Date();
+  const day = now.getDay();
+  const businessDay = day >= 1 && day <= 5;
+  const beforeCutoff = now.getHours() < EXCHANGE_CUTOFF_HOUR
+    || (now.getHours() === EXCHANGE_CUTOFF_HOUR && now.getMinutes() === 0 && now.getSeconds() === 0);
+  return businessDay && beforeCutoff;
+}
+
+function buildExpectedSettlementPreview(sameDaySettlementEligible: boolean) {
+  const now = new Date();
+  if (sameDaySettlementEligible) {
+    const sameDay = new Date(now);
+    sameDay.setHours(17, 30, 0, 0);
+    return sameDay.toLocaleString();
+  }
+
+  const nextBusinessDay = new Date(now);
+  do {
+    nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
+  } while (nextBusinessDay.getDay() === 0 || nextBusinessDay.getDay() === 6);
+  nextBusinessDay.setHours(10, 30, 0, 0);
+  return nextBusinessDay.toLocaleString();
 }

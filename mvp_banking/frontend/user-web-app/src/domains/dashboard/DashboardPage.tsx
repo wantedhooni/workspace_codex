@@ -186,6 +186,10 @@ export function DashboardPage({ loading, dashboard }: DashboardPageProps) {
               <strong>{dashboard.fxRates.length}</strong>
             </div>
             <div className="allocation-row">
+              <span>Linked Bank Accounts</span>
+              <strong>{dashboard.linkedBankAccounts.length}</strong>
+            </div>
+            <div className="allocation-row">
               <span>Tracked Positions</span>
               <strong>{dashboard.stockPositions.length}</strong>
             </div>

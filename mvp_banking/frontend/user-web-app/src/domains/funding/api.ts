@@ -1,5 +1,5 @@
 import { request } from "../../shared/api/http";
-import type { CreateFundingRequestPayload, FundingRequest } from "./types";
+import type { CancelFundingRequestPayload, CreateFundingRequestPayload, FundingRequest } from "./types";
 
 export const fundingApi = {
   list(token: string) {
@@ -8,6 +8,16 @@ export const fundingApi = {
   create(token: string, payload: CreateFundingRequestPayload) {
     return request<FundingRequest>(
       "/api/user/funding-requests",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  },
+  cancel(token: string, requestId: string, payload: CancelFundingRequestPayload) {
+    return request<FundingRequest>(
+      `/api/user/funding-requests/${requestId}/cancel`,
       {
         method: "POST",
         body: JSON.stringify(payload),

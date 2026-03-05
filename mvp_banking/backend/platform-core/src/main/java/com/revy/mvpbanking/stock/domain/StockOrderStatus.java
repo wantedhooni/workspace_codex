@@ -4,5 +4,6 @@ public enum StockOrderStatus {
     PENDING_APPROVAL,
     PARTIALLY_FILLED,
     APPROVED,
-    REJECTED
+    REJECTED,
+    CANCELED
 }

@@ -1,5 +1,5 @@
 import { request } from "../../shared/api/http";
-import type { CreateStockOrderPayload, StockOrder, StockPosition } from "./types";
+import type { CancelStockOrderPayload, CreateStockOrderPayload, StockOrder, StockPosition } from "./types";
 
 export const stockApi = {
   orders(token: string) {
@@ -11,6 +11,16 @@ export const stockApi = {
   create(token: string, payload: CreateStockOrderPayload) {
     return request<StockOrder>(
       "/api/user/stock-orders",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  },
+  cancel(token: string, orderId: string, payload: CancelStockOrderPayload) {
+    return request<StockOrder>(
+      `/api/user/stock-orders/${orderId}/cancel`,
       {
         method: "POST",
         body: JSON.stringify(payload),

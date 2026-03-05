@@ -77,6 +77,9 @@ Initial API surface:
 - `GET /api/admin/accounts`
 - `GET /api/admin/transactions`
 - `GET /api/admin/fx-rates`
+- `GET /api/admin/linked-bank-accounts`
+- `POST /api/admin/linked-bank-accounts/{linkedBankAccountId}/activate`
+- `POST /api/admin/linked-bank-accounts/{linkedBankAccountId}/block`
 - `GET /api/admin/funding-requests`
 - `GET /api/admin/exchange-requests`
 - `GET /api/admin/stock-orders`
@@ -95,15 +98,23 @@ Initial API surface:
 - `GET /api/user/dashboard/insights`
 - `GET /api/user/announcements`
 - `GET /api/user/accounts`
+- `GET /api/user/linked-bank-accounts`
+- `POST /api/user/linked-bank-accounts`
+- `POST /api/user/linked-bank-accounts/{linkedBankAccountId}/primary`
+- `POST /api/user/linked-bank-accounts/{linkedBankAccountId}/resend-verification`
+- `POST /api/user/linked-bank-accounts/{linkedBankAccountId}/verify`
 - `GET /api/user/funding-requests`
 - `POST /api/user/funding-requests`
+- `POST /api/user/funding-requests/{requestId}/cancel`
 - `GET /api/user/transactions`
 - `GET /api/user/fx-rates`
 - `GET /api/user/exchange-requests`
 - `POST /api/user/exchange-requests`
+- `POST /api/user/exchange-requests/{requestId}/cancel`
 - `GET /api/user/stock-orders`
 - `GET /api/user/stock-positions`
 - `POST /api/user/stock-orders`
+- `POST /api/user/stock-orders/{orderId}/cancel`
 - `GET /api/user/notifications`
 - `POST /api/user/notifications/{notificationId}/read`
 
@@ -132,13 +143,15 @@ npm run dev
 Admin Portal defaults:
 - URL: `http://localhost:5173`
 - Seed account: `admin@mvpbanking.local / Admin1234!`
-- Routes: `/`, `/customers`, `/accounts`, `/transactions`, `/fx-rates`, `/funding-requests`, `/exchange-requests`, `/stock-orders`, `/stock-positions`, `/approvals`, `/announcements`, `/notifications`, `/audit-logs`
+- Routes: `/`, `/customers`, `/accounts`, `/transactions`, `/fx-rates`, `/linked-bank-accounts`, `/funding-requests`, `/exchange-requests`, `/stock-orders`, `/stock-positions`, `/approvals`, `/announcements`, `/notifications`, `/audit-logs`
 - Page-level lazy loading enabled for admin routes
 - Advanced filters: balance range, amount range, transaction date range
 - Customer page: status summary cards, customer created date range
 - Markets: FX rates, funding queue, exchange queue, stock order queue
 - Overview: 승인 backlog, 심사 필요 고객, 시세 freshness, 운영 alerts, funding queue, pending instruction volume
 - Operations inbox: unread badge, severity별 운영 알림, 읽음 처리, 도착 시각과 액션 경로 확인
+- Linked bank accounts: 사용자 외부 출금 계좌 목록, stale verification 우선 점검, 운영 차단 액션
+- Funding operations: 수동 심사 플래그, 일일 한도 초과, 당일/다음 영업일 정산 윈도우를 큐에서 바로 확인
 - Announcements: draft / publish / archive, severity, audience, pin, service banner management
 - Stock operations: execution history, partial fill / remaining quantity, manual fill completion, settlement transaction number, fee / tax / net settlement breakdown, stock position inventory, mark-to-market valuation
 
@@ -153,13 +166,14 @@ npm run dev
 User Web Application defaults:
 - URL: `http://localhost:5174`
 - Seed account: `user@mvpbanking.local / User1234!`
-- Routes: `/`, `/announcements`, `/accounts`, `/funding-requests`, `/transactions`, `/fx-rates`, `/exchange-requests`, `/stock-orders`, `/stock-positions`, `/notifications`
+- Routes: `/`, `/announcements`, `/accounts`, `/linked-bank-accounts`, `/funding-requests`, `/transactions`, `/fx-rates`, `/exchange-requests`, `/stock-orders`, `/stock-positions`, `/notifications`
 - Built-in filters: account text filter, transaction text filter, transaction status filter
 - Dashboard: total assets, 현금/투자 자산 분리, 통화 노출, action board, 상위 보유 종목, funding/exchange/order service queue, stock valuation reflected
 - Service banner: published announcement 중 critical/pinned 우선 공지를 상단 배너로 노출
 - Notification center: unread badge, 최근 이벤트 프리뷰, 환전/주식/포트폴리오 알림 읽음 처리
 - Account cards: linked recent transactions per account
-- Funding: account 기반 입금/출금 요청 티켓, 승인 후 예상 잔액 프리뷰, 요청 내역 추적
+- Linked bank accounts: 외부 출금 계좌 등록, 검증 대기 티켓, 만료/재발송 cooldown, 다음 재발송 가능 시각, 소액이체 인증 문구 제출, 기본 출금 전환, 활성/차단 상태 확인
+- Funding: account 기반 입금/출금 요청 티켓, 기본 외부 목적지 자동 선택, 승인 후 예상 잔액 프리뷰, 컷오프/일일 한도/수동 심사 프리뷰, 요청 내역 추적
 - Markets: FX rate calculator, FX rate board, source/destination account exchange ticket with expected gross receive / fee / net receive, stock order ticket with estimated notional / fee / tax / cash impact
 - Portfolio extension: stock positions, current price, market value, unrealized/realized P/L, stock execution history, partial fill progress, remaining quantity, settled exchange/order details, fee and net settlement breakdown
 
@@ -215,7 +229,7 @@ Available scripts:
 - `./scripts/e2e-smoke.sh`
 
 E2E smoke test:
-- Default: starts the full stack, verifies health endpoints, performs admin/user login, checks core admin/user APIs including funding endpoints, and validates notification read endpoints
+- Default: starts the full stack, verifies health endpoints, performs admin/user login, checks core admin/user APIs including linked bank account create/resend/verify, funding request create/cancel, and validates notification read endpoints
 - Reuse already running services: `START_STACK=0 ./scripts/e2e-smoke.sh`
 - Stop stack after test: `STOP_STACK=1 ./scripts/e2e-smoke.sh`
 - Detailed guide: `docs/e2e-testing.md`

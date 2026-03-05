@@ -6,7 +6,8 @@ Responsibilities:
 - user signup and login
 - announcement lookup and service banner source
 - own account and transaction lookup
-- funding request creation and request history lookup
+- linked bank account registration, verification, resend cooldown, and primary withdrawal switching
+- funding request creation and request history lookup with cutoff / daily limit / manual review policy snapshot
 - FX rates and exchange requests
 - stock orders and stock positions
 

@@ -181,7 +181,8 @@ class UserApiIsolationIntegrationTest {
                                 {
                                   "sourceAccountId": "%s",
                                   "destinationAccountId": "%s",
-                                  "fromAmount": 250.0000
+                                  "fromAmount": 250.0000,
+                                  "requestMemo": "해외주식 투자자금 환전"
                                 }
                                 """.formatted(
                                         sourceAccount.path("id").asText(),
@@ -194,7 +195,163 @@ class UserApiIsolationIntegrationTest {
                 .andExpect(jsonPath("$.data.toCurrency").value("KRW"))
                 .andExpect(jsonPath("$.data.exchangeFeeAmount").isNumber())
                 .andExpect(jsonPath("$.data.netToAmount").isNumber())
+                .andExpect(jsonPath("$.data.appliedRateEffectiveAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.requestMemo").value("해외주식 투자자금 환전"))
+                .andExpect(jsonPath("$.data.sameDaySettlementEligible").isBoolean())
+                .andExpect(jsonPath("$.data.expectedSettlementAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.manualReviewRequired").isBoolean())
                 .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"));
+    }
+
+    @Test
+    void userApiCancelsPendingExchangeRequest() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String accountsContent = mockMvc.perform(get("/api/user/accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode accounts = objectMapper.readTree(accountsContent).path("data");
+        JsonNode sourceAccount = findBankingAccountByCurrency(accounts, "USD");
+        JsonNode destinationAccount = findBankingAccountByCurrency(accounts, "KRW");
+
+        String createContent = mockMvc.perform(post("/api/user/exchange-requests")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "sourceAccountId": "%s",
+                                  "destinationAccountId": "%s",
+                                  "fromAmount": 120.0000,
+                                  "requestMemo": "환율 조건 변경"
+                                }
+                                """.formatted(
+                                        sourceAccount.path("id").asText(),
+                                        destinationAccount.path("id").asText()
+                                )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String requestId = objectMapper.readTree(createContent).path("data").path("id").asText();
+
+        mockMvc.perform(post("/api/user/exchange-requests/{requestId}/cancel", requestId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reason": "환전 일정 연기"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(requestId))
+                .andExpect(jsonPath("$.data.status").value("CANCELED"))
+                .andExpect(jsonPath("$.data.cancellationReason").value("환전 일정 연기"))
+                .andExpect(jsonPath("$.data.canceledAt").isNotEmpty());
+    }
+
+    @Test
+    void userApiCreatesStockOrderWithMemo() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String accountsContent = mockMvc.perform(get("/api/user/accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode accounts = objectMapper.readTree(accountsContent).path("data");
+        JsonNode securitiesAccount = findActiveSecuritiesAccount(accounts);
+        String orderCurrency = securitiesAccount.path("currency").asText();
+
+        mockMvc.perform(post("/api/user/stock-orders")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "accountId": "%s",
+                                  "symbol": "AAPL",
+                                  "market": "NASDAQ",
+                                  "side": "BUY",
+                                  "quantity": 1.0000,
+                                  "limitPrice": 150.0000,
+                                  "currency": "%s",
+                                  "timeInForce": "DAY",
+                                  "orderMemo": "실적 발표 전 분할 매수"
+                                }
+                                """.formatted(securitiesAccount.path("id").asText(), orderCurrency)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accountId").value(securitiesAccount.path("id").asText()))
+                .andExpect(jsonPath("$.data.side").value("BUY"))
+                .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
+                .andExpect(jsonPath("$.data.orderMemo").value("실적 발표 전 분할 매수"))
+                .andExpect(jsonPath("$.data.timeInForce").value("DAY"))
+                .andExpect(jsonPath("$.data.expiresAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.marketSession").isNotEmpty())
+                .andExpect(jsonPath("$.data.expectedExecutionAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.manualReviewRequired").isBoolean());
+    }
+
+    @Test
+    void userApiCancelsPendingStockOrder() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String accountsContent = mockMvc.perform(get("/api/user/accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode accounts = objectMapper.readTree(accountsContent).path("data");
+        JsonNode securitiesAccount = findActiveSecuritiesAccount(accounts);
+        String orderCurrency = securitiesAccount.path("currency").asText();
+
+        String createContent = mockMvc.perform(post("/api/user/stock-orders")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "accountId": "%s",
+                                  "symbol": "AAPL",
+                                  "market": "NASDAQ",
+                                  "side": "BUY",
+                                  "quantity": 1.0000,
+                                  "limitPrice": 155.0000,
+                                  "currency": "%s",
+                                  "timeInForce": "DAY"
+                                }
+                                """.formatted(securitiesAccount.path("id").asText(), orderCurrency)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String orderId = objectMapper.readTree(createContent).path("data").path("id").asText();
+
+        mockMvc.perform(post("/api/user/stock-orders/{orderId}/cancel", orderId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reason": "투자전략 변경"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(orderId))
+                .andExpect(jsonPath("$.data.status").value("CANCELED"))
+                .andExpect(jsonPath("$.data.cancellationReason").value("투자전략 변경"))
+                .andExpect(jsonPath("$.data.canceledAt").isNotEmpty());
     }
 
     @Test
@@ -202,6 +359,38 @@ class UserApiIsolationIntegrationTest {
         doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
 
         String token = loginAsUser();
+        String linkedBankAccountContent = mockMvc.perform(post("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bankName": "Hana Bank",
+                                  "accountAlias": "생활비 계좌",
+                                  "accountHolderName": "MVP User",
+                                  "accountNumber": "777-888-%s",
+                                  "primaryWithdrawal": false
+                                }
+                                """.formatted(UUID.randomUUID().toString().substring(0, 6))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.bankName").value("Hana Bank"))
+                .andExpect(jsonPath("$.data.status").value("PENDING_VERIFICATION"))
+                .andExpect(jsonPath("$.data.verifiedAt").isEmpty())
+                .andExpect(jsonPath("$.data.verificationReference").isNotEmpty())
+                .andExpect(jsonPath("$.data.verificationExpiresAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.verificationExpired").value(false))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        objectMapper.readTree(linkedBankAccountContent).path("data").path("id").asText();
+        String linkedBankAccountsContent = mockMvc.perform(get("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode activeLinkedBankAccount = findLinkedBankAccountByStatus(objectMapper.readTree(linkedBankAccountsContent).path("data"), "ACTIVE");
         String accountsContent = mockMvc.perform(get("/api/user/accounts")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -219,14 +408,271 @@ class UserApiIsolationIntegrationTest {
                                   "accountId": "%s",
                                   "requestType": "WITHDRAWAL",
                                   "amount": 25.0000,
+                                  "linkedBankAccountId": "%s",
                                   "note": "생활비 출금"
                                 }
-                                """.formatted(activeAccount.path("id").asText())))
+                                """.formatted(activeAccount.path("id").asText(), activeLinkedBankAccount.path("id").asText())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accountId").value(activeAccount.path("id").asText()))
                 .andExpect(jsonPath("$.data.requestType").value("WITHDRAWAL"))
                 .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
-                .andExpect(jsonPath("$.data.accountNumber").isNotEmpty());
+                .andExpect(jsonPath("$.data.accountNumber").isNotEmpty())
+                .andExpect(jsonPath("$.data.linkedBankAccountId").value(activeLinkedBankAccount.path("id").asText()))
+                .andExpect(jsonPath("$.data.linkedBankName").isNotEmpty())
+                .andExpect(jsonPath("$.data.sameDaySettlementEligible").isBoolean())
+                .andExpect(jsonPath("$.data.expectedSettlementAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.manualReviewRequired").value(false))
+                .andExpect(jsonPath("$.data.serviceFeeAmount").isNumber())
+                .andExpect(jsonPath("$.data.totalDebitAmount").isNumber())
+                .andExpect(jsonPath("$.data.dailyLimitExceeded").value(false));
+    }
+
+    @Test
+    void userApiListsLinkedBankAccounts() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String content = mockMvc.perform(get("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode linkedAccounts = objectMapper.readTree(content).path("data");
+        org.assertj.core.api.Assertions.assertThat(linkedAccounts.isArray()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(linkedAccounts.size()).isGreaterThan(0);
+        org.assertj.core.api.Assertions.assertThat(linkedAccounts.get(0).path("maskedAccountNumber").asText()).isNotBlank();
+    }
+
+    @Test
+    void userApiMarksLinkedBankAccountAsPrimary() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String listedContent = mockMvc.perform(get("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode linkedAccountsBefore = objectMapper.readTree(listedContent).path("data");
+        JsonNode targetActiveLinkedAccount = findActiveNonPrimaryLinkedBankAccount(linkedAccountsBefore);
+        String linkedBankAccountId = targetActiveLinkedAccount.path("id").asText();
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/primary", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(linkedBankAccountId))
+                .andExpect(jsonPath("$.data.primaryWithdrawal").value(true))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+
+        String listedContentAfterUpdate = mockMvc.perform(get("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode linkedAccounts = objectMapper.readTree(listedContentAfterUpdate).path("data");
+        long primaryCount = 0;
+        for (JsonNode linkedAccount : linkedAccounts) {
+            if ("ACTIVE".equals(linkedAccount.path("status").asText()) && linkedAccount.path("primaryWithdrawal").asBoolean()) {
+                primaryCount++;
+            }
+        }
+        org.assertj.core.api.Assertions.assertThat(primaryCount).isEqualTo(1);
+    }
+
+    @Test
+    void userApiVerifiesPendingLinkedBankAccount() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String createdContent = mockMvc.perform(post("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bankName": "Toss Bank",
+                                  "accountAlias": "신규 자동이체 계좌",
+                                  "accountHolderName": "MVP User",
+                                  "accountNumber": "555-444-%s",
+                                  "primaryWithdrawal": false
+                                }
+                                """.formatted(UUID.randomUUID().toString().substring(0, 6))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING_VERIFICATION"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode createdLinkedAccount = objectMapper.readTree(createdContent).path("data");
+        String linkedBankAccountId = createdLinkedAccount.path("id").asText();
+        String verificationReference = createdLinkedAccount.path("verificationReference").asText();
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/verify", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "verificationReference": "%s"
+                                }
+                                """.formatted(verificationReference)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(linkedBankAccountId))
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.data.verifiedAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.verificationReference").isEmpty());
+    }
+
+    @Test
+    void userApiResendsLinkedBankAccountVerification() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String createdContent = mockMvc.perform(post("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bankName": "K Bank",
+                                  "accountAlias": "재발송 테스트 계좌",
+                                  "accountHolderName": "MVP User",
+                                  "accountNumber": "111-222-%s",
+                                  "primaryWithdrawal": false
+                                }
+                                """.formatted(UUID.randomUUID().toString().substring(0, 6))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode createdLinkedAccount = objectMapper.readTree(createdContent).path("data");
+        String linkedBankAccountId = createdLinkedAccount.path("id").asText();
+        String oldVerificationReference = createdLinkedAccount.path("verificationReference").asText();
+
+        String resentContent = mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/resend-verification", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(linkedBankAccountId))
+                .andExpect(jsonPath("$.data.status").value("PENDING_VERIFICATION"))
+                .andExpect(jsonPath("$.data.verificationReference").isNotEmpty())
+                .andExpect(jsonPath("$.data.verificationAttemptCount").value(0))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String newVerificationReference = objectMapper.readTree(resentContent).path("data").path("verificationReference").asText();
+        org.assertj.core.api.Assertions.assertThat(newVerificationReference).isNotEqualTo(oldVerificationReference);
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/verify", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "verificationReference": "%s"
+                                }
+                                """.formatted(newVerificationReference)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ACTIVE"));
+    }
+
+    @Test
+    void userApiPreventsImmediateRepeatedLinkedBankVerificationResend() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String createdContent = mockMvc.perform(post("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bankName": "NH Bank",
+                                  "accountAlias": "쿨다운 테스트 계좌",
+                                  "accountHolderName": "MVP User",
+                                  "accountNumber": "333-444-%s",
+                                  "primaryWithdrawal": false
+                                }
+                                """.formatted(UUID.randomUUID().toString().substring(0, 6))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String linkedBankAccountId = objectMapper.readTree(createdContent).path("data").path("id").asText();
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/resend-verification", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.verificationResendAllowed").value(false))
+                .andExpect(jsonPath("$.data.verificationResendAvailableAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.lastVerificationResentAt").isNotEmpty());
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/resend-verification", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void userApiBlocksLinkedBankAccountWhenVerificationAttemptsExceeded() throws Exception {
+        doNothing().when(refreshTokenStore).save(anyString(), any(RefreshTokenRecord.class), anyLong());
+
+        String token = loginAsUser();
+        String createdContent = mockMvc.perform(post("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "bankName": "Busan Bank",
+                                  "accountAlias": "인증실패 테스트 계좌",
+                                  "accountHolderName": "MVP User",
+                                  "accountNumber": "666-777-%s",
+                                  "primaryWithdrawal": false
+                                }
+                                """.formatted(UUID.randomUUID().toString().substring(0, 6))))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String linkedBankAccountId = objectMapper.readTree(createdContent).path("data").path("id").asText();
+
+        for (int attempt = 0; attempt < 4; attempt++) {
+            mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/verify", linkedBankAccountId)
+                            .header("Authorization", "Bearer " + token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "verificationReference": "MVP-0000"
+                                    }
+                                    """))
+                    .andExpect(status().isConflict());
+        }
+
+        mockMvc.perform(post("/api/user/linked-bank-accounts/{linkedBankAccountId}/verify", linkedBankAccountId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "verificationReference": "MVP-0000"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+
+        String listedContent = mockMvc.perform(get("/api/user/linked-bank-accounts")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode linkedAccounts = objectMapper.readTree(listedContent).path("data");
+        JsonNode blockedAccount = findLinkedBankAccountById(linkedAccounts, linkedBankAccountId);
+        org.assertj.core.api.Assertions.assertThat(blockedAccount.path("status").asText()).isEqualTo("BLOCKED");
+        org.assertj.core.api.Assertions.assertThat(blockedAccount.path("blockReasonCode").asText()).isEqualTo("VERIFICATION_ATTEMPTS_EXCEEDED");
+        org.assertj.core.api.Assertions.assertThat(blockedAccount.path("blockedAt").asText()).isNotBlank();
     }
 
     @Test
@@ -360,5 +806,42 @@ class UserApiIsolationIntegrationTest {
             }
         }
         throw new IllegalStateException("Required active account not found");
+    }
+
+    private static JsonNode findActiveSecuritiesAccount(JsonNode accounts) {
+        for (JsonNode account : accounts) {
+            if ("SECURITIES".equals(account.path("accountType").asText())
+                    && "ACTIVE".equals(account.path("status").asText())) {
+                return account;
+            }
+        }
+        throw new IllegalStateException("Required active securities account not found");
+    }
+
+    private static JsonNode findLinkedBankAccountByStatus(JsonNode linkedAccounts, String status) {
+        for (JsonNode linkedAccount : linkedAccounts) {
+            if (status.equals(linkedAccount.path("status").asText())) {
+                return linkedAccount;
+            }
+        }
+        throw new IllegalStateException("Required linked bank account not found for status: " + status);
+    }
+
+    private static JsonNode findActiveNonPrimaryLinkedBankAccount(JsonNode linkedAccounts) {
+        for (JsonNode linkedAccount : linkedAccounts) {
+            if ("ACTIVE".equals(linkedAccount.path("status").asText()) && !linkedAccount.path("primaryWithdrawal").asBoolean()) {
+                return linkedAccount;
+            }
+        }
+        throw new IllegalStateException("Required active non-primary linked bank account not found");
+    }
+
+    private static JsonNode findLinkedBankAccountById(JsonNode linkedAccounts, String linkedBankAccountId) {
+        for (JsonNode linkedAccount : linkedAccounts) {
+            if (linkedBankAccountId.equals(linkedAccount.path("id").asText())) {
+                return linkedAccount;
+            }
+        }
+        throw new IllegalStateException("Required linked bank account not found for id: " + linkedBankAccountId);
     }
 }

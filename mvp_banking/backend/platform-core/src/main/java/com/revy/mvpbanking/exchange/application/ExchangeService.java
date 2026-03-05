@@ -24,7 +24,14 @@ import com.revy.mvpbanking.transaction.domain.TransactionStatus;
 import com.revy.mvpbanking.transaction.domain.TransactionType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -38,6 +45,16 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 public class ExchangeService {
+
+    private static final int MAX_REQUEST_MEMO_LENGTH = 200;
+    private static final int MAX_CANCEL_REASON_LENGTH = 255;
+    private static final ZoneId OPERATIONS_ZONE = ZoneId.of("Asia/Seoul");
+    private static final LocalTime EXCHANGE_CUTOFF_TIME = LocalTime.of(16, 0);
+    private static final LocalTime SAME_DAY_SETTLEMENT_TIME = LocalTime.of(17, 30);
+    private static final LocalTime NEXT_DAY_SETTLEMENT_TIME = LocalTime.of(10, 30);
+    private static final BigDecimal KRW_MANUAL_REVIEW_THRESHOLD = new BigDecimal("5000000.0000");
+    private static final BigDecimal FX_MANUAL_REVIEW_THRESHOLD = new BigDecimal("5000.0000");
+    private static final long RATE_STALENESS_MANUAL_REVIEW_MINUTES = 30;
 
     private final ExchangeRequestRepository exchangeRequestRepository;
     private final CustomerRepository customerRepository;
@@ -83,7 +100,13 @@ public class ExchangeService {
     }
 
     @Transactional
-    public ExchangeRequest create(UUID endUserId, UUID sourceAccountId, UUID destinationAccountId, BigDecimal fromAmount) {
+    public ExchangeRequest create(
+            UUID endUserId,
+            UUID sourceAccountId,
+            UUID destinationAccountId,
+            BigDecimal fromAmount,
+            String requestMemo
+    ) {
         var customer = customerRepository.findByEndUserId(endUserId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Customer not found"));
         Account sourceAccount = accountRepository.findById(sourceAccountId)
@@ -108,8 +131,11 @@ public class ExchangeService {
         if (sourceAccount.getBalance().compareTo(fromAmount) < 0) {
             throw new ResponseStatusException(BAD_REQUEST, "Insufficient source account balance");
         }
+        String sanitizedRequestMemo = sanitizeMemo(requestMemo, "Exchange request memo");
 
         var fxRate = fxRateService.getLatestRate(fromCurrency, toCurrency);
+        Instant requestedAt = Instant.now();
+        ExchangePolicyDecision policyDecision = evaluatePolicy(fromCurrency, fromAmount, requestedAt, fxRate.getEffectiveAt());
         BigDecimal convertedAmount = fromAmount.multiply(fxRate.getRate()).setScale(4, RoundingMode.HALF_UP);
         ExchangeRequest request = exchangeRequestRepository.save(
                 new ExchangeRequest(
@@ -122,7 +148,13 @@ public class ExchangeService {
                         fromAmount.setScale(4, RoundingMode.HALF_UP),
                         fxRate.getRate(),
                         convertedAmount,
-                        ExchangeRequestStatus.PENDING_APPROVAL
+                        ExchangeRequestStatus.PENDING_APPROVAL,
+                        sanitizedRequestMemo,
+                        fxRate.getEffectiveAt(),
+                        policyDecision.sameDaySettlementEligible(),
+                        policyDecision.expectedSettlementAt(),
+                        policyDecision.manualReviewRequired(),
+                        policyDecision.manualReviewReason()
                 )
         );
 
@@ -168,9 +200,65 @@ public class ExchangeService {
     }
 
     @Transactional
+    public ExchangeRequest cancelByUser(UUID endUserId, UUID requestId, String cancelReason) {
+        var customer = customerRepository.findByEndUserId(endUserId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Customer not found"));
+        ExchangeRequest exchangeRequest = exchangeRequestRepository.findByIdAndCustomerId(requestId, customer.getId())
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Exchange request not found"));
+        String normalizedReason = sanitizeText(cancelReason, "Exchange cancel reason", MAX_CANCEL_REASON_LENGTH);
+        if (normalizedReason == null) {
+            normalizedReason = "사용자 요청 취소";
+        }
+
+        try {
+            exchangeRequest.cancel(normalizedReason);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(CONFLICT, exception.getMessage());
+        }
+
+        final String decisionReason = normalizedReason;
+        approvalRequestRepository.findByTargetTypeAndTargetIdAndStatus(
+                        ApprovalTargetType.FX_EXCHANGE,
+                        exchangeRequest.getId(),
+                        ApprovalStatus.PENDING
+                )
+                .ifPresent(approvalRequest -> approvalRequest.cancel(
+                        customer.getEmail(),
+                        "사용자 취소: " + decisionReason
+                ));
+
+        auditLogService.logCurrentActor(
+                AuditActionType.EXCHANGE_REQUEST_CANCELED,
+                "EXCHANGE_REQUEST",
+                exchangeRequest.getId().toString(),
+                "Canceled exchange request " + exchangeRequest.getRequestNumber()
+        );
+        notificationService.notifyActiveAdmins(
+                "ADMIN-EXCHANGE-CANCELED:" + exchangeRequest.getId(),
+                NotificationCategory.EXCHANGE,
+                NotificationSeverity.INFO,
+                "사용자 환전 요청 취소",
+                exchangeRequest.getRequestNumber() + " 요청이 사용자 요청으로 취소되었습니다.",
+                "/exchange-requests",
+                "EXCHANGE_REQUEST",
+                exchangeRequest.getId()
+        );
+        return exchangeRequest;
+    }
+
+    @Transactional
     public void markApproved(UUID requestId) {
         ExchangeRequest request = exchangeRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Exchange request not found"));
+        if (request.getStatus() == ExchangeRequestStatus.APPROVED) {
+            return;
+        }
+        if (request.getStatus() == ExchangeRequestStatus.REJECTED) {
+            throw new ResponseStatusException(CONFLICT, "Rejected exchange request cannot be approved");
+        }
+        if (request.getStatus() == ExchangeRequestStatus.CANCELED) {
+            throw new ResponseStatusException(CONFLICT, "Canceled exchange request cannot be approved");
+        }
         if (request.getSourceAccountId() == null) {
             throw new ResponseStatusException(BAD_REQUEST, "Exchange request source account is not configured");
         }
@@ -242,7 +330,11 @@ public class ExchangeService {
     public void markRejected(UUID requestId) {
         ExchangeRequest exchangeRequest = exchangeRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Exchange request not found"));
-        exchangeRequest.reject();
+        try {
+            exchangeRequest.reject();
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(CONFLICT, exception.getMessage());
+        }
         customerRepository.findById(exchangeRequest.getCustomerId())
                 .map(customer -> customer.getEndUserId())
                 .ifPresent(endUserId -> notificationService.notifyUser(
@@ -268,5 +360,87 @@ public class ExchangeService {
         if (account.getStatus() != AccountStatus.ACTIVE) {
             throw new ResponseStatusException(BAD_REQUEST, accountLabel + " account must be active");
         }
+    }
+
+    private static String sanitizeMemo(String memo, String label) {
+        return sanitizeText(memo, label, MAX_REQUEST_MEMO_LENGTH);
+    }
+
+    private static String sanitizeText(String text, String label, int maxLength) {
+        if (text == null) {
+            return null;
+        }
+        String normalized = text.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        if (normalized.length() > maxLength) {
+            throw new ResponseStatusException(BAD_REQUEST, label + " must be " + maxLength + " characters or less");
+        }
+        return normalized;
+    }
+
+    private static ExchangePolicyDecision evaluatePolicy(
+            String fromCurrency,
+            BigDecimal fromAmount,
+            Instant requestedAt,
+            Instant rateEffectiveAt
+    ) {
+        ZonedDateTime requestedLocal = requestedAt.atZone(OPERATIONS_ZONE);
+        boolean businessDay = isBusinessDay(requestedLocal.toLocalDate());
+        boolean beforeCutoff = !requestedLocal.toLocalTime().isAfter(EXCHANGE_CUTOFF_TIME);
+        boolean sameDaySettlementEligible = businessDay && beforeCutoff;
+        Instant expectedSettlementAt = resolveExpectedSettlementAt(requestedLocal.toLocalDate(), sameDaySettlementEligible);
+
+        List<String> manualReviewReasons = new ArrayList<>();
+        if (fromAmount.compareTo(resolveManualReviewThreshold(fromCurrency)) >= 0) {
+            manualReviewReasons.add("고액 환전 심사");
+        }
+        long rateAgeMinutes = ChronoUnit.MINUTES.between(rateEffectiveAt, requestedAt);
+        if (rateAgeMinutes >= RATE_STALENESS_MANUAL_REVIEW_MINUTES) {
+            manualReviewReasons.add("시세 지연 확인 필요");
+        }
+
+        boolean manualReviewRequired = !manualReviewReasons.isEmpty();
+        String manualReviewReason = manualReviewRequired ? String.join(" / ", manualReviewReasons) : null;
+
+        return new ExchangePolicyDecision(
+                sameDaySettlementEligible,
+                expectedSettlementAt,
+                manualReviewRequired,
+                manualReviewReason
+        );
+    }
+
+    private static Instant resolveExpectedSettlementAt(LocalDate requestedDate, boolean sameDaySettlementEligible) {
+        if (sameDaySettlementEligible) {
+            return requestedDate.atTime(SAME_DAY_SETTLEMENT_TIME).atZone(OPERATIONS_ZONE).toInstant();
+        }
+        return nextBusinessDay(requestedDate).atTime(NEXT_DAY_SETTLEMENT_TIME).atZone(OPERATIONS_ZONE).toInstant();
+    }
+
+    private static BigDecimal resolveManualReviewThreshold(String currency) {
+        return "KRW".equalsIgnoreCase(currency) ? KRW_MANUAL_REVIEW_THRESHOLD : FX_MANUAL_REVIEW_THRESHOLD;
+    }
+
+    private static LocalDate nextBusinessDay(LocalDate date) {
+        LocalDate next = date.plusDays(1);
+        while (!isBusinessDay(next)) {
+            next = next.plusDays(1);
+        }
+        return next;
+    }
+
+    private static boolean isBusinessDay(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
+    }
+
+    private record ExchangePolicyDecision(
+            boolean sameDaySettlementEligible,
+            Instant expectedSettlementAt,
+            boolean manualReviewRequired,
+            String manualReviewReason
+    ) {
     }
 }

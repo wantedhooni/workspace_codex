@@ -15,6 +15,7 @@ const navItems = [
   { label: "Accounts", to: "/accounts" },
   { label: "Transactions", to: "/transactions" },
   { label: "FX Rates", to: "/fx-rates" },
+  { label: "Linked Banks", to: "/linked-bank-accounts" },
   { label: "Funding", to: "/funding-requests" },
   { label: "Exchange", to: "/exchange-requests" },
   { label: "Stock Orders", to: "/stock-orders" },

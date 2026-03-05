@@ -48,6 +48,9 @@ public class ExchangeRequest extends BaseJpaEntity {
     @Column(name = "applied_rate", nullable = false, precision = 19, scale = 6)
     private BigDecimal appliedRate;
 
+    @Column(name = "applied_rate_effective_at", nullable = false)
+    private Instant appliedRateEffectiveAt;
+
     @Column(name = "to_amount", nullable = false, precision = 19, scale = 4)
     private BigDecimal toAmount;
 
@@ -67,6 +70,27 @@ public class ExchangeRequest extends BaseJpaEntity {
     @Column(name = "settlement_transaction_number", length = 50)
     private String destinationTransactionNumber;
 
+    @Column(name = "request_memo", length = 200)
+    private String requestMemo;
+
+    @Column(name = "same_day_settlement_eligible", nullable = false)
+    private boolean sameDaySettlementEligible;
+
+    @Column(name = "expected_settlement_at")
+    private Instant expectedSettlementAt;
+
+    @Column(name = "manual_review_required", nullable = false)
+    private boolean manualReviewRequired;
+
+    @Column(name = "manual_review_reason", length = 255)
+    private String manualReviewReason;
+
+    @Column(name = "cancellation_reason", length = 255)
+    private String cancellationReason;
+
+    @Column(name = "canceled_at")
+    private Instant canceledAt;
+
     @Column(name = "settled_at")
     private Instant settledAt;
 
@@ -85,6 +109,77 @@ public class ExchangeRequest extends BaseJpaEntity {
             BigDecimal toAmount,
             ExchangeRequestStatus status
     ) {
+        this(
+                customerId,
+                sourceAccountId,
+                destinationAccountId,
+                requestNumber,
+                fromCurrency,
+                toCurrency,
+                fromAmount,
+                appliedRate,
+                toAmount,
+                status,
+                null,
+                Instant.now(),
+                true,
+                Instant.now().plusSeconds(7200),
+                false,
+                null
+        );
+    }
+
+    public ExchangeRequest(
+            UUID customerId,
+            UUID sourceAccountId,
+            UUID destinationAccountId,
+            String requestNumber,
+            String fromCurrency,
+            String toCurrency,
+            BigDecimal fromAmount,
+            BigDecimal appliedRate,
+            BigDecimal toAmount,
+            ExchangeRequestStatus status,
+            String requestMemo
+    ) {
+        this(
+                customerId,
+                sourceAccountId,
+                destinationAccountId,
+                requestNumber,
+                fromCurrency,
+                toCurrency,
+                fromAmount,
+                appliedRate,
+                toAmount,
+                status,
+                requestMemo,
+                Instant.now(),
+                true,
+                Instant.now().plusSeconds(7200),
+                false,
+                null
+        );
+    }
+
+    public ExchangeRequest(
+            UUID customerId,
+            UUID sourceAccountId,
+            UUID destinationAccountId,
+            String requestNumber,
+            String fromCurrency,
+            String toCurrency,
+            BigDecimal fromAmount,
+            BigDecimal appliedRate,
+            BigDecimal toAmount,
+            ExchangeRequestStatus status,
+            String requestMemo,
+            Instant appliedRateEffectiveAt,
+            boolean sameDaySettlementEligible,
+            Instant expectedSettlementAt,
+            boolean manualReviewRequired,
+            String manualReviewReason
+    ) {
         this.customerId = customerId;
         this.sourceAccountId = sourceAccountId;
         this.destinationAccountId = destinationAccountId;
@@ -93,10 +188,16 @@ public class ExchangeRequest extends BaseJpaEntity {
         this.toCurrency = toCurrency;
         this.fromAmount = fromAmount;
         this.appliedRate = appliedRate;
+        this.appliedRateEffectiveAt = appliedRateEffectiveAt;
         this.toAmount = toAmount;
         this.exchangeFeeAmount = calculateExchangeFee(toAmount);
         this.netToAmount = toAmount.subtract(this.exchangeFeeAmount).setScale(4, RoundingMode.HALF_UP);
         this.status = status;
+        this.requestMemo = requestMemo;
+        this.sameDaySettlementEligible = sameDaySettlementEligible;
+        this.expectedSettlementAt = expectedSettlementAt;
+        this.manualReviewRequired = manualReviewRequired;
+        this.manualReviewReason = manualReviewReason;
     }
 
     public void synchronizeAccounts(UUID sourceAccountId, UUID destinationAccountId) {
@@ -105,6 +206,15 @@ public class ExchangeRequest extends BaseJpaEntity {
     }
 
     public void approve(String sourceTransactionNumber, String destinationTransactionNumber, Instant settledAt) {
+        if (status == ExchangeRequestStatus.CANCELED) {
+            throw new IllegalStateException("Canceled exchange request cannot be approved");
+        }
+        if (status == ExchangeRequestStatus.REJECTED) {
+            throw new IllegalStateException("Rejected exchange request cannot be approved");
+        }
+        if (status == ExchangeRequestStatus.APPROVED) {
+            return;
+        }
         this.status = ExchangeRequestStatus.APPROVED;
         this.sourceTransactionNumber = sourceTransactionNumber;
         this.destinationTransactionNumber = destinationTransactionNumber;
@@ -112,10 +222,37 @@ public class ExchangeRequest extends BaseJpaEntity {
     }
 
     public void reject() {
+        if (status == ExchangeRequestStatus.CANCELED) {
+            throw new IllegalStateException("Canceled exchange request cannot be rejected");
+        }
+        if (status == ExchangeRequestStatus.APPROVED) {
+            throw new IllegalStateException("Approved exchange request cannot be rejected");
+        }
+        if (status == ExchangeRequestStatus.REJECTED) {
+            return;
+        }
         this.status = ExchangeRequestStatus.REJECTED;
         this.sourceTransactionNumber = null;
         this.destinationTransactionNumber = null;
         this.settledAt = null;
+    }
+
+    public void cancel(String cancellationReason) {
+        if (status == ExchangeRequestStatus.CANCELED) {
+            return;
+        }
+        if (status == ExchangeRequestStatus.APPROVED) {
+            throw new IllegalStateException("Approved exchange request cannot be canceled");
+        }
+        if (status == ExchangeRequestStatus.REJECTED) {
+            throw new IllegalStateException("Rejected exchange request cannot be canceled");
+        }
+        this.status = ExchangeRequestStatus.CANCELED;
+        this.sourceTransactionNumber = null;
+        this.destinationTransactionNumber = null;
+        this.settledAt = null;
+        this.cancellationReason = cancellationReason;
+        this.canceledAt = Instant.now();
     }
 
     public UUID getId() { return id; }
@@ -127,12 +264,20 @@ public class ExchangeRequest extends BaseJpaEntity {
     public String getToCurrency() { return toCurrency; }
     public BigDecimal getFromAmount() { return fromAmount; }
     public BigDecimal getAppliedRate() { return appliedRate; }
+    public Instant getAppliedRateEffectiveAt() { return appliedRateEffectiveAt; }
     public BigDecimal getToAmount() { return toAmount; }
     public BigDecimal getExchangeFeeAmount() { return exchangeFeeAmount; }
     public BigDecimal getNetToAmount() { return netToAmount; }
+    public boolean isSameDaySettlementEligible() { return sameDaySettlementEligible; }
+    public Instant getExpectedSettlementAt() { return expectedSettlementAt; }
+    public boolean isManualReviewRequired() { return manualReviewRequired; }
+    public String getManualReviewReason() { return manualReviewReason; }
+    public String getCancellationReason() { return cancellationReason; }
+    public Instant getCanceledAt() { return canceledAt; }
     public ExchangeRequestStatus getStatus() { return status; }
     public String getSourceTransactionNumber() { return sourceTransactionNumber; }
     public String getDestinationTransactionNumber() { return destinationTransactionNumber; }
+    public String getRequestMemo() { return requestMemo; }
     public Instant getSettledAt() { return settledAt; }
 
     public UUID getAccountId() { return destinationAccountId; }

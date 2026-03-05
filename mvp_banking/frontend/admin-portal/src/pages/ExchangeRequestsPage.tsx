@@ -34,7 +34,33 @@ export function ExchangeRequestsPage({ exchangeRequests }: ExchangeRequestsPageP
               </div>
             ),
           },
-          { title: "Status", dataIndex: "status", render: (value: string) => <Tag color={value === "APPROVED" ? "green" : value === "REJECTED" ? "red" : "gold"}>{value}</Tag> },
+          {
+            title: "Memo",
+            render: (_, record: ExchangeRequest) => record.requestMemo ?? "-",
+          },
+          {
+            title: "Policy",
+            render: (_, record: ExchangeRequest) => (
+              <div>
+                <div>{record.status === "CANCELED" ? "Canceled by user" : record.sameDaySettlementEligible ? "Same-day" : "Next business day"}</div>
+                <small>
+                  {record.status === "CANCELED"
+                    ? record.cancellationReason ?? "-"
+                    : record.manualReviewRequired ? (record.manualReviewReason ?? "Manual review required") : "No additional review"}
+                </small>
+              </div>
+            ),
+          },
+          {
+            title: "Expected Settlement",
+            render: (_, record: ExchangeRequest) => (
+              <div>
+                <div>{record.expectedSettlementAt ? new Date(record.expectedSettlementAt).toLocaleString() : "-"}</div>
+                <small>{`Rate @ ${new Date(record.appliedRateEffectiveAt).toLocaleString()}`}</small>
+              </div>
+            ),
+          },
+          { title: "Status", dataIndex: "status", render: (value: string) => <Tag color={value === "APPROVED" ? "green" : value === "REJECTED" ? "red" : value === "CANCELED" ? "default" : "gold"}>{value}</Tag> },
           {
             title: "Settlement Legs",
             render: (_, record: ExchangeRequest) => (
@@ -45,6 +71,7 @@ export function ExchangeRequestsPage({ exchangeRequests }: ExchangeRequestsPageP
             ),
           },
           { title: "Settled At", render: (_, record: ExchangeRequest) => record.settledAt ? new Date(record.settledAt).toLocaleString() : "-" },
+          { title: "Canceled At", render: (_, record: ExchangeRequest) => record.canceledAt ? new Date(record.canceledAt).toLocaleString() : "-" },
           { title: "Created At", render: (_, record: ExchangeRequest) => new Date(record.createdAt).toLocaleString() },
         ]}
       />

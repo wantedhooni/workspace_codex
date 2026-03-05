@@ -5,7 +5,8 @@ React + Refine admin application.
 Responsibilities:
 - admin login
 - customer, account, transaction operations view
-- funding request operations view
+- linked bank account registry with pending / stale verification queue, stale-first review order, ops override activation, and block action
+- funding request operations view with manual review, daily limit, and expected settlement window visibility
 - approval queue
 - operations inbox / notification center
 - service announcement draft / publish / archive
@@ -41,6 +42,7 @@ Important routes:
 - `/accounts`
 - `/transactions`
 - `/fx-rates`
+- `/linked-bank-accounts`
 - `/funding-requests`
 - `/exchange-requests`
 - `/stock-orders`

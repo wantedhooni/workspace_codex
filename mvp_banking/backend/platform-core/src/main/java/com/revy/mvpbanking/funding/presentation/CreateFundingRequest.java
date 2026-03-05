@@ -11,6 +11,8 @@ public record CreateFundingRequest(
         @NotNull UUID accountId,
         @NotNull FundingRequestType requestType,
         @NotNull @DecimalMin("0.0001") BigDecimal amount,
+        UUID linkedBankAccountId,
+        Boolean priorityProcessing,
         @Size(max = 255) String note
 ) {
 }

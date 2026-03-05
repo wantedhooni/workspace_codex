@@ -13,11 +13,14 @@
 1. 인프라 및 서비스 health check
 2. 관리자 로그인
 3. 관리자 핵심 조회 API 접근
-4. 관리자 알림 목록 및 읽음 처리
-5. 사용자 로그인
-6. 사용자 핵심 조회 API 접근
-7. 사용자 알림 목록 및 읽음 처리
-8. 프론트 dev 서버 응답 확인
+4. 관리자 입출금 정책 스냅샷 응답 확인
+5. 관리자 알림 목록 및 읽음 처리
+6. 사용자 로그인
+7. 사용자 핵심 조회 API 접근
+8. 사용자 입출금 정책 스냅샷 응답 확인
+9. 사용자 입출금 요청 생성 및 사용자 취소(CANCEL) 경로 확인
+10. 사용자 알림 목록 및 읽음 처리
+11. 프론트 dev 서버 응답 확인
 
 실제 확인 경로는 다음과 같다.
 
@@ -30,6 +33,7 @@
 - `GET /api/admin/overview`
 - `GET /api/admin/announcements`
 - `GET /api/admin/customers?page=0&size=5`
+- `GET /api/admin/linked-bank-accounts`
 - `GET /api/admin/funding-requests`
 - `GET /api/admin/stock-orders`
 - `GET /api/admin/stock-positions`
@@ -41,7 +45,13 @@
 - `GET /api/user/dashboard/insights`
 - `GET /api/user/announcements`
 - `GET /api/user/accounts`
+- `GET /api/user/linked-bank-accounts`
+- `POST /api/user/linked-bank-accounts`
+- `POST /api/user/linked-bank-accounts/{linkedBankAccountId}/resend-verification`
+- `POST /api/user/linked-bank-accounts/{linkedBankAccountId}/verify`
 - `GET /api/user/funding-requests`
+- `POST /api/user/funding-requests`
+- `POST /api/user/funding-requests/{requestId}/cancel`
 - `GET /api/user/stock-orders`
 - `GET /api/user/stock-positions`
 - `GET /api/user/exchange-requests`
@@ -120,9 +130,12 @@ START_STACK=0 STOP_STACK=1 ./scripts/e2e-smoke.sh
 5. 관리자 알림 목록 조회 후 첫 알림 읽음 처리
 6. 사용자 로그인 후 access token 추출
 7. 사용자 보호 API 호출
-8. 사용자 알림 목록 조회 후 첫 알림 읽음 처리
-9. 성공 시 `E2E smoke test passed.` 출력
-10. `STOP_STACK=1`인 경우 `./scripts/all-stop.sh` 실행
+8. 사용자가 연결 계좌를 새로 등록하고 인증 문구를 재발송한 뒤 활성화
+   재발송은 최초 1회만 즉시 허용되고, 이후에는 cooldown 정책이 적용된다.
+9. 사용자 입출금 요청을 생성한 뒤 즉시 사용자 취소(CANCEL) API를 호출해 상태 전이를 검증
+10. 사용자 알림 목록 조회 후 첫 알림 읽음 처리
+11. 성공 시 `E2E smoke test passed.` 출력
+12. `STOP_STACK=1`인 경우 `./scripts/all-stop.sh` 실행
 
 ## 성공 기준
 

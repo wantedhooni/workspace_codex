@@ -28,6 +28,19 @@ export type StockOrder = {
   feeAmount: number;
   taxAmount: number;
   netSettlementAmount: number;
+  orderMemo: string | null;
+  timeInForce: string;
+  expiresAt: string;
+  cancellationReason: string | null;
+  canceledAt: string | null;
+  marketSession: string;
+  expectedExecutionAt: string;
+  manualReviewRequired: boolean;
+  manualReviewReason: string | null;
+  referencePrice: number | null;
+  priceDeviationRate: number | null;
+  quoteEffectiveAt: string | null;
+  quoteSource: string | null;
   settlementTransactionNumber: string | null;
   executions: StockOrderExecution[];
   settledAt: string | null;
@@ -63,4 +76,10 @@ export type CreateStockOrderPayload = {
   quantity: number;
   limitPrice: number;
   currency: string;
+  timeInForce?: string;
+  orderMemo?: string;
+};
+
+export type CancelStockOrderPayload = {
+  reason?: string;
 };

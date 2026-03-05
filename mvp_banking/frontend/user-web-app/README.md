@@ -8,7 +8,8 @@ Responsibilities:
 - service banner and announcement page
 - notification center with unread badge and read action
 - own account and transaction lookup
-- account based funding request ticket with projected balance preview and request history
+- linked bank account registry with verification ticket, expiry/resend cooldown, next resend time, demo verification memo, and primary withdrawal switching
+- account based funding request ticket with withdrawal destination selection, projected balance preview, cutoff / daily limit / manual review policy preview, and request history
 - FX rate calculator and source/destination account based exchange request entry with expected gross receive, fee, and net receive preview
 - stock order entry and position view with execution history, partial fill progress, remaining quantity, estimated fee / tax / cash impact, and current price / valuation
 - domain-based page routing and split API modules
@@ -38,6 +39,7 @@ Routes:
 - `/`
 - `/announcements`
 - `/accounts`
+- `/linked-bank-accounts`
 - `/funding-requests`
 - `/transactions`
 - `/fx-rates`

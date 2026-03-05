@@ -19,6 +19,7 @@ export function StockOrdersPage({ stockOrders, completingOrderId, onCompleteFill
           { title: "Symbol", dataIndex: "symbol" },
           { title: "Market", dataIndex: "market" },
           { title: "Side", dataIndex: "side" },
+          { title: "TIF", dataIndex: "timeInForce" },
           { title: "Quantity", render: (_, record: StockOrder) => Number(record.quantity).toLocaleString() },
           { title: "Limit Price", render: (_, record: StockOrder) => `${Number(record.limitPrice).toLocaleString()} ${record.currency}` },
           { title: "Gross", render: (_, record: StockOrder) => `${Number(record.grossAmount).toLocaleString()} ${record.currency}` },
@@ -35,10 +36,44 @@ export function StockOrdersPage({ stockOrders, completingOrderId, onCompleteFill
             title: "Status",
             dataIndex: "status",
             render: (value: string) => (
-              <Tag color={value === "APPROVED" ? "green" : value === "REJECTED" ? "red" : value === "PARTIALLY_FILLED" ? "blue" : "gold"}>
+              <Tag color={value === "APPROVED" ? "green" : value === "REJECTED" ? "red" : value === "CANCELED" ? "default" : value === "PARTIALLY_FILLED" ? "blue" : "gold"}>
                 {value}
               </Tag>
             ),
+          },
+          {
+            title: "Memo",
+            render: (_, record: StockOrder) => record.orderMemo ?? "-",
+          },
+          {
+            title: "Policy",
+            render: (_, record: StockOrder) => (
+              <div>
+                <div>{record.status === "CANCELED" ? "Canceled by user" : record.manualReviewRequired ? "Manual review" : "Standard queue"}</div>
+                <small>
+                  {record.status === "CANCELED"
+                    ? record.cancellationReason ?? "-"
+                    : record.manualReviewRequired ? record.manualReviewReason ?? "-" : "No additional review"}
+                </small>
+              </div>
+            ),
+          },
+          {
+            title: "Execution Window",
+            render: (_, record: StockOrder) => (
+              <div>
+                <div>{record.marketSession}</div>
+                <small>{new Date(record.expectedExecutionAt).toLocaleString()}</small>
+              </div>
+            ),
+          },
+          {
+            title: "Expires At",
+            render: (_, record: StockOrder) => new Date(record.expiresAt).toLocaleString(),
+          },
+          {
+            title: "Canceled At",
+            render: (_, record: StockOrder) => record.canceledAt ? new Date(record.canceledAt).toLocaleString() : "-",
           },
           {
             title: "Fill Progress",

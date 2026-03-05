@@ -132,7 +132,7 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
                   title: "Status",
                   dataIndex: "status",
                   render: (value: string) => (
-                    <Tag color={value === "PENDING" ? "gold" : value === "APPROVED" ? "green" : "red"}>{value}</Tag>
+                    <Tag color={value === "PENDING" ? "gold" : value === "APPROVED" ? "green" : value === "CANCELED" ? "default" : "red"}>{value}</Tag>
                   ),
                 },
               ]}

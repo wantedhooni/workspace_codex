@@ -89,6 +89,14 @@ export type ExchangeRequest = {
   toAmount: number;
   exchangeFeeAmount: number;
   netToAmount: number;
+  appliedRateEffectiveAt: string;
+  requestMemo: string | null;
+  sameDaySettlementEligible: boolean;
+  expectedSettlementAt: string | null;
+  manualReviewRequired: boolean;
+  manualReviewReason: string | null;
+  cancellationReason: string | null;
+  canceledAt: string | null;
   status: string;
   sourceTransactionNumber: string | null;
   destinationTransactionNumber: string | null;
@@ -107,11 +115,53 @@ export type FundingRequest = {
   requestType: string;
   status: string;
   amount: number;
+  serviceFeeAmount: number;
+  priorityProcessing: boolean;
+  priorityFeeAmount: number;
+  totalDebitAmount: number;
   currency: string;
   balanceSnapshot: number;
+  linkedBankAccountId: string | null;
+  linkedBankName: string | null;
+  linkedBankAccountAlias: string | null;
+  linkedBankAccountNumberMasked: string | null;
+  linkedBankAccountHolderName: string | null;
+  dailyLimitAmount: number | null;
+  dailyAccumulatedAmount: number | null;
+  dailyLimitExceeded: boolean;
+  sameDaySettlementEligible: boolean;
+  expectedSettlementAt: string | null;
+  manualReviewRequired: boolean;
+  manualReviewReason: string | null;
   note: string | null;
+  cancellationReason: string | null;
+  canceledAt: string | null;
   settlementTransactionNumber: string | null;
   settledAt: string | null;
+  createdAt: string;
+};
+
+export type LinkedBankAccount = {
+  id: string;
+  customerId: string;
+  customerEmail: string;
+  bankName: string;
+  accountAlias: string;
+  accountHolderName: string;
+  maskedAccountNumber: string;
+  status: string;
+  primaryWithdrawal: boolean;
+  verifiedAt: string | null;
+  verificationReference: string | null;
+  verificationRequestedAt: string | null;
+  verificationExpiresAt: string | null;
+  verificationExpired: boolean;
+  lastVerificationResentAt: string | null;
+  verificationResendAvailableAt: string | null;
+  verificationResendAllowed: boolean;
+  verificationAttemptCount: number;
+  blockReasonCode: string | null;
+  blockedAt: string | null;
   createdAt: string;
 };
 
@@ -145,6 +195,19 @@ export type StockOrder = {
   feeAmount: number;
   taxAmount: number;
   netSettlementAmount: number;
+  orderMemo: string | null;
+  timeInForce: string;
+  expiresAt: string;
+  cancellationReason: string | null;
+  canceledAt: string | null;
+  marketSession: string;
+  expectedExecutionAt: string;
+  manualReviewRequired: boolean;
+  manualReviewReason: string | null;
+  referencePrice: number | null;
+  priceDeviationRate: number | null;
+  quoteEffectiveAt: string | null;
+  quoteSource: string | null;
   settlementTransactionNumber: string | null;
   executions: StockOrderExecution[];
   settledAt: string | null;
@@ -357,6 +420,27 @@ export const adminApi = {
   },
   fundingRequests(token: string) {
     return request<FundingRequest[]>("/api/admin/funding-requests", {}, token);
+  },
+  linkedBankAccounts(token: string) {
+    return request<LinkedBankAccount[]>("/api/admin/linked-bank-accounts", {}, token);
+  },
+  activateLinkedBankAccount(token: string, linkedBankAccountId: string) {
+    return request<LinkedBankAccount>(
+      `/api/admin/linked-bank-accounts/${linkedBankAccountId}/activate`,
+      {
+        method: "POST",
+      },
+      token,
+    );
+  },
+  blockLinkedBankAccount(token: string, linkedBankAccountId: string) {
+    return request<LinkedBankAccount>(
+      `/api/admin/linked-bank-accounts/${linkedBankAccountId}/block`,
+      {
+        method: "POST",
+      },
+      token,
+    );
   },
   exchangeRequests(token: string) {
     return request<ExchangeRequest[]>("/api/admin/exchange-requests", {}, token);

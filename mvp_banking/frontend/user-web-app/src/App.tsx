@@ -17,6 +17,9 @@ import type { FxRate } from "./domains/fx/types";
 import { fundingApi } from "./domains/funding/api";
 import { FundingRequestsPage } from "./domains/funding/FundingRequestsPage";
 import type { CreateFundingRequestPayload } from "./domains/funding/types";
+import { linkedBankAccountApi } from "./domains/linked-bank-accounts/api";
+import { LinkedBankAccountsPage } from "./domains/linked-bank-accounts/LinkedBankAccountsPage";
+import type { CreateLinkedBankAccountPayload } from "./domains/linked-bank-accounts/types";
 import { notificationApi } from "./domains/notifications/api";
 import { NotificationsPage } from "./domains/notifications/NotificationsPage";
 import { stockApi } from "./domains/stock/api";
@@ -34,6 +37,11 @@ function App() {
   const [dashboard, setDashboard] = useState<DashboardState | null>(null);
   const [loading, setLoading] = useState(false);
   const [submittingAction, setSubmittingAction] = useState(false);
+  const [cancelingFundingRequestId, setCancelingFundingRequestId] = useState<string | null>(null);
+  const [cancelingExchangeRequestId, setCancelingExchangeRequestId] = useState<string | null>(null);
+  const [cancelingStockOrderId, setCancelingStockOrderId] = useState<string | null>(null);
+  const [verifyingLinkedBankAccountId, setVerifyingLinkedBankAccountId] = useState<string | null>(null);
+  const [resendingLinkedBankAccountId, setResendingLinkedBankAccountId] = useState<string | null>(null);
   const [readingNotificationId, setReadingNotificationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,12 +50,13 @@ function App() {
     setError(null);
 
     try {
-      const [profile, insights, announcements, notifications, accounts, fundingRequests, transactions, fxRates, exchangeRequests, stockOrders, stockPositions] = await Promise.all([
+      const [profile, insights, announcements, notifications, accounts, linkedBankAccounts, fundingRequests, transactions, fxRates, exchangeRequests, stockOrders, stockPositions] = await Promise.all([
         authApi.me(currentToken),
         dashboardApi.insights(currentToken),
         announcementApi.list(currentToken),
         notificationApi.list(currentToken),
         accountApi.list(currentToken),
+        linkedBankAccountApi.list(currentToken),
         fundingApi.list(currentToken),
         transactionApi.list(currentToken),
         fxApi.list(currentToken),
@@ -62,6 +71,7 @@ function App() {
           insights,
           announcements,
           accounts,
+          linkedBankAccounts,
           fundingRequests,
           transactions,
           fxRates,
@@ -140,6 +150,23 @@ function App() {
     }
   }
 
+  async function cancelExchangeRequest(requestId: string, reason?: string) {
+    if (!token) {
+      return;
+    }
+
+    setCancelingExchangeRequestId(requestId);
+    setError(null);
+    try {
+      await exchangeApi.cancel(token, requestId, { reason });
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to cancel exchange request");
+    } finally {
+      setCancelingExchangeRequestId(null);
+    }
+  }
+
   async function createFundingRequest(payload: CreateFundingRequestPayload) {
     if (!token) {
       return;
@@ -157,6 +184,91 @@ function App() {
     }
   }
 
+  async function cancelFundingRequest(requestId: string, reason?: string) {
+    if (!token) {
+      return;
+    }
+
+    setCancelingFundingRequestId(requestId);
+    setError(null);
+    try {
+      await fundingApi.cancel(token, requestId, { reason });
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to cancel funding request");
+    } finally {
+      setCancelingFundingRequestId(null);
+    }
+  }
+
+  async function createLinkedBankAccount(payload: CreateLinkedBankAccountPayload) {
+    if (!token) {
+      return;
+    }
+
+    setSubmittingAction(true);
+    setError(null);
+    try {
+      await linkedBankAccountApi.create(token, payload);
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to create linked bank account");
+    } finally {
+      setSubmittingAction(false);
+    }
+  }
+
+  async function markPrimaryLinkedBankAccount(linkedBankAccountId: string) {
+    if (!token) {
+      return;
+    }
+
+    setSubmittingAction(true);
+    setError(null);
+    try {
+      await linkedBankAccountApi.markPrimary(token, linkedBankAccountId);
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to update primary linked bank account");
+    } finally {
+      setSubmittingAction(false);
+    }
+  }
+
+  async function verifyLinkedBankAccount(linkedBankAccountId: string, verificationReference: string) {
+    if (!token) {
+      return;
+    }
+
+    setVerifyingLinkedBankAccountId(linkedBankAccountId);
+    setError(null);
+    try {
+      await linkedBankAccountApi.verify(token, linkedBankAccountId, { verificationReference });
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to verify linked bank account");
+    } finally {
+      setVerifyingLinkedBankAccountId(null);
+    }
+  }
+
+  async function resendLinkedBankAccountVerification(linkedBankAccountId: string) {
+    if (!token) {
+      return;
+    }
+
+    setResendingLinkedBankAccountId(linkedBankAccountId);
+    setError(null);
+    try {
+      await linkedBankAccountApi.resendVerification(token, linkedBankAccountId);
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to resend linked bank account verification");
+    } finally {
+      setResendingLinkedBankAccountId(null);
+    }
+  }
+
   async function createStockOrder(payload: CreateStockOrderPayload) {
     if (!token) {
       return;
@@ -171,6 +283,23 @@ function App() {
       setError(requestError instanceof Error ? requestError.message : "Failed to create stock order");
     } finally {
       setSubmittingAction(false);
+    }
+  }
+
+  async function cancelStockOrder(orderId: string, reason?: string) {
+    if (!token) {
+      return;
+    }
+
+    setCancelingStockOrderId(orderId);
+    setError(null);
+    try {
+      await stockApi.cancel(token, orderId, { reason });
+      await loadDashboard(token);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Failed to cancel stock order");
+    } finally {
+      setCancelingStockOrderId(null);
     }
   }
 
@@ -211,6 +340,7 @@ function App() {
   }
 
   const accounts = dashboard?.accounts ?? [];
+  const linkedBankAccounts = dashboard?.linkedBankAccounts ?? [];
   const fundingRequests = dashboard?.fundingRequests ?? [];
   const transactions = dashboard?.transactions ?? [];
   const fxRates = dashboard?.fxRates ?? [];
@@ -237,14 +367,33 @@ function App() {
         <Route path="announcements" element={<AnnouncementsPage loading={loading} announcements={dashboard?.announcements ?? []} />} />
         <Route path="accounts" element={<AccountsPage loading={loading} accounts={accounts} transactions={transactions} />} />
         <Route
+          path="linked-bank-accounts"
+          element={
+            <LinkedBankAccountsPage
+              loading={loading}
+              submitting={submittingAction}
+              verifyingId={verifyingLinkedBankAccountId}
+              resendingId={resendingLinkedBankAccountId}
+              linkedBankAccounts={linkedBankAccounts}
+              onCreate={createLinkedBankAccount}
+              onMarkPrimary={markPrimaryLinkedBankAccount}
+              onVerify={verifyLinkedBankAccount}
+              onResend={resendLinkedBankAccountVerification}
+            />
+          }
+        />
+        <Route
           path="funding-requests"
           element={
             <FundingRequestsPage
               loading={loading}
               submitting={submittingAction}
+              cancelingRequestId={cancelingFundingRequestId}
               accounts={accounts}
+              linkedBankAccounts={linkedBankAccounts}
               fundingRequests={fundingRequests}
               onCreate={createFundingRequest}
+              onCancel={cancelFundingRequest}
             />
           }
         />
@@ -256,10 +405,12 @@ function App() {
             <ExchangeRequestsPage
               loading={loading}
               submitting={submittingAction}
+              cancelingRequestId={cancelingExchangeRequestId}
               accounts={accounts}
               fxRates={fxRates as FxRate[]}
               exchangeRequests={exchangeRequests}
               onCreate={createExchangeRequest}
+              onCancel={cancelExchangeRequest}
             />
           }
         />
@@ -269,10 +420,12 @@ function App() {
             <StockOrdersPage
               loading={loading}
               submitting={submittingAction}
+              cancelingOrderId={cancelingStockOrderId}
               accounts={accounts}
               stockPositions={stockPositions}
               stockOrders={stockOrders}
               onCreate={createStockOrder}
+              onCancel={cancelStockOrder}
             />
           }
         />

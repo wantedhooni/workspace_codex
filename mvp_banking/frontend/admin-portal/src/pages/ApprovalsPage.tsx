@@ -36,7 +36,7 @@ export function ApprovalsPage({
               title: "Status",
               dataIndex: "status",
               render: (value: string) => (
-                <Tag color={value === "PENDING" ? "gold" : value === "APPROVED" ? "green" : "red"}>{value}</Tag>
+                <Tag color={value === "PENDING" ? "gold" : value === "APPROVED" ? "green" : value === "CANCELED" ? "default" : "red"}>{value}</Tag>
               ),
             },
             { title: "Requested By", dataIndex: "requestedByEmail" },
