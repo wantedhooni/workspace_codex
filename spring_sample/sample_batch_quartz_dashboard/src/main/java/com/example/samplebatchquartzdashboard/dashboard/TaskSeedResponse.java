@@ -2,6 +2,7 @@ package com.example.samplebatchquartzdashboard.dashboard;
 
 public record TaskSeedResponse(
         int loadedCount,
-        long pendingCount
+        long pendingCount,
+        String datasetType
 ) {
 }

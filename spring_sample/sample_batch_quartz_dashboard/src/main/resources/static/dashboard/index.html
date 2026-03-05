@@ -19,9 +19,9 @@
             color: var(--ink);
         }
         .wrap {
-            max-width: 1080px;
+            max-width: 1180px;
             margin: 0 auto;
-            padding: 40px 20px 80px;
+            padding: 32px 20px 80px;
         }
         h1 {
             margin: 0 0 12px;
@@ -29,11 +29,11 @@
         }
         .actions, .grid {
             display: grid;
-            gap: 16px;
+            gap: 12px;
         }
         .actions {
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            margin: 24px 0;
+            margin: 20px 0;
         }
         .grid {
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -41,41 +41,71 @@
         .card {
             background: var(--card);
             border: 1px solid var(--line);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 18px 40px rgba(18, 38, 32, 0.06);
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: 0 16px 30px rgba(18, 38, 32, 0.06);
         }
         .metric {
-            font-size: 34px;
+            font-size: 32px;
             font-weight: 700;
-            margin-top: 12px;
+            margin-top: 8px;
         }
         button {
             width: 100%;
             border: 0;
-            border-radius: 14px;
-            padding: 14px 18px;
+            border-radius: 12px;
+            padding: 12px 14px;
             background: var(--accent);
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             cursor: pointer;
         }
         .meta {
-            margin-top: 28px;
-            font-size: 15px;
-            line-height: 1.6;
+            margin-top: 20px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .quartz-controls {
+            margin-top: 20px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+        .cron-form {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        input {
+            flex: 1;
+            min-width: 260px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+        .result {
+            margin-top: 16px;
+            white-space: pre-wrap;
+            background: #eef5ef;
+            border-radius: 10px;
+            border: 1px solid #d2e0d4;
+            padding: 12px;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
 <div class="wrap">
     <h1>Batch + Quartz Dashboard</h1>
-    <p>요청 적재, 수동 실행, 스케줄 상태를 한 화면에서 확인한다.</p>
+    <p>실제 데이터 적재, 배치 실행, Quartz 제어를 한 화면에서 점검한다.</p>
 
     <div class="actions">
-        <div class="card"><button onclick="seed()">샘플 5,000건 적재</button></div>
+        <div class="card"><button onclick="seedSynthetic()">합성 데이터 5,000건 적재</button></div>
+        <div class="card"><button onclick="seedReal()">실제 샘플 데이터 적재</button></div>
         <div class="card"><button onclick="runBatch()">수동 배치 실행</button></div>
-        <div class="card"><button onclick="triggerQuartz()">Quartz 즉시 트리거</button></div>
+        <div class="card"><button onclick="runRealExample()">실제 데이터 예제 실행</button></div>
     </div>
 
     <div class="grid">
@@ -90,37 +120,118 @@
         <div>Batch 실행 횟수: <strong id="batchExecutions">0</strong></div>
         <div>Quartz Trigger 상태: <strong id="quartzTriggerState">NONE</strong></div>
         <div>다음 실행 시각: <strong id="nextFireTime">-</strong></div>
+        <div>Scheduler 상태: <strong id="schedulerState">-</strong></div>
+        <div>Cron 표현식: <strong id="cronExpression">-</strong></div>
     </div>
+
+    <div class="quartz-controls">
+        <div class="card"><button onclick="triggerQuartz()">Quartz 즉시 트리거</button></div>
+        <div class="card"><button onclick="pauseQuartz()">Trigger Pause</button></div>
+        <div class="card"><button onclick="resumeQuartz()">Trigger Resume</button></div>
+        <div class="card"><button onclick="standbyQuartz()">Scheduler Standby</button></div>
+        <div class="card"><button onclick="startQuartz()">Scheduler Start</button></div>
+    </div>
+
+    <div class="card">
+        <strong>Quartz Cron 변경</strong>
+        <div class="cron-form">
+            <input id="cronInput" value="0 0/1 * * * ?" />
+            <button style="max-width: 200px" onclick="updateCron()">Cron 적용</button>
+        </div>
+    </div>
+
+    <div class="result" id="resultBox">결과가 여기에 표시된다.</div>
 </div>
 <script>
     async function refresh() {
-        const response = await fetch('/api/dashboard/overview');
-        const data = await response.json();
-        for (const [key, value] of Object.entries(data)) {
+        const overviewRes = await fetch('/api/dashboard/overview');
+        const overview = await overviewRes.json();
+        for (const [key, value] of Object.entries(overview)) {
             const element = document.getElementById(key);
             if (element) {
                 element.textContent = value ?? '-';
             }
         }
+        const quartzRes = await fetch('/api/dashboard/quartz/status');
+        const quartz = await quartzRes.json();
+        document.getElementById('schedulerState').textContent = quartz.schedulerState;
+        document.getElementById('cronExpression').textContent = quartz.cronExpression;
+        if (quartz.cronExpression && document.getElementById('cronInput').value === '0 0/1 * * * ?') {
+            document.getElementById('cronInput').value = quartz.cronExpression;
+        }
     }
 
-    async function seed() {
-        await fetch('/api/dashboard/tasks/seed', {
+    function showResult(data) {
+        document.getElementById('resultBox').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function seedSynthetic() {
+        const res = await fetch('/api/dashboard/tasks/seed', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({size: 5000, truncateBeforeLoad: true})
         });
+        showResult(await res.json());
+        await refresh();
+    }
+
+    async function seedReal() {
+        const res = await fetch('/api/dashboard/tasks/seed/real?truncateBeforeLoad=true', {method: 'POST'});
+        showResult(await res.json());
         await refresh();
     }
 
     async function runBatch() {
-        await fetch('/api/dashboard/jobs/import/run', {method: 'POST'});
-        setTimeout(refresh, 1500);
+        const res = await fetch('/api/dashboard/jobs/import/run', {method: 'POST'});
+        showResult(await res.json());
+        setTimeout(refresh, 1000);
+    }
+
+    async function runRealExample() {
+        const res = await fetch('/api/dashboard/examples/real/run', {method: 'POST'});
+        showResult(await res.json());
+        setTimeout(refresh, 1000);
     }
 
     async function triggerQuartz() {
-        await fetch('/api/dashboard/jobs/import/quartz/trigger', {method: 'POST'});
-        setTimeout(refresh, 1500);
+        const res = await fetch('/api/dashboard/jobs/import/quartz/trigger', {method: 'POST'});
+        showResult(await res.json());
+        setTimeout(refresh, 1000);
+    }
+
+    async function pauseQuartz() {
+        const res = await fetch('/api/dashboard/quartz/pause', {method: 'POST'});
+        showResult(await res.json());
+        await refresh();
+    }
+
+    async function resumeQuartz() {
+        const res = await fetch('/api/dashboard/quartz/resume', {method: 'POST'});
+        showResult(await res.json());
+        await refresh();
+    }
+
+    async function standbyQuartz() {
+        const res = await fetch('/api/dashboard/quartz/standby', {method: 'POST'});
+        showResult(await res.json());
+        await refresh();
+    }
+
+    async function startQuartz() {
+        const res = await fetch('/api/dashboard/quartz/start', {method: 'POST'});
+        showResult(await res.json());
+        await refresh();
+    }
+
+    async function updateCron() {
+        const cronExpression = document.getElementById('cronInput').value;
+        const res = await fetch('/api/dashboard/quartz/cron', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({cronExpression})
+        });
+        showResult(await res.json());
+        await refresh();
     }
 
     refresh();

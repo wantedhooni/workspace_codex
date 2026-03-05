@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.samplebatchquartzdashboard.batch.TaskImportJobService;
 import com.example.samplebatchquartzdashboard.dashboard.DashboardMetricsRepository;
+import com.example.samplebatchquartzdashboard.dashboard.QuartzControlService;
 import com.example.samplebatchquartzdashboard.dashboard.TaskDatasetService;
 import com.example.samplebatchquartzdashboard.dashboard.TaskSeedRequest;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,9 @@ class SampleBatchQuartzDashboardApplicationTests {
     @Autowired
     private DashboardMetricsRepository dashboardMetricsRepository;
 
+    @Autowired
+    private QuartzControlService quartzControlService;
+
     @Test
     void seededTasksAreProcessedByBatchJob() {
         taskDatasetService.seed(new TaskSeedRequest(500, true));
@@ -52,5 +56,23 @@ class SampleBatchQuartzDashboardApplicationTests {
 
         assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
         assertThat(dashboardMetricsRepository.fetchOverview().processedRequests()).isEqualTo(500L);
+    }
+
+    @Test
+    void realSampleTasksAreProcessedByBatchJob() {
+        var seedResponse = taskDatasetService.seedRealSample(true);
+        JobExecution execution = taskImportJobService.launchNow("REAL_SAMPLE_TEST");
+
+        assertThat(seedResponse.datasetType()).isEqualTo("REAL_SAMPLE");
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(dashboardMetricsRepository.fetchOverview().processedRequests()).isEqualTo(seedResponse.loadedCount());
+        assertThat(dashboardMetricsRepository.fetchRecentAudits(5)).isNotEmpty();
+    }
+
+    @Test
+    void quartzTriggerCanPauseAndResume() {
+        assertThat(quartzControlService.pauseTrigger().triggerState()).isIn("PAUSED", "NORMAL");
+        assertThat(quartzControlService.resumeTrigger().triggerState()).isIn("NORMAL", "BLOCKED");
+        assertThat(quartzControlService.status().cronExpression()).isNotBlank();
     }
 }

@@ -20,10 +20,12 @@ Spring Batch와 Quartz를 DB 기반으로 운영하면서, 상태를 대시보�
 
 ## 주요 기능
 
-- 대량 요청 적재 API
+- 합성/실제 샘플 데이터 적재 API
 - `JdbcPagingItemReader` 기반 배치 처리
 - Quartz cron 스케줄 실행
 - 수동 즉시 실행 API
+- 실제 데이터 기준 end-to-end 배치 실행 예제 API
+- Quartz trigger pause/resume, scheduler standby/start, cron 변경 제어 API
 - `/dashboard` 운영 화면
 - Batch/Quartz 메타데이터 DB 저장
 
@@ -54,7 +56,16 @@ cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard
 3. Quartz Job이 Spring Batch `taskImportJob` 을 호출한다.
 4. Batch가 미처리 요청을 페이지 단위로 읽고 감사 테이블에 기록한다.
 5. 원본 요청은 `processed = true` 로 업데이트된다.
-6. 대시보드에서 요청 건수, 최근 배치 상태, 다음 트리거 시각을 확인한다.
+6. 대시보드에서 요청 건수, 최근 배치 상태, 다음 트리거 시각, Quartz 상태를 확인한다.
+
+## 실제 데이터 예제
+
+프로젝트는 `src/main/resources/sample-data/task-import-real-data.csv` 를 포함한다. 금융 거래 정산 배치에서 자주 보이는 항목(소스 시스템, 계좌, 상품코드, 시장구분, 통화, 원금, 우선순위)을 샘플로 제공한다.
+
+- `task_import_request` 핵심 컬럼
+  - `external_id`, `source_system`, `account_no`, `instrument_code`, `market`
+  - `settlement_currency`, `notional_amount`, `priority`, `payload_size`
+- 배치 처리 후 `task_import_audit` 에 `risk_bucket`, `processing_latency_ms` 를 기록한다.
 
 ## API 예제
 
@@ -64,6 +75,12 @@ cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard
 curl -X POST http://localhost:8080/api/dashboard/tasks/seed \
   -H 'Content-Type: application/json' \
   -d '{"size":5000,"truncateBeforeLoad":true}'
+```
+
+### 실제 샘플 데이터 적재
+
+```bash
+curl -X POST "http://localhost:8080/api/dashboard/tasks/seed/real?truncateBeforeLoad=true"
 ```
 
 ### 수동 배치 실행
@@ -78,10 +95,45 @@ curl -X POST http://localhost:8080/api/dashboard/jobs/import/run
 curl -X POST http://localhost:8080/api/dashboard/jobs/import/quartz/trigger
 ```
 
+### 실제 데이터 end-to-end 실행 예제
+
+```bash
+curl -X POST http://localhost:8080/api/dashboard/examples/real/run
+```
+
 ### 대시보드 데이터 조회
 
 ```bash
 curl http://localhost:8080/api/dashboard/overview
+```
+
+### 최근 감사 로그 조회
+
+```bash
+curl "http://localhost:8080/api/dashboard/audits/recent?limit=10"
+```
+
+### Quartz 상태 조회
+
+```bash
+curl http://localhost:8080/api/dashboard/quartz/status
+```
+
+### Quartz 제어 (pause/resume/standby/start)
+
+```bash
+curl -X POST http://localhost:8080/api/dashboard/quartz/pause
+curl -X POST http://localhost:8080/api/dashboard/quartz/resume
+curl -X POST http://localhost:8080/api/dashboard/quartz/standby
+curl -X POST http://localhost:8080/api/dashboard/quartz/start
+```
+
+### Quartz cron 변경
+
+```bash
+curl -X PUT http://localhost:8080/api/dashboard/quartz/cron \
+  -H 'Content-Type: application/json' \
+  -d '{"cronExpression":"0 0/2 * * * ?"}'
 ```
 
 ## 주요 테이블

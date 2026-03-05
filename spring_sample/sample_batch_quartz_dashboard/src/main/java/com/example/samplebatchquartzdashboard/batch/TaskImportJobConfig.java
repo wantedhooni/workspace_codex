@@ -65,7 +65,10 @@ public class TaskImportJobConfig {
             BatchDashboardProperties properties
     ) throws Exception {
         PostgresPagingQueryProvider queryProvider = new PostgresPagingQueryProvider();
-        queryProvider.setSelectClause("select id, external_id, payload_size, requested_at");
+        queryProvider.setSelectClause(
+                "select id, external_id, source_system, account_no, instrument_code, market, settlement_currency, "
+                        + "notional_amount, payload_size, priority, requested_at"
+        );
         queryProvider.setFromClause("from task_import_request");
         queryProvider.setWhereClause("where processed = false");
         queryProvider.setSortKeys(Map.of("id", Order.ASCENDING));
@@ -83,13 +86,28 @@ public class TaskImportJobConfig {
 
     @Bean
     public ItemProcessor<TaskImportRequestRow, TaskImportAuditItem> taskImportProcessor() {
-        return item -> new TaskImportAuditItem(
-                item.id(),
-                item.externalId(),
-                item.payloadSize(),
-                Math.max(50L, item.payloadSize() * 2L),
-                Instant.now()
-        );
+        return item -> {
+            long marketFactor = "OTC".equals(item.market()) ? 3L : 2L;
+            long priorityFactor = Math.max(1, item.priority());
+            long latency = Math.max(60L, (item.payloadSize() * marketFactor) + (priorityFactor * 15L));
+            String riskBucket = classifyRisk(item.notionalAmount(), item.market());
+
+            return new TaskImportAuditItem(
+                    item.id(),
+                    item.externalId(),
+                    item.sourceSystem(),
+                    item.accountNo(),
+                    item.instrumentCode(),
+                    item.market(),
+                    item.settlementCurrency(),
+                    item.notionalAmount(),
+                    item.priority(),
+                    riskBucket,
+                    item.payloadSize(),
+                    latency,
+                    Instant.now()
+            );
+        };
     }
 
     @Bean
@@ -101,10 +119,18 @@ public class TaskImportJobConfig {
                         insert into task_import_audit (
                             request_id,
                             external_id,
+                            source_system,
+                            account_no,
+                            instrument_code,
+                            market,
+                            settlement_currency,
+                            notional_amount,
+                            priority,
+                            risk_bucket,
                             payload_size,
                             processing_latency_ms,
                             created_at
-                        ) values (?, ?, ?, ?, ?)
+                        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """
                 )
                 .itemPreparedStatementSetter(this::setInsertParameters)
@@ -125,7 +151,14 @@ public class TaskImportJobConfig {
         return new TaskImportRequestRow(
                 resultSet.getLong("id"),
                 resultSet.getString("external_id"),
+                resultSet.getString("source_system"),
+                resultSet.getString("account_no"),
+                resultSet.getString("instrument_code"),
+                resultSet.getString("market"),
+                resultSet.getString("settlement_currency"),
+                resultSet.getBigDecimal("notional_amount"),
                 resultSet.getInt("payload_size"),
+                resultSet.getInt("priority"),
                 resultSet.getTimestamp("requested_at").toInstant()
         );
     }
@@ -133,12 +166,30 @@ public class TaskImportJobConfig {
     private void setInsertParameters(TaskImportAuditItem item, PreparedStatement preparedStatement) throws SQLException {
         preparedStatement.setLong(1, item.requestId());
         preparedStatement.setString(2, item.externalId());
-        preparedStatement.setInt(3, item.payloadSize());
-        preparedStatement.setLong(4, item.processingLatencyMs());
-        preparedStatement.setTimestamp(5, Timestamp.from(item.createdAt()));
+        preparedStatement.setString(3, item.sourceSystem());
+        preparedStatement.setString(4, item.accountNo());
+        preparedStatement.setString(5, item.instrumentCode());
+        preparedStatement.setString(6, item.market());
+        preparedStatement.setString(7, item.settlementCurrency());
+        preparedStatement.setBigDecimal(8, item.notionalAmount());
+        preparedStatement.setInt(9, item.priority());
+        preparedStatement.setString(10, item.riskBucket());
+        preparedStatement.setInt(11, item.payloadSize());
+        preparedStatement.setLong(12, item.processingLatencyMs());
+        preparedStatement.setTimestamp(13, Timestamp.from(item.createdAt()));
     }
 
     private void setUpdateParameters(TaskImportAuditItem item, PreparedStatement preparedStatement) throws SQLException {
         preparedStatement.setLong(1, item.requestId());
+    }
+
+    private String classifyRisk(java.math.BigDecimal notionalAmount, String market) {
+        if (notionalAmount.compareTo(new java.math.BigDecimal("10000000")) >= 0 || "OTC".equals(market)) {
+            return "HIGH";
+        }
+        if (notionalAmount.compareTo(new java.math.BigDecimal("3000000")) >= 0) {
+            return "MEDIUM";
+        }
+        return "LOW";
     }
 }

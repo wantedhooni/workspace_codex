@@ -3,7 +3,7 @@ package com.example.samplebatchquartzdashboard.dashboard;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record TaskImportAuditItem(
+public record RecentAuditResponse(
         long requestId,
         String externalId,
         String sourceSystem,

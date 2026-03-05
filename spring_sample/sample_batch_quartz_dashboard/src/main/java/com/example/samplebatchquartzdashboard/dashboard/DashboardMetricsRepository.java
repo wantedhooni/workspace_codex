@@ -2,6 +2,7 @@ package com.example.samplebatchquartzdashboard.dashboard;
 
 import com.example.samplebatchquartzdashboard.config.QuartzConfig;
 import java.time.Instant;
+import java.util.List;
 import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -48,6 +49,46 @@ public class DashboardMetricsRepository {
         } catch (Exception exception) {
             throw new IllegalStateException("대시보드 메트릭 조회에 실패했습니다.", exception);
         }
+    }
+
+    public List<RecentAuditResponse> fetchRecentAudits(int limit) {
+        return jdbcTemplate.query(
+                """
+                select
+                    request_id,
+                    external_id,
+                    source_system,
+                    account_no,
+                    instrument_code,
+                    market,
+                    settlement_currency,
+                    notional_amount,
+                    priority,
+                    risk_bucket,
+                    payload_size,
+                    processing_latency_ms,
+                    created_at
+                from task_import_audit
+                order by id desc
+                limit ?
+                """,
+                (rs, rowNum) -> new RecentAuditResponse(
+                        rs.getLong("request_id"),
+                        rs.getString("external_id"),
+                        rs.getString("source_system"),
+                        rs.getString("account_no"),
+                        rs.getString("instrument_code"),
+                        rs.getString("market"),
+                        rs.getString("settlement_currency"),
+                        rs.getBigDecimal("notional_amount"),
+                        rs.getInt("priority"),
+                        rs.getString("risk_bucket"),
+                        rs.getInt("payload_size"),
+                        rs.getLong("processing_latency_ms"),
+                        rs.getTimestamp("created_at").toInstant()
+                ),
+                limit
+        );
     }
 
     private long queryLong(String sql) {
