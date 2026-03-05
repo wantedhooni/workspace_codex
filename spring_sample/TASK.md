@@ -30,6 +30,8 @@
 - `sample_batch_quartz_dashboard` 폴더에 Batch/Quartz 운영 대시보드 샘플 프로젝트 생성 완료
 - 신규 5개 프로젝트 `README.md`, Docker 설정, 테스트 검증 완료
 - 루트 `README.md`에 신규 5개 프로젝트 설명, 실행 방법, 문서 링크, 검증 명령 추가 완료
+- `sample_batch_quartz_dashboard`에 실제 샘플 데이터(CSV) 적재, 배치 end-to-end 실행 예제 API, Quartz 제어(pause/resume/standby/start/cron 변경) 기능 추가 완료
+- `sample_batch_quartz_dashboard/README.md`를 실제 데이터 실행 절차와 Quartz 제어 예제 기준으로 최신화 완료
 - `r2dbc` 폴더에 PostgreSQL 기반 반응형 고객 계정 CRUD 샘플 프로젝트 생성 완료
 - `r2dbc-auditlog` 폴더에 반응형 승인 요청 및 감사 로그 적재 샘플 프로젝트 생성 완료
 - `webflux` 폴더에 대시보드 조회 및 SSE 스트림 샘플 프로젝트 생성 완료
@@ -56,3 +58,8 @@
 - `bllue-green-docker/runtime/versions` 기반 슬롯별 배포 버전 추적 및 롤백 버전 복원 로직 반영 완료
 - 루트 `README.md`를 현재 폴더 구조(`blue-green-nginx`, `bllue-green-docker`) 기준으로 정리하고 문서 링크/검증 명령 최신화 완료
 - `blue-green-nginx/README.md`, `bllue-green-docker/README.md`에 운영 시 주의사항(nginx reload override, 비활성 슬롯 응답 정책) 보강 완료
+- `sample_file_stream` 폴더에 JPA 기반 파일 메타데이터 + Local/S3 저장소 샘플 프로젝트 생성 완료
+- `FileMetadata` 엔티티/리포지토리, 저장소 추상화(`LocalFileContentStorage`, `S3FileContentStorage`), 업로드/다운로드 서비스 구현 완료
+- 파일 업로드 시 SHA-256 체크섬 계산, 메타데이터 조회/목록 API, 다운로드 스트리밍 API 구현 완료
+- `sample_file_stream/README.md`에 실행 방법, S3 환경변수, API 예제, 검증 명령 문서화 완료
+- 루트 `README.md`, `PLANS.md`, `TASK.md`를 `sample_file_stream` 기준으로 최신화 완료
