@@ -31,6 +31,16 @@ Build:
 npm run build
 ```
 
+Domain template scaffolding:
+
+```bash
+cd /Users/revy/workspace_codex/mvp_banking
+./scripts/scaffold-frontend-domain.sh --domain transfer-limit --target user
+```
+
+Guide:
+- `/Users/revy/workspace_codex/mvp_banking/docs/frontend-domain-template.md`
+
 Seed login:
 - `user@mvpbanking.local / User1234!`
 - Demo banking accounts: `KRW` + `USD`

@@ -33,6 +33,16 @@ Build:
 npm run build
 ```
 
+Domain/page template scaffolding:
+
+```bash
+cd /Users/revy/workspace_codex/mvp_banking
+./scripts/scaffold-frontend-domain.sh --domain transfer-limit --target admin
+```
+
+Guide:
+- `/Users/revy/workspace_codex/mvp_banking/docs/frontend-domain-template.md`
+
 Seed login:
 - `admin@mvpbanking.local / Admin1234!`
 

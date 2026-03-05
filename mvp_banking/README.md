@@ -24,6 +24,7 @@ Module READMEs:
 Docs:
 - `docs/system-architecture.md`
 - `docs/e2e-testing.md`
+- `docs/frontend-domain-template.md`
 
 ## Run Local Infra
 
@@ -227,9 +228,14 @@ Available scripts:
 - `./scripts/all-start.sh`
 - `./scripts/all-stop.sh`
 - `./scripts/e2e-smoke.sh`
+- `./scripts/scaffold-frontend-domain.sh`
 
 E2E smoke test:
 - Default: starts the full stack, verifies health endpoints, performs admin/user login, checks core admin/user APIs including linked bank account create/resend/verify, funding request create/cancel, and validates notification read endpoints
 - Reuse already running services: `START_STACK=0 ./scripts/e2e-smoke.sh`
 - Stop stack after test: `STOP_STACK=1 ./scripts/e2e-smoke.sh`
 - Detailed guide: `docs/e2e-testing.md`
+
+Frontend domain scaffolding:
+- Generate user/admin frontend domain templates: `./scripts/scaffold-frontend-domain.sh --domain transfer-limit --target both`
+- Detailed guide: `docs/frontend-domain-template.md`

@@ -43,6 +43,12 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+/**
+ * 환전 요청의 생성, 취소, 승인/반려 정산을 담당하는 애플리케이션 서비스입니다.
+ * <p>
+ * 요청 시점의 환율과 정책(당일 정산 가능 여부, 수동 심사 사유)을 스냅샷으로 보존해
+ * 운영 화면과 감사 이력에서 동일한 판단 근거를 추적할 수 있게 합니다.
+ */
 @Service
 public class ExchangeService {
 
@@ -85,12 +91,18 @@ public class ExchangeService {
         this.notificationService = notificationService;
     }
 
+    /**
+     * 관리자 화면에서 사용할 환전 요청 목록을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<ExchangeRequest> getAdminRequests() {
         auditLogService.logCurrentActor(AuditActionType.EXCHANGE_REQUEST_LIST_VIEWED, "EXCHANGE_REQUEST", "all", "Viewed exchange requests");
         return exchangeRequestRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    /**
+     * 현재 사용자(고객)의 환전 요청 목록을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<ExchangeRequest> getUserRequests(UUID endUserId) {
         UUID customerId = customerRepository.findByEndUserId(endUserId)
@@ -99,6 +111,11 @@ public class ExchangeService {
         return exchangeRequestRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }
 
+    /**
+     * 신규 환전 요청을 생성합니다.
+     * <p>
+     * 출금/입금 계좌 검증, 환율 조회, 정책 스냅샷 확정, 승인 큐 등록, 알림 발행을 함께 처리합니다.
+     */
     @Transactional
     public ExchangeRequest create(
             UUID endUserId,
@@ -199,6 +216,9 @@ public class ExchangeService {
         return request;
     }
 
+    /**
+     * 사용자가 대기중(PENDING_APPROVAL) 환전 요청을 취소합니다.
+     */
     @Transactional
     public ExchangeRequest cancelByUser(UUID endUserId, UUID requestId, String cancelReason) {
         var customer = customerRepository.findByEndUserId(endUserId)
@@ -246,6 +266,9 @@ public class ExchangeService {
         return exchangeRequest;
     }
 
+    /**
+     * 환전 요청을 승인하고 출금/입금 양쪽 거래 원장을 동시에 생성합니다.
+     */
     @Transactional
     public void markApproved(UUID requestId) {
         ExchangeRequest request = exchangeRequestRepository.findById(requestId)
@@ -326,6 +349,9 @@ public class ExchangeService {
                 ));
     }
 
+    /**
+     * 환전 요청을 반려 처리하고 사용자에게 반려 알림을 전송합니다.
+     */
     @Transactional
     public void markRejected(UUID requestId) {
         ExchangeRequest exchangeRequest = exchangeRequestRepository.findById(requestId)
@@ -350,6 +376,9 @@ public class ExchangeService {
                 ));
     }
 
+    /**
+     * 환전 가능 계좌인지(소유권, 은행 계좌 타입, 활성 상태) 검증합니다.
+     */
     private static void validateOwnedBankingAccount(Account account, UUID customerId, String accountLabel) {
         if (!account.getCustomerId().equals(customerId)) {
             throw new ResponseStatusException(FORBIDDEN, accountLabel + " account does not belong to current user");
@@ -380,6 +409,9 @@ public class ExchangeService {
         return normalized;
     }
 
+    /**
+     * 요청 시점 기준의 수동 심사 필요 여부와 예상 정산 시각을 계산합니다.
+     */
     private static ExchangePolicyDecision evaluatePolicy(
             String fromCurrency,
             BigDecimal fromAmount,
@@ -412,6 +444,9 @@ public class ExchangeService {
         );
     }
 
+    /**
+     * 환전 요청의 예상 정산 시각(당일/익영업일)을 반환합니다.
+     */
     private static Instant resolveExpectedSettlementAt(LocalDate requestedDate, boolean sameDaySettlementEligible) {
         if (sameDaySettlementEligible) {
             return requestedDate.atTime(SAME_DAY_SETTLEMENT_TIME).atZone(OPERATIONS_ZONE).toInstant();

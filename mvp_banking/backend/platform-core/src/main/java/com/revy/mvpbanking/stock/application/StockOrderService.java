@@ -55,6 +55,12 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+/**
+ * 주식 주문의 생성, 취소, 승인/체결/정산을 담당하는 애플리케이션 서비스입니다.
+ * <p>
+ * 주문 시점 정책 스냅샷(TIF, 시장 세션, 예상 체결 시각, 수동 심사 사유)을 고정해
+ * 운영 승인 과정과 사용자 화면에서 동일한 기준으로 주문 상태를 해석할 수 있게 합니다.
+ */
 @Service
 public class StockOrderService {
 
@@ -104,12 +110,18 @@ public class StockOrderService {
         this.notificationService = notificationService;
     }
 
+    /**
+     * 관리자 화면에서 사용할 주식 주문 목록(체결 이력 포함)을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<StockOrderDetail> getAdminOrders() {
         auditLogService.logCurrentActor(AuditActionType.STOCK_ORDER_LIST_VIEWED, "STOCK_ORDER", "all", "Viewed stock orders");
         return attachExecutions(stockOrderRepository.findAllByOrderByCreatedAtDesc());
     }
 
+    /**
+     * 현재 사용자(고객)의 주식 주문 목록(체결 이력 포함)을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<StockOrderDetail> getUserOrders(UUID endUserId) {
         UUID customerId = customerRepository.findByEndUserId(endUserId)
@@ -118,6 +130,11 @@ public class StockOrderService {
         return attachExecutions(stockOrderRepository.findByCustomerIdOrderByCreatedAtDesc(customerId));
     }
 
+    /**
+     * 신규 주식 주문을 생성합니다.
+     * <p>
+     * 계좌/잔고/보유수량 검증, 정책 스냅샷 계산, 승인 큐 등록, 사용자/관리자 알림 발행을 함께 처리합니다.
+     */
     @Transactional
     public StockOrder create(
             UUID endUserId,
@@ -249,6 +266,9 @@ public class StockOrderService {
         return order;
     }
 
+    /**
+     * 사용자가 대기중 또는 부분체결 주문을 취소합니다.
+     */
     @Transactional
     public StockOrder cancelByUser(UUID endUserId, UUID orderId, String cancelReason) {
         var customer = customerRepository.findByEndUserId(endUserId)
@@ -296,6 +316,9 @@ public class StockOrderService {
         return stockOrder;
     }
 
+    /**
+     * 주문 승인 시 초기 체결 수량을 계산해 체결/정산을 수행합니다.
+     */
     @Transactional
     public void markApproved(UUID orderId) {
         StockOrder order = stockOrderRepository.findById(orderId)
@@ -312,6 +335,9 @@ public class StockOrderService {
         executeOrder(order, determineInitialExecutionQuantity(order), Instant.now());
     }
 
+    /**
+     * 부분체결 상태 주문의 잔여 수량을 운영자가 강제로 체결 완료합니다.
+     */
     @Transactional
     public void completeRemainingFill(UUID orderId) {
         StockOrder order = stockOrderRepository.findById(orderId)
@@ -322,6 +348,9 @@ public class StockOrderService {
         executeOrder(order, order.getRemainingQuantity(), Instant.now());
     }
 
+    /**
+     * 주문을 반려 상태로 전환하고 사용자 알림을 전송합니다.
+     */
     @Transactional
     public void markRejected(UUID orderId) {
         StockOrder stockOrder = stockOrderRepository.findById(orderId)
@@ -363,6 +392,9 @@ public class StockOrderService {
                 .toList();
     }
 
+    /**
+     * 지정 수량만큼 주문을 체결하고 포지션/계좌/거래 원장/알림을 갱신합니다.
+     */
     private void executeOrder(StockOrder order, BigDecimal quantityToExecute, Instant settledAt) {
         if (order.getStatus() == StockOrderStatus.REJECTED) {
             throw new ResponseStatusException(CONFLICT, "Rejected order cannot be executed");
@@ -669,6 +701,9 @@ public class StockOrderService {
         return normalized;
     }
 
+    /**
+     * 주문 시점 기준 정책 스냅샷(TIF, 세션, 만료, 예상 체결, 심사 사유)을 계산합니다.
+     */
     private static StockOrderPolicyDecision evaluatePolicy(
             StockOrderTimeInForce timeInForce,
             String market,

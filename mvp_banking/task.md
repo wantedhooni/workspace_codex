@@ -78,3 +78,4 @@
 - [x] 입출금 요청 사용자 취소(CANCEL) 도메인/승인 연동 확장 및 user/admin funding 화면 상태 필터/액션 UX 개선
 - [x] 입출금 출금 수수료/총 차감액 정책 스냅샷 도메인 확장 및 user/admin funding 금액 가시성 UX 개선
 - [x] 입출금 우선처리(priority) 정책/수수료 도메인 확장 마무리 및 user/admin funding 화면 컷오프·수수료·정책 태그 UX 개선
+- [x] 백엔드 핵심 서비스/인증 필터 한글 Javadoc 주석 보강 및 프론트 도메인 스캐폴딩 템플릿/문서화 추가

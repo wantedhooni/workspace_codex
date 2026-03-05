@@ -22,8 +22,8 @@ import com.revy.mvpbanking.transaction.domain.TransactionEntry;
 import com.revy.mvpbanking.transaction.domain.TransactionEntryRepository;
 import com.revy.mvpbanking.transaction.domain.TransactionStatus;
 import com.revy.mvpbanking.transaction.domain.TransactionType;
-import com.revy.mvpbanking.linkedaccount.application.LinkedBankAccountService;
 import com.revy.mvpbanking.common.support.MaskingUtils;
+import com.revy.mvpbanking.linkedaccount.application.LinkedBankAccountService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -43,6 +43,12 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+/**
+ * 입출금(Funding) 요청의 생성, 취소, 승인/반려 정산을 담당하는 애플리케이션 서비스입니다.
+ * <p>
+ * 정책 스냅샷(일일 한도, 당일 정산 가능 여부, 수동 심사 사유, 우선처리 수수료)을 요청 생성 시점에 확정해
+ * 이후 운영 화면과 감사 로그에서 동일한 기준으로 추적할 수 있게 합니다.
+ */
 @Service
 public class FundingRequestService {
 
@@ -98,12 +104,18 @@ public class FundingRequestService {
         this.linkedBankAccountService = linkedBankAccountService;
     }
 
+    /**
+     * 관리자 화면에서 사용하는 전체 입출금 요청 목록을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<FundingRequest> getAdminRequests() {
         auditLogService.logCurrentActor(AuditActionType.FUNDING_REQUEST_LIST_VIEWED, "FUNDING_REQUEST", "all", "Viewed funding requests");
         return fundingRequestRepository.findAllByOrderByCreatedAtDesc();
     }
 
+    /**
+     * 현재 사용자(고객)의 입출금 요청 목록을 최신순으로 조회합니다.
+     */
     @Transactional(readOnly = true)
     public List<FundingRequest> getUserRequests(UUID endUserId) {
         UUID customerId = customerRepository.findByEndUserId(endUserId)
@@ -112,6 +124,11 @@ public class FundingRequestService {
         return fundingRequestRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }
 
+    /**
+     * 신규 입출금 요청을 생성합니다.
+     * <p>
+     * 계좌 소유권/상태 검증, 수수료 및 총 차감액 계산, 정책 스냅샷 확정, 승인 큐 등록, 사용자/관리자 알림 발행을 한 트랜잭션으로 처리합니다.
+     */
     @Transactional
     public FundingRequest create(
             UUID endUserId,
@@ -246,6 +263,11 @@ public class FundingRequestService {
         return request;
     }
 
+    /**
+     * 사용자가 대기중(PENDING_APPROVAL) 입출금 요청을 취소합니다.
+     * <p>
+     * 취소 시 연결된 승인 요청도 함께 취소 상태로 동기화합니다.
+     */
     @Transactional
     public FundingRequest cancelByUser(UUID endUserId, UUID requestId, String cancelReason) {
         Customer customer = customerRepository.findByEndUserId(endUserId)
@@ -294,6 +316,9 @@ public class FundingRequestService {
         return fundingRequest;
     }
 
+    /**
+     * 입출금 요청을 승인 처리하고 계좌/거래 원장 정산을 수행합니다.
+     */
     @Transactional
     public void markApproved(UUID requestId) {
         FundingRequest request = fundingRequestRepository.findById(requestId)
@@ -357,6 +382,9 @@ public class FundingRequestService {
                 ));
     }
 
+    /**
+     * 입출금 요청을 반려 처리하고 사용자에게 반려 알림을 발송합니다.
+     */
     @Transactional
     public void markRejected(UUID requestId) {
         FundingRequest request = fundingRequestRepository.findById(requestId)
@@ -383,6 +411,9 @@ public class FundingRequestService {
                 ));
     }
 
+    /**
+     * 요청 대상 계좌가 현재 고객 소유이며 활성 상태인지 검증합니다.
+     */
     private void validateRequestAccount(Account account, UUID customerId) {
         if (!account.getCustomerId().equals(customerId)) {
             throw new ResponseStatusException(FORBIDDEN, "Account does not belong to current user");
@@ -396,6 +427,9 @@ public class FundingRequestService {
         return sanitizeText(note, "Funding note", 255);
     }
 
+    /**
+     * 정산 후 거래 원장에 기록할 설명 문구를 구성합니다.
+     */
     private String buildSettlementDescription(FundingRequest request, Account account) {
         if (request.getRequestType() == FundingRequestType.DEPOSIT) {
             return "Funding deposit settled to " + account.getAccountNumber();
@@ -416,6 +450,9 @@ public class FundingRequestService {
                 + ", total debit " + request.getTotalDebitAmount().toPlainString() + ")";
     }
 
+    /**
+     * 요청 시점 기준 정책 스냅샷(한도/정산창/수동심사 사유)을 계산합니다.
+     */
     private FundingPolicyDecision evaluatePolicy(
             UUID customerId,
             FundingRequestType requestType,
@@ -505,6 +542,9 @@ public class FundingRequestService {
         return nextBusinessDate.atTime(settlementTime).atZone(OPERATIONS_ZONE).toInstant();
     }
 
+    /**
+     * 당일 정산 가능 여부를 영업일/컷오프/우선처리 기준으로 판별합니다.
+     */
     private boolean resolveSameDaySettlementEligible(
             LocalDate operationsDate,
             LocalTime operationsTime,
@@ -579,6 +619,9 @@ public class FundingRequestService {
         return description.toString();
     }
 
+    /**
+     * 사용자 알림용 정산 완료 메시지를 구성합니다.
+     */
     private String buildUserSettlementMessage(FundingRequest request) {
         if (request.getRequestType() == FundingRequestType.DEPOSIT) {
             return request.getRequestNumber() + " 요청이 승인되어 계좌에 반영되었습니다.";
@@ -590,6 +633,9 @@ public class FundingRequestService {
                 + " / 우선처리 수수료 " + request.getPriorityFeeAmount().toPlainString() + ")";
     }
 
+    /**
+     * 요청 금액, 서비스 수수료, 우선처리 수수료, 총 차감액 스냅샷을 계산합니다.
+     */
     private FundingSettlementSnapshot buildSettlementSnapshot(
             FundingRequestType requestType,
             String currency,
@@ -628,6 +674,9 @@ public class FundingRequestService {
         return (krw ? KRW_PRIORITY_FEE : FX_PRIORITY_FEE).setScale(4, RoundingMode.HALF_UP);
     }
 
+    /**
+     * 메모/사유 문자열을 트림/길이 제한 정책에 맞게 정규화합니다.
+     */
     private static String sanitizeText(String text, String label, int maxLength) {
         if (text == null) {
             return null;
