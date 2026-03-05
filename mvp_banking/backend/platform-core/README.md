@@ -8,6 +8,7 @@ Contains:
 - security and JWT infrastructure
 - JPA, Querydsl, Redis integration
 - Flyway migrations
+- Flyway 기반 데모 데이터 시드(`V28__seed_demo_data.sql`)
 - shared API response models
 - exchange fee / net settlement and stock fee / tax / net settlement domain logic
 

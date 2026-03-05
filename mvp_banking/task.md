@@ -81,3 +81,4 @@
 - [x] 백엔드 핵심 서비스/인증 필터 한글 Javadoc 주석 보강 및 프론트 도메인 스캐폴딩 템플릿/문서화 추가
 - [x] 루트 README.md 전체 한글화(실행 가이드/구성/스크립트/API 설명 포함)
 - [x] admin/user 전용 서비스·컨트롤러를 `platform-core`에서 각 서버 모듈(`admin-api`, `user-api`)로 분리
+- [x] 코드 기반 초기 데모 시딩(`InitialDataConfig`) 제거 및 Flyway DB 시드(`V28`)로 이관

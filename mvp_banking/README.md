@@ -65,6 +65,7 @@ cd /Users/revy/workspace_codex/mvp_banking/backend
 - 사용자: `user@mvpbanking.local` / `User1234!`
 - 데모 데이터셋: 고객 `100명` + 계좌/거래/승인 큐 기본 데이터
 - 기본 데모 사용자 은행 계좌: `KRW` + `USD`
+- 데모 데이터 로딩 방식: Flyway 마이그레이션(`V28__seed_demo_data.sql`)
 
 초기 API 목록:
 - `POST /api/admin/auth/login`
