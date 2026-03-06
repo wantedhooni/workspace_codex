@@ -2,6 +2,10 @@ package com.example.samplebatchquartzdashboard;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.samplebatchquartzdashboard.batchsample.BatchSampleDatasetService;
+import com.example.samplebatchquartzdashboard.batchsample.BatchSampleJobService;
+import com.example.samplebatchquartzdashboard.batchsample.BatchSampleMetricsRepository;
+import com.example.samplebatchquartzdashboard.batchsample.BatchSampleSeedRequest;
 import com.example.samplebatchquartzdashboard.batch.TaskImportJobService;
 import com.example.samplebatchquartzdashboard.dashboard.DashboardMetricsRepository;
 import com.example.samplebatchquartzdashboard.dashboard.QuartzControlService;
@@ -48,6 +52,15 @@ class SampleBatchQuartzDashboardApplicationTests {
     @Autowired
     private QuartzControlService quartzControlService;
 
+    @Autowired
+    private BatchSampleDatasetService batchSampleDatasetService;
+
+    @Autowired
+    private BatchSampleJobService batchSampleJobService;
+
+    @Autowired
+    private BatchSampleMetricsRepository batchSampleMetricsRepository;
+
     @Test
     void seededTasksAreProcessedByBatchJob() {
         taskDatasetService.seed(new TaskSeedRequest(500, true));
@@ -74,5 +87,16 @@ class SampleBatchQuartzDashboardApplicationTests {
         assertThat(quartzControlService.pauseTrigger().triggerState()).isIn("PAUSED", "NORMAL");
         assertThat(quartzControlService.resumeTrigger().triggerState()).isIn("NORMAL", "BLOCKED");
         assertThat(quartzControlService.status().cronExpression()).isNotBlank();
+    }
+
+    @Test
+    void batchComponentSampleRunsWithReaderProcessorWriterChunk() {
+        batchSampleDatasetService.seed(new BatchSampleSeedRequest(1_200, true));
+
+        JobExecution execution = batchSampleJobService.launchNow();
+
+        assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+        assertThat(batchSampleMetricsRepository.fetch().processedInput()).isEqualTo(1_200L);
+        assertThat(batchSampleMetricsRepository.fetch().outputCount()).isEqualTo(1_200L);
     }
 }

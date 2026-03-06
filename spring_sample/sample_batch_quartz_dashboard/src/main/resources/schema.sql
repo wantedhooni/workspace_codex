@@ -38,3 +38,32 @@ CREATE TABLE IF NOT EXISTS task_import_audit (
 
 CREATE INDEX IF NOT EXISTS idx_task_import_audit_created_at
     ON task_import_audit (created_at DESC);
+
+CREATE TABLE IF NOT EXISTS batch_sample_input (
+    id BIGSERIAL PRIMARY KEY,
+    account_no VARCHAR(40) NOT NULL,
+    instrument_code VARCHAR(30) NOT NULL,
+    quantity NUMERIC(18, 2) NOT NULL,
+    unit_price NUMERIC(18, 2) NOT NULL,
+    processed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_batch_sample_input_processed_id
+    ON batch_sample_input (processed, id);
+
+CREATE TABLE IF NOT EXISTS batch_sample_output (
+    id BIGSERIAL PRIMARY KEY,
+    input_id BIGINT NOT NULL UNIQUE,
+    account_no VARCHAR(40) NOT NULL,
+    instrument_code VARCHAR(30) NOT NULL,
+    gross_amount NUMERIC(18, 2) NOT NULL,
+    fee_amount NUMERIC(18, 2) NOT NULL,
+    net_amount NUMERIC(18, 2) NOT NULL,
+    risk_grade VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_batch_sample_output_created_at
+    ON batch_sample_output (created_at DESC);

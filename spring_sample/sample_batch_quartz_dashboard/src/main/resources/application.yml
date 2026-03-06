@@ -48,3 +48,7 @@ app:
     cron: ${APP_BATCH_DASHBOARD_CRON:0 0/1 * * * ?}
     chunk-size: ${APP_BATCH_DASHBOARD_CHUNK_SIZE:500}
     page-size: ${APP_BATCH_DASHBOARD_PAGE_SIZE:500}
+  batch-sample:
+    chunk-size: ${APP_BATCH_SAMPLE_CHUNK_SIZE:200}
+    page-size: ${APP_BATCH_SAMPLE_PAGE_SIZE:200}
+    default-seed-size: ${APP_BATCH_SAMPLE_DEFAULT_SEED_SIZE:1000}

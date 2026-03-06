@@ -28,6 +28,20 @@ Spring Batch와 Quartz를 DB 기반으로 운영하면서, 상태를 대시보�
 - Quartz trigger pause/resume, scheduler standby/start, cron 변경 제어 API
 - `/dashboard` 운영 화면
 - Batch/Quartz 메타데이터 DB 저장
+- `ItemReader / ItemProcessor / ItemWriter / Chunk Size`를 명시적으로 확인할 수 있는 전용 샘플 API 제공
+
+## Batch 컴포넌트 샘플
+
+`batchComponentSampleJob`은 요청하신 4가지 요소를 분리해 적용한 예제다.
+
+- ItemReader: `batchSampleItemReader` (`JdbcPagingItemReader`)
+- ItemProcessor: `batchSampleItemProcessor`
+- ItemWriter: `batchSampleInsertWriter` + `batchSampleProcessedWriter` (`CompositeItemWriter`)
+- Chunk Size: `app.batch-sample.chunk-size` (기본 `200`)
+
+코드 위치:
+- [BatchSampleJobConfig.java](/Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard/src/main/java/com/example/samplebatchquartzdashboard/batchsample/BatchSampleJobConfig.java)
+- [application.yml](/Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard/src/main/resources/application.yml)
 
 ## 실행
 
@@ -134,6 +148,26 @@ curl -X POST http://localhost:8080/api/dashboard/quartz/start
 curl -X PUT http://localhost:8080/api/dashboard/quartz/cron \
   -H 'Content-Type: application/json' \
   -d '{"cronExpression":"0 0/2 * * * ?"}'
+```
+
+### Batch 컴포넌트 샘플: 데이터 적재
+
+```bash
+curl -X POST http://localhost:8080/api/batch-sample/seed \
+  -H 'Content-Type: application/json' \
+  -d '{"size":1200,"truncateBeforeLoad":true}'
+```
+
+### Batch 컴포넌트 샘플: 실행
+
+```bash
+curl -X POST http://localhost:8080/api/batch-sample/run
+```
+
+### Batch 컴포넌트 샘플: 메트릭 조회
+
+```bash
+curl http://localhost:8080/api/batch-sample/metrics
 ```
 
 ## 주요 테이블

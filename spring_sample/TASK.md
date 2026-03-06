@@ -32,6 +32,7 @@
 - 루트 `README.md`에 신규 5개 프로젝트 설명, 실행 방법, 문서 링크, 검증 명령 추가 완료
 - `sample_batch_quartz_dashboard`에 실제 샘플 데이터(CSV) 적재, 배치 end-to-end 실행 예제 API, Quartz 제어(pause/resume/standby/start/cron 변경) 기능 추가 완료
 - `sample_batch_quartz_dashboard/README.md`를 실제 데이터 실행 절차와 Quartz 제어 예제 기준으로 최신화 완료
+- `sample_batch_quartz_dashboard`에 `ItemReader / ItemProcessor / ItemWriter / Chunk Size` 전용 배치 샘플(`batchComponentSampleJob`)과 실행 API(`/api/batch-sample/*`) 추가 완료
 - `r2dbc` 폴더에 PostgreSQL 기반 반응형 고객 계정 CRUD 샘플 프로젝트 생성 완료
 - `r2dbc-auditlog` 폴더에 반응형 승인 요청 및 감사 로그 적재 샘플 프로젝트 생성 완료
 - `webflux` 폴더에 대시보드 조회 및 SSE 스트림 샘플 프로젝트 생성 완료
