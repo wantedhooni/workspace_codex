@@ -34,11 +34,32 @@ function App() {
   const [socketState, setSocketState] = useState<SocketState>('connecting');
 
   const socketRef = useRef<WebSocket | null>(null);
+  const chatLogRef = useRef<HTMLElement | null>(null);
+  const chatLogBottomRef = useRef<HTMLDivElement | null>(null);
 
   const canSubmit = useMemo(
     () => input.trim().length > 0 && !loading && socketState === 'connected',
     [input, loading, socketState]
   );
+
+  useEffect(() => {
+    if (!widgetOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      if (!chatLogRef.current || !chatLogBottomRef.current) {
+        return;
+      }
+
+      chatLogBottomRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end'
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [messages, widgetOpen]);
 
   useEffect(() => {
     const socket = new WebSocket(socketUrl);
@@ -220,7 +241,7 @@ function App() {
           </button>
         </header>
 
-        <section className="chat-log">
+        <section className="chat-log" ref={chatLogRef}>
           {messages.length === 0 ? (
             <div className="empty">메시지를 입력하면 대화가 시작됩니다.</div>
           ) : (
@@ -231,6 +252,7 @@ function App() {
               </article>
             ))
           )}
+          <div ref={chatLogBottomRef} />
         </section>
 
         <form className="composer" onSubmit={handleSubmit}>

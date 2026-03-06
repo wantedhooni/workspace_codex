@@ -95,3 +95,7 @@
 - `all-start.sh`에 Ollama 모델 warm-up 옵션(`OLLAMA_WARMUP`) 추가로 첫 응답 지연 완화 구성 완료
 - `docker-compose.yml`에 Ollama 서버 병렬/로드 모델 수 제어 환경변수 반영 완료
 - `sample-ai-bot/README.md`에 WebSocket 연결/요청/응답/세션 처리 규칙을 설명하는 동작 방식 섹션 추가 완료
+- `sample-ai-bot/scripts/all-start.sh`를 블로킹 없는 `docker compose up -d` 래퍼로 단순화하고, README 실행 설명을 실제 동작 기준으로 정합화 완료
+- `sample-ai-bot/scripts/all-start.sh`에 Backend/Frontend 백그라운드 기동을 재반영하고, 짧은 PID 생존 확인 후 종료되는 단순 실행 흐름으로 수정 완료
+- `sample-ai-bot/scripts/all-start.sh`를 `bootJar + java -jar` 기반으로 보강해 백엔드 PID 추적 안정화 및 포트 점유/대기 검증 로직 반영 완료
+- `sample-ai-bot/frontend` 채팅 로그에 하단 anchor 스크롤을 추가해 사용자/AI 최신 메시지 기준으로 자동 포커스 이동되도록 수정 완료

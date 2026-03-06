@@ -59,14 +59,13 @@ VITE_WS_URL=ws://localhost:8088/ws/chat
 
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample-ai-bot
-docker compose --env-file .env up -d ollama
+docker compose --env-file .env up -d
 ```
 
-- `OLLAMA_MODEL` 변경 시 `scripts/all-start.sh` 실행 중 자동 `ollama pull` 수행
 - 수동으로 모델 다운로드하려면:
 
 ```bash
-docker compose --env-file .env exec -T ollama ollama pull llama3.2
+docker compose --env-file .env exec -T ollama ollama pull llama3.2:1b
 ```
 
 ## 전체 시작/중지 스크립트
@@ -79,10 +78,10 @@ cd /Users/revy/workspace_codex/spring_sample/sample-ai-bot
 ```
 
 - 수행 내용
-  - docker-compose로 Ollama 컨테이너 시작
-  - `.env`의 `OLLAMA_MODEL` 자동 pull
-  - Backend 기동 + 헬스체크
-  - Frontend 기동
+  - `docker compose --env-file .env up -d` 실행 (Ollama)
+  - Backend(`./gradlew bootJar` 후 `java -jar`) 백그라운드 기동
+  - Frontend(`npm run dev`) 백그라운드 기동
+  - compose 상태와 로그 경로 출력
 
 ### 전체 중지
 
@@ -91,7 +90,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample-ai-bot
 ./scripts/all-stop.sh
 ```
 
-- Frontend/Backend 프로세스 종료
+- Frontend/Backend PID 파일이 있으면 프로세스 종료
 - Ollama 컨테이너 `docker compose stop ollama` 실행
 
 ## 개별 실행
