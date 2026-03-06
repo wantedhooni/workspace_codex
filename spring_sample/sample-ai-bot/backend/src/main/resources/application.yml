@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: sample-ai-bot-backend
+
+server:
+  port: ${BACKEND_PORT:8088}
+
+app:
+  ollama:
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:llama3.2}
+    system-prompt: 당신은 한국어로 명확하고 간결하게 답변하는 AI 비서다.(한국어로만 대답하세요.)
+    max-history: ${OLLAMA_MAX_HISTORY:6}
+    temperature: ${OLLAMA_TEMPERATURE:0.2}
+    num-predict: ${OLLAMA_NUM_PREDICT:128}
+    keep-alive: ${OLLAMA_KEEP_ALIVE:30m}
+    request-timeout-seconds: ${OLLAMA_REQUEST_TIMEOUT_SECONDS:180}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

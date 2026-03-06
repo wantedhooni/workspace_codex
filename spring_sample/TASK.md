@@ -64,3 +64,34 @@
 - 파일 업로드 시 SHA-256 체크섬 계산, 메타데이터 조회/목록 API, 다운로드 스트리밍 API 구현 완료
 - `sample_file_stream/README.md`에 실행 방법, S3 환경변수, API 예제, 검증 명령 문서화 완료
 - 루트 `README.md`, `PLANS.md`, `TASK.md`를 `sample_file_stream` 기준으로 최신화 완료
+- `sample-ai-bot` 폴더에 로컬 Ollama 연동 채팅 샘플 프로젝트(`backend`/`frontend`) 생성 완료
+- `backend`에 Spring Boot 기반 Ollama 채팅 API, 세션 이력 조회/초기화 API, CORS/설정/예외 처리 구현 완료
+- `frontend`에 React(Vite) 채팅 UI, 세션 ID/모델 입력, 메시지 전송/세션 초기화 연동 구현 완료
+- `sample-ai-bot/README.md` 및 하위 README에 Ollama 실행, 서버 실행, 테스트/빌드 검증 절차 문서화 완료
+- `sample-ai-bot/scripts/all-start.sh`, `all-stop.sh` 추가로 Ollama/Backend/Frontend 전체 시작·중지 자동화 구성 완료
+- `sample-ai-bot/README.md`에 전체 시작/중지 스크립트 사용법, 로그/PID 경로, 스크립트 검증 명령 문서화 완료
+- `sample-ai-bot/frontend` 채팅 UI를 우측 사이드 위젯(열기/닫기 토글) 형태로 개편 완료
+- `sample-ai-bot`에 `docker-compose.yml` 추가로 Ollama를 컨테이너로 실행하도록 전환 완료
+- `sample-ai-bot/.env`, `.env.example` 추가 및 기본 모델을 `llama3.2`로 설정, 포트/모델/URL 속성 중앙 관리 구성 완료
+- `scripts/all-start.sh`, `all-stop.sh`를 docker compose + .env 기반으로 개편하고 모델 자동 pull 로직 반영 완료
+- `backend/application.yml`, `frontend` 기본 모델 설정을 `.env` 변수 기반으로 변경 완료
+- `sample-ai-bot/README.md`를 docker-compose/.env 사용법 및 변경 포인트 중심으로 최신화 완료
+- `sample-ai-bot/frontend` 채팅 입력 UX를 개선해 `Enter` 전송, `Shift+Enter` 줄바꿈 동작 적용 완료
+- `sample-ai-bot/frontend` 모델 입력 UI를 제거하고 모델 선택을 백엔드(`OLLAMA_MODEL`)에서만 관리하도록 전환 완료
+- `sample-ai-bot/scripts/all-start.sh` 프론트 시작 버그 수정: PID 생존 + 포트 소유(자식 프로세스 포함) + URL 안정화 체크를 통과해야 성공 처리하도록 보강 완료
+- `all-start.sh` 프론트 시작 실패 이슈 수정: 5173 포트 점유 시 동일 프로젝트 stale Vite 프로세스 자동 정리, 타 프로세스 점유 시 명확한 에러 출력 로직 추가 완료
+- `sample-ai-bot/frontend` 한글 입력 조합(IME) 중 Enter 전송 시 잔여 문자 남는 문제를 수정하기 위해 조합 상태(`isComposing`) 처리 로직 추가 완료
+- `sample-ai-bot` 챗봇 통신을 REST 요청 중심에서 WebSocket(`ws://.../ws/chat`) 기반으로 전환 완료
+- `backend`에 WebSocket 핸들러/설정(`ChatWebSocketConfig`, `ChatWebSocketHandler`) 추가 및 `chat`/`clear` 타입 메시지 처리 구현 완료
+- `frontend`를 WebSocket 연결/수신 이벤트 기반으로 개편하고 Enter 전송/Shift+Enter 줄바꿈 UX와 함께 동작하도록 정리 완료
+- `.env`에 `VITE_WS_URL` 추가 및 README/하위 README를 WebSocket 실행 방식으로 최신화 완료
+- `backend` CORS/WebSocket Origin 정책을 전체 허용(`*`)으로 변경 완료
+- `sample-ai-bot/E2E_ISSUE_REPORT.md` 파일에 E2E 장애 원인 분석 및 조치 내역/추가 해결안 문서화 완료
+- `sample-ai-bot/frontend`에서 세션 ID 입력 UI를 숨기고 세션은 내부 상태로만 관리하도록 변경 완료
+- `sample-ai-bot/frontend` 세션 초기화 버튼을 입력 영역 하단 액션 영역으로 이동해 전송 버튼 옆에 배치 완료
+- `sample-ai-bot/frontend` 액션 버튼 정렬을 보강해 세션 초기화 버튼이 전송 버튼 왼쪽에 고정 배치되도록 스타일 조정 완료
+- `sample-ai-bot/frontend` 채팅 내역 영역 높이를 고정(데스크톱/모바일 별도 기준)하고 overflow 스크롤로 동작하도록 스타일 조정 완료
+- `sample-ai-bot` Ollama 응답 속도 개선을 위해 기본 모델/컨텍스트/토큰/keep-alive/timeout 튜닝 속성을 `.env`로 노출하고 기본값을 경량 프로파일로 조정 완료
+- `all-start.sh`에 Ollama 모델 warm-up 옵션(`OLLAMA_WARMUP`) 추가로 첫 응답 지연 완화 구성 완료
+- `docker-compose.yml`에 Ollama 서버 병렬/로드 모델 수 제어 환경변수 반영 완료
+- `sample-ai-bot/README.md`에 WebSocket 연결/요청/응답/세션 처리 규칙을 설명하는 동작 방식 섹션 추가 완료

@@ -1,0 +1,17 @@
+# backend
+backend/.gradle
+backend/build
+
+# frontend
+frontend/node_modules
+frontend/dist
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# common
+.DS_Store
+
+# runtime
+runtime/logs
+runtime/pids

@@ -1,6 +1,6 @@
 # 작업 계획
 
-1. `sample_file_stream` 디렉터리에 독립 실행형 Spring Boot 파일 스트리밍 샘플 프로젝트를 생성한다.
-2. JPA 기반 파일 메타데이터 엔티티/리포지토리와 업로드·다운로드 서비스 계층을 구현한다.
-3. 저장소 추상화를 적용해 `LOCAL`, `S3` 백엔드를 선택적으로 사용하는 파일 저장/조회 기능을 구현한다.
+1. `sample-ai-bot` 폴더에 `backend`, `frontend` 분리 구조로 신규 프로젝트를 생성한다.
+2. `backend`에 Spring Boot 기반 Ollama 채팅 API(`POST /api/chat`)와 세션 이력 조회/초기화 API를 구현한다.
+3. `frontend`에 React 기반 채팅 UI를 구현하고 백엔드 API와 연동한다.
 4. `README.md`, `TASK.md`에 실행/검증 방법과 작업 내역을 한글로 반영한다.
