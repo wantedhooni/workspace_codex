@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/securities
+    driver-class-name: org.postgresql.Driver
+    username: securities
+    password: securities
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+app:
+  security:
+    jwt:
+      secret: change-this-to-a-long-random-secret-key-for-prod
+      expiration-seconds: 3600

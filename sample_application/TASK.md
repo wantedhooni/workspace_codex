@@ -1,0 +1,40 @@
+# 작업 내역
+
+## 2026-03-06
+- [완료] AGENTS.md/PLANS.md 한글 문서 작성
+- [완료] backend(Java 21/JPA/Querydsl) 스캐폴딩 및 4계 도메인 구현
+  - 채널계: 신청/멱등키 처리
+  - 계정계: 계좌 개설/입출금/원장/잔액 확정
+  - 정보계: 확정 이벤트 적재/조회
+  - 대외계: 전문 송신/실패/재전송
+- [완료] frontend(Next.js/React) 운영 콘솔 구현
+  - 도메인별 페이지(대시보드/채널/계정/정보/대외)
+  - 백엔드 API 연동
+- [완료] 인증/인가(JWT) 계층 추가
+  - 로그인 API(`/api/auth/login`) 및 Bearer 토큰 검증 필터
+  - API 인증 가드 및 프론트 로그인/로그아웃/가드 처리
+- [완료] EOD 배치/대사 기능 추가
+  - EOD 스냅샷 엔티티 및 Querydsl 집계
+  - 수동 실행 API(`/api/eod/run`) 및 조회 API(`/api/eod/snapshots`)
+  - 일 단위 스케줄 실행(중복 생성 방지)
+- [완료] RBAC 추가
+  - OPERATOR/VIEWER 역할 클레임 발급
+  - 메서드 권한 분리(조회/변경)
+  - 권한 거부 표준 응답(`403 FORBIDDEN`) 처리
+- [완료] Querydsl 원장 검색 API 추가
+  - `/api/accounts/ledger/search` 조건 검색(고객/계좌/유형/시각/금액)
+- [완료] frontend 권한 기반 UI 분기
+  - VIEWER는 조회 전용, OPERATOR만 변경 기능 노출
+- [완료] Next.js 보안 패치 업그레이드
+  - `next`, `eslint-config-next` -> `15.5.12`
+- [완료] Docker Compose 실행환경 추가
+  - PostgreSQL + backend + frontend 컨테이너 구성
+  - backend docker profile(`application-docker.yml`) 추가
+- [완료] script 전체 실행 관리 스크립트 추가
+  - `script/all-start.sh`: backend/frontend 동시 기동
+  - `script/all-stop.sh`: PID 기반 전체 종료
+  - `script/all-restart.sh`: 전체 재기동
+  - 로그 경로: `.logs/backend.log`, `.logs/frontend.log`
+- [완료] 빌드/검증
+  - backend: gradle clean build 성공
+  - frontend: npm run typecheck/lint/build 성공
