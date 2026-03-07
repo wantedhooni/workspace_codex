@@ -59,24 +59,59 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="panel" style={{ maxWidth: 420, margin: "0 auto" }}>
-      <h2>로그인</h2>
-      <div className="row" style={{ marginBottom: 10 }}>
-        <button type="button" className="secondary" onClick={fillOperatorDemo}>
-          운영자 데모 자동입력
-        </button>
-        <button type="button" className="secondary" onClick={fillViewerDemo}>
-          조회자 데모 자동입력
-        </button>
+    <div className="page" style={{ maxWidth: 520, margin: "0 auto" }}>
+      <div>
+        <h2 className="page-title">관리자 로그인</h2>
+        <p className="page-desc">운영 권한에 따라 조회 전용 모드와 처리 모드가 분리됩니다.</p>
       </div>
-      <form className="grid" onSubmit={onSubmit}>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="아이디" />
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호" />
-        <button type="submit">로그인</button>
-      </form>
-      <p style={{ color: "#5c6b7a", fontSize: 13 }}>운영자: admin / admin1234</p>
-      <p style={{ color: "#5c6b7a", fontSize: 13 }}>조회자: auditor / audit1234</p>
-      {error && <p style={{ color: "#b91c1c" }}>{error}</p>}
-    </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>접속 안내</h2>
+          <span className="badge badge-warn">관리자 전용</span>
+        </div>
+        <div className="meta-list">
+          <div className="meta-row">
+            <span className="meta-label">운영자(OPERATOR)</span>
+            <strong>계좌/전문/EOD 처리 가능</strong>
+          </div>
+          <div className="meta-row">
+            <span className="meta-label">조회자(VIEWER)</span>
+            <strong>조회 전용, 처리 액션 차단</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>계정 자동입력</h2>
+          <span className="badge badge-warn">Demo</span>
+        </div>
+        <div className="row">
+          <button type="button" className="secondary" onClick={fillOperatorDemo}>
+            운영자 계정 입력
+          </button>
+          <button type="button" className="secondary" onClick={fillViewerDemo}>
+            조회자 계정 입력
+          </button>
+        </div>
+      </section>
+
+      <section className="panel">
+        <h2 style={{ marginBottom: 10 }}>로그인 정보</h2>
+        <form className="form-grid" onSubmit={onSubmit}>
+          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="아이디" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호" />
+          <button type="submit" style={{ gridColumn: "1 / -1" }}>
+            로그인
+          </button>
+        </form>
+        <p className="panel-sub" style={{ marginTop: 10 }}>
+          운영자: admin / admin1234 | 조회자: auditor / audit1234
+        </p>
+      </section>
+
+      {error && <div className="alert">{error}</div>}
+    </div>
   );
 }

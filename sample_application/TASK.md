@@ -35,6 +35,17 @@
   - `script/all-stop.sh`: PID 기반 전체 종료
   - `script/all-restart.sh`: 전체 재기동
   - 로그 경로: `.logs/backend.log`, `.logs/frontend.log`
+- [완료] frontend 관리자 업무 시스템 UI 전면 개선
+  - 고객 서비스형 톤 제거, 백오피스 레이아웃/데이터 밀도 중심 개편
+  - 좌측 업무 네비 + 상단 운영바 + 패널/그리드/배지 시스템 재정의
+  - 계정/채널/정보/대외 업무 화면을 처리 효율 중심으로 재배치
+- [완료] frontend 업무형 UI 2차 개선
+  - 활성 네비게이션, 세션/권한 상단 상태 바, 빠른 업무 이동 패널 추가
+  - 대시보드/계정계/대외계/정보계에 요약 KPI 및 운영 설명 강화
+  - 로그인 화면을 관리자 접근 안내 중심으로 재정리
+- [완료] frontend 생성/수정 액션 모달 전환
+  - 계좌 개설, 입출금 확정, 채널 접수, 대외 전문 송신을 모달 워크플로우로 변경
+  - 본문 화면은 현황/조회 중심으로 정리
 - [완료] 빌드/검증
   - backend: gradle clean build 성공
   - frontend: npm run typecheck/lint/build 성공
