@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +60,31 @@ public class AdminAnnouncementController {
                 "ANNOUNCEMENT",
                 announcement.getId().toString(),
                 "Created announcement " + announcement.getTitle()
+        );
+        return ApiResponse.ok(AnnouncementResponse.from(announcement));
+    }
+
+    @PutMapping("/{announcementId}")
+    public ApiResponse<AnnouncementResponse> update(
+            @PathVariable UUID announcementId,
+            @RequestBody UpdateAnnouncementRequest request
+    ) {
+        var announcement = announcementService.updateDraft(
+                announcementId,
+                request.title(),
+                request.summary(),
+                request.body(),
+                request.severity(),
+                request.audience(),
+                request.pinned(),
+                request.startsAt(),
+                request.endsAt()
+        );
+        auditLogService.logCurrentActor(
+                AuditActionType.ANNOUNCEMENT_UPDATED,
+                "ANNOUNCEMENT",
+                announcement.getId().toString(),
+                "Updated announcement " + announcement.getTitle()
         );
         return ApiResponse.ok(AnnouncementResponse.from(announcement));
     }

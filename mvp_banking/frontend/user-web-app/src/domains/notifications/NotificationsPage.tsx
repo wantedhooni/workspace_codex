@@ -30,6 +30,10 @@ export function NotificationsPage({
   return (
     <>
       <section className="timeline-panel asset-panel">
+        <div className="page-convenience-strip">
+          <strong>{notifications.length}건 이벤트 표시 중</strong>
+          <span>미확인 항목부터 읽음 처리하고 바로가기 링크로 해당 업무 화면에 이동할 수 있습니다.</span>
+        </div>
         <div className="section-header compact">
           <div>
             <p className="eyebrow">Notification Center</p>
@@ -63,6 +67,9 @@ export function NotificationsPage({
           <div>
             <p className="eyebrow">Inbox Queue</p>
             <h2>이벤트 알림 목록</h2>
+            <p className="section-copy">
+              거래·환전·포트폴리오 이벤트를 우선순위와 처리 상태 기준으로 바로 확인할 수 있습니다.
+            </p>
           </div>
         </div>
         <div className="table-shell">

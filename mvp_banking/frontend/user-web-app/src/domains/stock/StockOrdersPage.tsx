@@ -140,11 +140,46 @@ export function StockOrdersPage({
 
   return (
     <>
+      <section className="summary-grid">
+        <article className="summary-card">
+          <span className="eyebrow">Open Orders</span>
+          <strong>{stockOrders.filter((item) => item.status === "PENDING_APPROVAL" || item.status === "PARTIALLY_FILLED").length}</strong>
+          <p>승인 대기 및 부분체결 주문 수</p>
+        </article>
+        <article className={`summary-card ${previewManualReviewRequired ? "negative" : ""}`}>
+          <span className="eyebrow">Review Status</span>
+          <strong>{previewManualReviewRequired ? "수동 심사 예상" : "자동 큐"}</strong>
+          <p>{previewManualReviewRequired ? previewManualReviewReasons.join(" / ") : "현재 입력 기준 추가 심사 사유 없음"}</p>
+        </article>
+        <article className={`summary-card ${isSell && !hasEnoughShares ? "negative" : ""}`}>
+          <span className="eyebrow">Exposure Check</span>
+          <strong>{estimatedNotional > 0 ? formatAmount(estimatedNotional, form.currency) : "-"}</strong>
+          <p>{isSell ? "보유 수량 기준 매도 가능 여부를 확인합니다." : "주문 예상 금액과 현금 영향도를 미리 계산합니다."}</p>
+        </article>
+        <article className="summary-card">
+          <span className="eyebrow">Execution Window</span>
+          <strong>{renderMarketSessionLabel(marketSessionPreview)}</strong>
+          <p>{`예상 체결 ${expectedExecutionPreview}`}</p>
+        </article>
+      </section>
+
+      <div className="page-convenience-strip">
+        <div>
+          <span>주문 안내</span>
+          <strong>종목, 방향, 수량, 지정가를 입력하면 세금·수수료와 현금 영향도가 함께 계산됩니다.</strong>
+        </div>
+        <div>
+          <span>{isSell ? "예상 순수령" : "예상 출금"}</span>
+          <strong>{estimatedNotional > 0 ? formatAmount(estimatedCashImpact, form.currency) : "-"}</strong>
+        </div>
+      </div>
+
       <section className="timeline-panel asset-panel">
         <div className="section-header compact">
           <div>
             <p className="eyebrow">Stock Trading</p>
             <h2>주식 주문</h2>
+            <p className="section-copy">실제 주문 티켓처럼 계좌 정보, 정책 플래그, 체결 윈도우를 먼저 확인하고 주문 조건을 입력하도록 정리했습니다.</p>
           </div>
         </div>
         <form className="trade-ticket" onSubmit={onSubmit}>
@@ -425,6 +460,7 @@ export function StockOrdersPage({
           <div>
             <p className="eyebrow">Stock Orders</p>
             <h2>내 주식 주문</h2>
+            <p className="section-copy">체결 진척, 정산 결과, 취소 가능 상태를 표에서 한 번에 읽을 수 있도록 요약했습니다.</p>
           </div>
         </div>
         <div className="table-shell">

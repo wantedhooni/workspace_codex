@@ -26,7 +26,16 @@ type CustomersPageProps = {
 
 export function CustomersPage({ summary, data, filter, setFilter, onSearch, onReset, onPageChange }: CustomersPageProps) {
   return (
-    <Card title="Customers" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
+    <Card
+      className="ops-panel-card"
+      title={
+        <div>
+          <p className="eyebrow">Customer Operations</p>
+          <Typography.Title level={3} style={{ margin: 0 }}>Customers</Typography.Title>
+        </div>
+      }
+      extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}
+    >
       <Row gutter={[16, 16]} className="customer-summary-grid">
         <Col xs={24} md={6}>
           <Card bordered={false} className="customer-summary-card">
@@ -49,7 +58,7 @@ export function CustomersPage({ summary, data, filter, setFilter, onSearch, onRe
           </Card>
         </Col>
       </Row>
-      <Space wrap className="filter-row">
+      <Space wrap className="filter-row ops-filter-row">
         <Input
           placeholder="고객번호 / 이름 / 이메일 검색"
           value={filter.query}

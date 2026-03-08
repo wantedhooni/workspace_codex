@@ -1,5 +1,5 @@
 import { request } from "../../shared/api/http";
-import type { Announcement, CreateAnnouncementPayload } from "../../types";
+import type { Announcement, CreateAnnouncementPayload, UpdateAnnouncementPayload } from "../../types";
 
 export const adminAnnouncementsApi = {
   announcements(token: string) {
@@ -10,6 +10,16 @@ export const adminAnnouncementsApi = {
       "/api/admin/announcements",
       {
         method: "POST",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  },
+  updateAnnouncement(token: string, announcementId: string, payload: UpdateAnnouncementPayload) {
+    return request<Announcement>(
+      `/api/admin/announcements/${announcementId}`,
+      {
+        method: "PUT",
         body: JSON.stringify(payload),
       },
       token,

@@ -384,6 +384,35 @@ function App() {
     }
   }
 
+  async function handleUpdateAnnouncement(
+    announcementId: string,
+    payload: {
+      title: string;
+      summary: string;
+      body: string;
+      severity: string;
+      audience: string;
+      pinned: boolean;
+      startsAt?: string | null;
+      endsAt?: string | null;
+    },
+  ) {
+    if (!token) {
+      return;
+    }
+
+    setActingAnnouncementId(announcementId);
+    try {
+      await adminApi.updateAnnouncement(token, announcementId, payload);
+      await loadShell(token);
+      messageApi.success("공지 초안을 수정했습니다.");
+    } catch (error) {
+      messageApi.error(error instanceof Error ? error.message : "Announcement update failed");
+    } finally {
+      setActingAnnouncementId(null);
+    }
+  }
+
   async function handlePublishAnnouncement(announcementId: string) {
     if (!token) {
       return;
@@ -816,6 +845,7 @@ function App() {
                       creatingAnnouncement={creatingAnnouncement}
                       actingAnnouncementId={actingAnnouncementId}
                       onCreate={handleCreateAnnouncement}
+                      onUpdate={handleUpdateAnnouncement}
                       onPublish={handlePublishAnnouncement}
                       onArchive={handleArchiveAnnouncement}
                     />

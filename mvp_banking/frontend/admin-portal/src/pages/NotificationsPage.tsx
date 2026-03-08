@@ -15,18 +15,28 @@ export function NotificationsPage({ notifications, unreadCount, readingNotificat
 
   return (
     <Space direction="vertical" size={16} style={{ width: "100%" }}>
-      <div>
-        <Typography.Title level={2} style={{ marginBottom: 8 }}>
-          Operations Inbox
-        </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-          승인 대기, 시세 경보, 사용자 지시 이벤트를 읽음 상태까지 포함해 운영자 기준으로 정리한 알림 대기함입니다.
-        </Typography.Paragraph>
-      </div>
+      <Card className="ops-hero-card" bordered={false}>
+        <div className="ops-page-header">
+          <div>
+            <p className="eyebrow">Operations Inbox</p>
+            <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              Notification Queue
+            </Typography.Title>
+            <Typography.Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
+              승인 대기, 시세 경보, 사용자 지시 이벤트를 읽음 상태까지 포함해 운영자 기준으로 정리한 알림 대기함입니다.
+            </Typography.Paragraph>
+          </div>
+          <div className="ops-header-meta">
+            <span>Unread Load</span>
+            <strong>{unreadCount}건</strong>
+            <small>즉시 확인이 필요한 운영 인박스</small>
+          </div>
+        </div>
+      </Card>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
-          <Card>
+          <Card className="ops-stat-card">
             <Typography.Text type="secondary">Unread</Typography.Text>
             <Typography.Title level={3} style={{ margin: "12px 0 0" }}>
               {unreadCount}건
@@ -34,7 +44,7 @@ export function NotificationsPage({ notifications, unreadCount, readingNotificat
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card>
+          <Card className="ops-stat-card">
             <Typography.Text type="secondary">Action Required</Typography.Text>
             <Typography.Title level={3} style={{ margin: "12px 0 0", color: actionRequiredCount > 0 ? "#cf1322" : undefined }}>
               {actionRequiredCount}건
@@ -42,7 +52,7 @@ export function NotificationsPage({ notifications, unreadCount, readingNotificat
           </Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card>
+          <Card className="ops-stat-card">
             <Typography.Text type="secondary">Today</Typography.Text>
             <Typography.Title level={3} style={{ margin: "12px 0 0" }}>
               {todayCount}건
@@ -51,7 +61,7 @@ export function NotificationsPage({ notifications, unreadCount, readingNotificat
         </Col>
       </Row>
 
-      <Card title="Notification Queue">
+      <Card className="ops-panel-card" title="Notification Queue">
         <OperationsGridTable
           rowKey="id"
           dataSource={notifications}

@@ -99,6 +99,29 @@ public class Announcement extends BaseJpaEntity {
         this.archivedAt = null;
     }
 
+    public void updateDraft(
+            String title,
+            String summary,
+            String body,
+            AnnouncementSeverity severity,
+            AnnouncementAudience audience,
+            boolean pinned,
+            Instant startsAt,
+            Instant endsAt
+    ) {
+        if (this.status != AnnouncementStatus.DRAFT) {
+            throw new IllegalStateException("Only draft announcement can be updated");
+        }
+        this.title = title;
+        this.summary = summary;
+        this.body = body;
+        this.severity = severity;
+        this.audience = audience;
+        this.pinned = pinned;
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+    }
+
     public void archive(Instant archivedAt) {
         this.status = AnnouncementStatus.ARCHIVED;
         this.archivedAt = archivedAt;

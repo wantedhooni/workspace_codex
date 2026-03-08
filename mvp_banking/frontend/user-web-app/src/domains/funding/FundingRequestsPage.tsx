@@ -211,11 +211,25 @@ export function FundingRequestsPage({
         </article>
       </section>
 
+      <div className="page-convenience-strip">
+        <div>
+          <span>입출금 안내</span>
+          <strong>{isWithdrawal ? "출금은 목적지 계좌와 총 차감액을 먼저 확인하세요." : "입금은 승인 후 계좌 잔액과 거래내역에 반영됩니다."}</strong>
+        </div>
+        <div>
+          <span>오늘 누적 / 한도</span>
+          <strong>{`${formatAmount(projectedDailyTotal, effectiveCurrency)} / ${formatAmount(dailyLimit, effectiveCurrency)}`}</strong>
+        </div>
+      </div>
+
       <section className="timeline-panel asset-panel">
         <div className="section-header compact">
           <div>
             <p className="eyebrow">Funding Desk</p>
             <h2>입출금 요청</h2>
+            <p className="section-copy">
+              계좌 선택, 정산 경로, 정책 플래그를 먼저 확인한 뒤 요청을 제출하세요. 실제 운영 환경과 같은 승인형 플로우로 동작합니다.
+            </p>
           </div>
         </div>
         <div className="trade-route-strip funding-route-strip">
@@ -525,6 +539,7 @@ export function FundingRequestsPage({
           <div>
             <p className="eyebrow">Funding Requests</p>
             <h2>내 입출금 요청</h2>
+            <p className="section-copy">상태, 심사 사유, 정산 거래번호를 한 번에 볼 수 있도록 표 중심으로 정리했습니다.</p>
           </div>
           <div className="filter-cluster">
             <select

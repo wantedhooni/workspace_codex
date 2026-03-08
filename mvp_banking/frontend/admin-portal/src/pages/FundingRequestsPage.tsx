@@ -26,17 +26,32 @@ export function FundingRequestsPage({ fundingRequests }: FundingRequestsPageProp
   const pendingVolume = pendingRequests.reduce((sum, item) => sum + Number(item.amount), 0);
   const manualReviewCount = pendingRequests.filter((item) => item.manualReviewRequired).length;
   const nextWindowCount = pendingRequests.filter((item) => !item.sameDaySettlementEligible).length;
+  const topPriorityRequest = pendingRequests.find((item) => item.priorityProcessing);
 
   return (
     <>
-      <div>
-        <Typography.Title level={2} style={{ marginBottom: 8 }}>
-          Funding Operations
-        </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-          고객 입금/출금 요청의 큐 볼륨, 계좌 스냅샷, 정산 거래번호를 한 화면에서 점검하는 운영 페이지입니다.
-        </Typography.Paragraph>
-      </div>
+      <Card className="ops-hero-card" bordered={false}>
+        <div className="ops-page-header">
+          <div>
+            <p className="eyebrow">Cash Operations</p>
+            <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              Funding Operations
+            </Typography.Title>
+            <Typography.Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
+              입금, 출금, 우선처리, 수동 심사 플래그를 하나의 운영 큐에서 점검하는 현금성 요청 화면입니다. 계좌 스냅샷과 정산 거래번호까지 함께 보여 주도록 배치했습니다.
+            </Typography.Paragraph>
+          </div>
+          <div className="ops-header-meta">
+            <span>Pending Volume</span>
+            <strong>{pendingRequests.length}건</strong>
+            <small>
+              {topPriorityRequest
+                ? `우선처리 ${topPriorityRequest.requestNumber} / ${Number(topPriorityRequest.amount).toLocaleString()} ${topPriorityRequest.currency}`
+                : "우선처리 티켓 없음"}
+            </small>
+          </div>
+        </div>
+      </Card>
 
       <Row gutter={[16, 16]} style={{ marginTop: 16, marginBottom: 16 }}>
         <Col xs={24} md={8}>
@@ -115,7 +130,7 @@ export function FundingRequestsPage({ fundingRequests }: FundingRequestsPageProp
         </Col>
       </Row>
 
-      <Card title="Funding Request Queue">
+      <Card className="ops-panel-card" title="Funding Request Queue">
         <OperationsGridTable
           rowKey="id"
           dataSource={fundingRequests}

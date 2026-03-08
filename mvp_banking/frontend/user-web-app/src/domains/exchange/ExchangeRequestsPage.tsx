@@ -143,11 +143,46 @@ export function ExchangeRequestsPage({
 
   return (
     <>
+      <section className="summary-grid">
+        <article className="summary-card">
+          <span className="eyebrow">Exchange Requests</span>
+          <strong>{exchangeRequests.length}</strong>
+          <p>등록된 환전 요청 전체 건수</p>
+        </article>
+        <article className="summary-card">
+          <span className="eyebrow">Same Day Window</span>
+          <strong>{sameDaySettlementEligiblePreview ? "당일 가능" : "익영업일"}</strong>
+          <p>{`컷오프 ${EXCHANGE_CUTOFF_HOUR}:00 이후 요청은 익영업일로 이월됩니다.`}</p>
+        </article>
+        <article className={`summary-card ${previewManualReviewRequired ? "negative" : ""}`}>
+          <span className="eyebrow">Review Status</span>
+          <strong>{previewManualReviewRequired ? "수동 심사 예상" : "자동 큐"}</strong>
+          <p>{previewManualReviewRequired ? previewManualReviewReasons.join(" / ") : "현재 입력 기준 추가 심사 사유 없음"}</p>
+        </article>
+        <article className="summary-card">
+          <span className="eyebrow">Live Rate</span>
+          <strong>{rateSnapshot && sourceAccount && destinationAccount ? `${sourceAccount.currency}/${destinationAccount.currency}` : "환율 선택 필요"}</strong>
+          <p>{rateSnapshot ? `기준 시각 ${new Date(rateSnapshot.effectiveAt).toLocaleString()}` : "서로 다른 통화 계좌를 선택하면 즉시 계산됩니다."}</p>
+        </article>
+      </section>
+
+      <div className="page-convenience-strip">
+        <div>
+          <span>환전 안내</span>
+          <strong>출금 통화와 입금 통화를 먼저 고른 뒤 금액을 입력하면 순수령 예상액이 바로 계산됩니다.</strong>
+        </div>
+        <div>
+          <span>예상 순수령</span>
+          <strong>{expectedReceiveAmount !== null && destinationAccount ? formatAmount(expectedReceiveAmount, destinationAccount.currency) : "-"}</strong>
+        </div>
+      </div>
+
       <section className="timeline-panel asset-panel">
         <div className="section-header compact">
           <div>
             <p className="eyebrow">FX Exchange</p>
             <h2>환전 요청</h2>
+            <p className="section-copy">실무 화면처럼 환율, 시세 신선도, 정산 예상 시각을 위쪽에서 먼저 보여주고 입력 폼은 그 아래에 배치했습니다.</p>
           </div>
         </div>
         <form className="trade-ticket" onSubmit={onSubmit}>
@@ -386,6 +421,7 @@ export function ExchangeRequestsPage({
           <div>
             <p className="eyebrow">Exchange Requests</p>
             <h2>내 환전 요청</h2>
+            <p className="section-copy">환전 흐름, 정산 결과, 취소 가능 여부를 표에서 바로 확인할 수 있습니다.</p>
           </div>
         </div>
         <div className="table-shell">

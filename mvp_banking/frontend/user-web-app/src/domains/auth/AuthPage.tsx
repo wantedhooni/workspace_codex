@@ -45,6 +45,20 @@ export function AuthPage({ loading, error, onLogin, onSignup }: AuthPageProps) {
               데모 계정 채우기
             </button>
           </div>
+          <div className="auth-trust-points">
+            <div>
+              <span>Channel</span>
+              <strong>Retail User Desk</strong>
+            </div>
+            <div>
+              <span>Access</span>
+              <strong>JWT + Refresh</strong>
+            </div>
+            <div>
+              <span>Coverage</span>
+              <strong>Banking / FX / Stock</strong>
+            </div>
+          </div>
         </div>
 
         <form className="auth-form" onSubmit={onSubmit}>

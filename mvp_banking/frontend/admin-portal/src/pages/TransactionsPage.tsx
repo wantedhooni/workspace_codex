@@ -28,8 +28,17 @@ type TransactionsPageProps = {
 
 export function TransactionsPage({ data, filter, setFilter, onSearch, onReset, onPageChange }: TransactionsPageProps) {
   return (
-    <Card title="Transactions" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
-      <Space wrap className="filter-row">
+    <Card
+      className="ops-panel-card"
+      title={
+        <div>
+          <p className="eyebrow">Ledger Review</p>
+          <Typography.Title level={3} style={{ margin: 0 }}>Transactions</Typography.Title>
+        </div>
+      }
+      extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}
+    >
+      <Space wrap className="filter-row ops-filter-row">
         <Input
           placeholder="거래번호 / 통화 검색"
           value={filter.query}

@@ -39,15 +39,42 @@ export function UserAppLayout({ profile, loading, error, unreadNotificationCount
           <p className="description">
             사용자 전용 `user API` 기반 화면입니다. 계좌, 입출금, 거래, 환율, 환전, 주식 주문, 포지션, 알림 센터를 도메인별 페이지로 나눠 확인할 수 있습니다.
           </p>
+          <div className="hero-inline-metrics">
+            <div className="hero-inline-metric">
+              <span>Unread Alerts</span>
+              <strong>{unreadNotificationCount}</strong>
+            </div>
+            <div className="hero-inline-metric">
+              <span>Visible Notices</span>
+              <strong>{announcements.length}</strong>
+            </div>
+            <div className="hero-inline-metric">
+              <span>Channel Status</span>
+              <strong>{loading ? "Syncing" : "Ready"}</strong>
+            </div>
+          </div>
         </div>
         <div className="hero-card session-card">
           <p className="eyebrow">Session</p>
           <strong>{profile?.email ?? "Loading..."}</strong>
-          <ul>
-            <li>권한: {profile?.roles.join(", ") ?? "USER"}</li>
-            <li>상태: {loading ? "동기화 중" : "활성"}</li>
-            <li>미확인 알림: {unreadNotificationCount}건</li>
-          </ul>
+          <div className="session-grid">
+            <div>
+              <span>권한</span>
+              <b>{profile?.roles.join(", ") ?? "USER"}</b>
+            </div>
+            <div>
+              <span>상태</span>
+              <b>{loading ? "동기화 중" : "활성"}</b>
+            </div>
+            <div>
+              <span>미확인 알림</span>
+              <b>{unreadNotificationCount}건</b>
+            </div>
+            <div>
+              <span>공지 수</span>
+              <b>{announcements.length}건</b>
+            </div>
+          </div>
           <button type="button" className="secondary-button" onClick={onLogout}>
             로그아웃
           </button>

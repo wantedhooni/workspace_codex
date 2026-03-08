@@ -16,58 +16,68 @@ export function OverviewPage({ overview, fundingRequests, announcements, approva
 
   return (
     <>
-      <div>
-        <Typography.Title level={2} style={{ marginBottom: 8 }}>
-          Operations Overview
-        </Typography.Title>
-        <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
-          운영 대기열, 시세 freshness, 고객 심사 상태, 입출금 요청 볼륨을 한 화면에서 확인할 수 있는 실무형 운영 요약입니다.
-        </Typography.Paragraph>
-      </div>
+      <Card className="ops-hero-card" bordered={false}>
+        <div className="ops-page-header">
+          <div>
+            <p className="eyebrow">Control Center</p>
+            <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              Operations Overview
+            </Typography.Title>
+            <Typography.Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
+              운영 대기열, 시세 freshness, 고객 심사 상태, 입출금 요청 볼륨을 한 화면에서 확인할 수 있는 실무형 운영 요약입니다.
+            </Typography.Paragraph>
+          </div>
+          <div className="ops-header-meta">
+            <span>Ops Queue</span>
+            <strong>{overview.metrics.pendingApprovals + overview.metrics.pendingFundingRequests + overview.metrics.pendingExchanges + overview.metrics.pendingStockOrders}건</strong>
+            <small>승인·정산·주문 대기 합산</small>
+          </div>
+        </div>
+      </Card>
 
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Pending Approvals" value={overview.metrics.pendingApprovals} suffix="건" />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Overdue Approvals" value={overview.metrics.overdueApprovals} suffix="건" valueStyle={{ color: overview.metrics.overdueApprovals > 0 ? "#cf1322" : undefined }} />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Review Required Customers" value={overview.metrics.reviewRequiredCustomers} suffix="명" valueStyle={{ color: overview.metrics.reviewRequiredCustomers > 0 ? "#d46b08" : undefined }} />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Locked Accounts" value={overview.metrics.lockedAccounts} suffix="개" valueStyle={{ color: overview.metrics.lockedAccounts > 0 ? "#d46b08" : undefined }} />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Pending Funding" value={overview.metrics.pendingFundingRequests} suffix="건" valueStyle={{ color: overview.metrics.pendingFundingRequests > 0 ? "#d46b08" : undefined }} />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Pending Exchanges" value={overview.metrics.pendingExchanges} suffix="건" />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Pending Stock Orders" value={overview.metrics.pendingStockOrders} suffix="건" />
           </Card>
         </Col>
         <Col xs={24} md={12} xl={6}>
-          <Card>
+          <Card className="ops-stat-card">
             <Statistic title="Partial Fill Orders" value={overview.metrics.partiallyFilledOrders} suffix="건" />
           </Card>
         </Col>
         <Col xs={24}>
-          <Card>
+          <Card className="ops-stat-card ops-stat-card-wide">
             <Statistic title="Pending Instruction Volume" value={Number(overview.metrics.pendingInstructionVolumeKrw).toLocaleString()} suffix="KRW" />
           </Card>
         </Col>

@@ -34,6 +34,20 @@ export function DashboardPage({ loading, dashboard }: DashboardPageProps) {
             총자산, 대기 지시, 통화 노출, 상위 보유종목을 한 화면에서 확인할 수 있도록 정리했습니다.
             현재 기준 총자산은 {formatAmount(insights.totalAssetsKrw, "KRW")} 입니다.
           </p>
+          <div className="hero-inline-metrics">
+            <div className="hero-inline-metric">
+              <span>Pending Funding</span>
+              <strong>{pendingFundingCount}</strong>
+            </div>
+            <div className="hero-inline-metric">
+              <span>Pending FX</span>
+              <strong>{pendingExchangeCount}</strong>
+            </div>
+            <div className="hero-inline-metric">
+              <span>Pending Orders</span>
+              <strong>{pendingStockOrderCount}</strong>
+            </div>
+          </div>
         </article>
         <article className="hero-card">
           <p className="eyebrow">Action Board</p>

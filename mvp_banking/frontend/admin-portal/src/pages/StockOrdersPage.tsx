@@ -1,4 +1,4 @@
-import { Button, Card, Tag } from "antd";
+import { Button, Card, Col, Row, Tag, Typography } from "antd";
 import type { StockOrder } from "../api";
 import { OperationsGridTable } from "../components/OperationsGridTable";
 
@@ -9,8 +9,62 @@ type StockOrdersPageProps = {
 };
 
 export function StockOrdersPage({ stockOrders, completingOrderId, onCompleteFill }: StockOrdersPageProps) {
+  const pendingCount = stockOrders.filter((item) => item.status === "PENDING_APPROVAL").length;
+  const partiallyFilledCount = stockOrders.filter((item) => item.status === "PARTIALLY_FILLED").length;
+  const manualReviewCount = stockOrders.filter((item) => item.manualReviewRequired).length;
+  const pendingNotional = stockOrders
+    .filter((item) => item.status === "PENDING_APPROVAL" || item.status === "PARTIALLY_FILLED")
+    .reduce((sum, item) => sum + Number(item.grossAmount), 0);
+
   return (
-    <Card title="Stock Orders">
+    <>
+      <Card className="ops-hero-card" bordered={false}>
+        <div className="ops-page-header">
+          <div>
+            <p className="eyebrow">Trading Desk</p>
+            <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              Stock Orders
+            </Typography.Title>
+            <Typography.Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
+              주문 심사, 부분 체결 후속 처리, 정산 상태 확인을 한 화면에 모은 운영형 주식 주문 대기함입니다. 실행 윈도우와 정책 플래그를 표에서 바로 읽을 수 있도록 구성했습니다.
+            </Typography.Paragraph>
+          </div>
+          <div className="ops-header-meta">
+            <span>Open Order Load</span>
+            <strong>{pendingCount + partiallyFilledCount}건</strong>
+            <small>{`대기 명목금액 ${pendingNotional.toLocaleString()}`}</small>
+          </div>
+        </div>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Pending Approval</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0", color: pendingCount > 0 ? "#d46b08" : undefined }}>
+              {pendingCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Partial Fill</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0", color: partiallyFilledCount > 0 ? "#0f6ab4" : undefined }}>
+              {partiallyFilledCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Manual Review</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0", color: manualReviewCount > 0 ? "#cf1322" : undefined }}>
+              {manualReviewCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="ops-panel-card" title="Stock Orders">
       <OperationsGridTable
         rowKey="id"
         dataSource={stockOrders}
@@ -121,6 +175,7 @@ export function StockOrdersPage({ stockOrders, completingOrderId, onCompleteFill
           { title: "Created At", render: (_, record: StockOrder) => new Date(record.createdAt).toLocaleString() },
         ]}
       />
-    </Card>
+      </Card>
+    </>
   );
 }

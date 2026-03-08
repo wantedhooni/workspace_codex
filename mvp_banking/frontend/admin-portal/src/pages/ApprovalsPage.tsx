@@ -1,4 +1,4 @@
-import { Button, Card, Modal, Space, Tag, Typography, Input } from "antd";
+import { Button, Card, Col, Input, Modal, Row, Space, Tag, Typography } from "antd";
 import type { Approval } from "../api";
 import { OperationsGridTable } from "../components/OperationsGridTable";
 
@@ -23,9 +23,60 @@ export function ApprovalsPage({
   onReasonChange,
   onSubmit,
 }: ApprovalsPageProps) {
+  const pendingCount = approvals.filter((item) => item.status === "PENDING").length;
+  const approvedCount = approvals.filter((item) => item.status === "APPROVED").length;
+  const rejectedCount = approvals.filter((item) => item.status === "REJECTED").length;
+  const topPendingItem = approvals.find((item) => item.status === "PENDING");
+
   return (
     <>
-      <Card title="Approval Queue">
+      <Card className="ops-hero-card" bordered={false}>
+        <div className="ops-page-header">
+          <div>
+            <p className="eyebrow">Approval Control</p>
+            <Typography.Title level={2} style={{ marginBottom: 8 }}>
+              Approval Queue
+            </Typography.Title>
+            <Typography.Paragraph type="secondary" style={{ margin: 0, maxWidth: 760 }}>
+              승인, 반려, 사유 입력이 모두 한 흐름에서 끝나도록 정리한 운영 심사 대기함입니다. 처리 우선순위는 대기 건수와 미처리 타깃을 먼저 확인한 뒤 액션 컬럼에서 바로 수행합니다.
+            </Typography.Paragraph>
+          </div>
+          <div className="ops-header-meta">
+            <span>Pending Queue</span>
+            <strong>{pendingCount}건</strong>
+            <small>{topPendingItem ? `${topPendingItem.targetType} / ${topPendingItem.title}` : "현재 즉시 처리 대상 없음"}</small>
+          </div>
+        </div>
+      </Card>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Pending</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0", color: pendingCount > 0 ? "#d46b08" : undefined }}>
+              {pendingCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Approved</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0" }}>
+              {approvedCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card className="ops-stat-card">
+            <Typography.Text type="secondary">Rejected</Typography.Text>
+            <Typography.Title level={3} style={{ margin: "12px 0 0", color: rejectedCount > 0 ? "#cf1322" : undefined }}>
+              {rejectedCount}건
+            </Typography.Title>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="ops-panel-card" title="Approval Queue">
         <OperationsGridTable
           rowKey="id"
           dataSource={approvals}

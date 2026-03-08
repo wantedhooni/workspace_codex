@@ -26,8 +26,17 @@ type AccountsPageProps = {
 
 export function AccountsPage({ data, filter, setFilter, onSearch, onReset, onPageChange }: AccountsPageProps) {
   return (
-    <Card title="Accounts" extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}>
-      <Space wrap className="filter-row">
+    <Card
+      className="ops-panel-card"
+      title={
+        <div>
+          <p className="eyebrow">Account Registry</p>
+          <Typography.Title level={3} style={{ margin: 0 }}>Accounts</Typography.Title>
+        </div>
+      }
+      extra={<Typography.Text type="secondary">총 {data.totalElements}건</Typography.Text>}
+    >
+      <Space wrap className="filter-row ops-filter-row">
         <Input
           placeholder="계좌번호 / 통화 검색"
           value={filter.query}

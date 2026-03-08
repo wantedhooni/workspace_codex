@@ -69,6 +69,28 @@ public class AnnouncementService {
     }
 
     @Transactional
+    public Announcement updateDraft(
+            UUID announcementId,
+            String title,
+            String summary,
+            String body,
+            AnnouncementSeverity severity,
+            AnnouncementAudience audience,
+            boolean pinned,
+            Instant startsAt,
+            Instant endsAt
+    ) {
+        validateSchedule(startsAt, endsAt);
+        Announcement announcement = getById(announcementId);
+        try {
+            announcement.updateDraft(title, summary, body, severity, audience, pinned, startsAt, endsAt);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(BAD_REQUEST, exception.getMessage());
+        }
+        return announcement;
+    }
+
+    @Transactional
     public Announcement publish(UUID announcementId) {
         Announcement announcement = getById(announcementId);
         validateSchedule(announcement.getStartsAt(), announcement.getEndsAt());

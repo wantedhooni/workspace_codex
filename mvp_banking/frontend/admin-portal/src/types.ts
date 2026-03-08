@@ -307,6 +307,8 @@ export type CreateAnnouncementPayload = {
   endsAt?: string | null;
 };
 
+export type UpdateAnnouncementPayload = CreateAnnouncementPayload;
+
 export type AdminOverview = {
   metrics: {
     pendingApprovals: number;

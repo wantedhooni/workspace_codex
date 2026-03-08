@@ -61,7 +61,9 @@ export function AdminShell({ profile, unreadNotificationCount, onLogout, childre
           </Button>
         </Card>
       </Layout.Sider>
-      <Layout.Content className="admin-content">{children}</Layout.Content>
+      <Layout.Content className="admin-content">
+        <div className="admin-content-inner">{children}</div>
+      </Layout.Content>
     </Layout>
   );
 }
