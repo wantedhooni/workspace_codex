@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: sample-cqrs-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: sample_cqrs
+      POSTGRES_USER: sample_user
+      POSTGRES_PASSWORD: sample_pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sample_user -d sample_cqrs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

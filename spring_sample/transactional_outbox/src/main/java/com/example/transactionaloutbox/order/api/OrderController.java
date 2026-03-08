@@ -2,6 +2,7 @@ package com.example.transactionaloutbox.order.api;
 
 import com.example.transactionaloutbox.order.application.OrderCommandService;
 import com.example.transactionaloutbox.order.application.OrderQueryService;
+import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,11 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) {
         return orderCommandService.createOrder(request);
+    }
+
+    @GetMapping
+    public List<OrderResponse> getRecentOrders() {
+        return orderQueryService.getRecentOrders();
     }
 
     @GetMapping("/{orderId}")

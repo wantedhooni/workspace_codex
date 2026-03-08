@@ -14,7 +14,7 @@
 - Spring Boot 3.4.3
 - Spring Web MVC
 - Spring Data JPA
-- H2
+- PostgreSQL
 - Gradle
 
 ## 주요 기능
@@ -96,9 +96,49 @@ flowchart LR
 
 ## 실행
 
+### 1. PostgreSQL 실행
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample/sample_cqrs
+docker compose up -d
+```
+
+- PostgreSQL 포트: `5434`
+- DB 이름: `sample_cqrs`
+- 사용자: `sample_user`
+- 비밀번호: `sample_pass`
+
+### 2. 애플리케이션 실행
+
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample_cqrs
 ./gradlew bootRun
+```
+
+- 애플리케이션 포트: `8081`
+
+환경 변수로 접속 속성을 덮어쓸 수 있다.
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+
+## 샘플 데이터
+
+애플리케이션 시작 시 데이터가 비어 있으면 아래 예시가 자동 적재된다.
+
+- 생성 완료 주문 2건
+- 취소 완료 주문 1건
+
+## 통합 실행
+
+백엔드 3개와 Next.js 웹 앱을 함께 실행하려면 아래 스크립트를 사용한다.
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample
+./scripts/patterns-all-start.sh
 ```
 
 ## API 예제

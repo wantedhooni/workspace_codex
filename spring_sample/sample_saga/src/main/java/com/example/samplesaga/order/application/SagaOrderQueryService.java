@@ -6,6 +6,7 @@ import com.example.samplesaga.order.domain.SagaOrderRepository;
 import com.example.samplesaga.saga.api.OrderSagaResponse;
 import com.example.samplesaga.saga.domain.OrderSaga;
 import com.example.samplesaga.saga.domain.OrderSagaRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,20 @@ public class SagaOrderQueryService {
         OrderSaga saga = orderSagaRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new SagaOrderNotFoundException(orderId));
         return toResponse(saga);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SagaOrderResponse> getRecentOrders() {
+        return sagaOrderRepository.findTop20ByOrderByCreatedAtDesc().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderSagaResponse> getRecentSagaExecutions() {
+        return orderSagaRepository.findTop20ByOrderByCreatedAtDesc().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public SagaOrderResponse toResponse(SagaOrder order) {

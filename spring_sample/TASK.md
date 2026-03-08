@@ -1,5 +1,7 @@
 # 작업 내역
 
+- `sample_cqrs`, `sample_saga`, `transactional_outbox`에 샘플 데이터 초기화와 목록 조회용 API를 추가하고 `sample-patterns-web` Next.js 대시보드 및 전체 start/stop 스크립트 작성 완료
+- `sample_cqrs`, `sample_saga`, `transactional_outbox`의 H2 구성을 PostgreSQL로 전환하고 `docker-compose.yml`, 애플리케이션 속성, Testcontainers 기반 테스트 설정 변경 완료
 - `sample_cqrs`, `sample_saga`, `transactional_outbox`의 `README.md`를 한글로 확장하고 아키텍처 상세 설명 및 관련 링크 추가 완료
 - `sample_cqrs` 폴더에 Spring Boot 기반 CQRS 샘플 프로젝트 생성 및 구현 완료
 - 명령 모델/조회 모델 분리, 이벤트 기반 프로젝션 갱신, 조회 API, 통합 테스트, 실행 문서 작성 완료

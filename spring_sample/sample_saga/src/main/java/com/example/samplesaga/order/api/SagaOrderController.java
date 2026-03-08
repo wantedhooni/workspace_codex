@@ -3,6 +3,7 @@ package com.example.samplesaga.order.api;
 import com.example.samplesaga.order.application.SagaOrderQueryService;
 import com.example.samplesaga.saga.api.OrderSagaResponse;
 import com.example.samplesaga.saga.application.OrderSagaOrchestrator;
+import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,9 +35,19 @@ public class SagaOrderController {
         return orderSagaOrchestrator.start(request);
     }
 
+    @GetMapping
+    public List<SagaOrderResponse> getRecentOrders() {
+        return sagaOrderQueryService.getRecentOrders();
+    }
+
     @GetMapping("/{orderId}")
     public SagaOrderResponse getOrder(@PathVariable String orderId) {
         return sagaOrderQueryService.getOrder(orderId);
+    }
+
+    @GetMapping("/executions")
+    public List<OrderSagaResponse> getRecentSagas() {
+        return sagaOrderQueryService.getRecentSagaExecutions();
     }
 
     @GetMapping("/{orderId}/saga")

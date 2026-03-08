@@ -80,7 +80,7 @@ flowchart LR
 ## 기술 포인트
 
 - Spring Boot 3.4.3
-- Spring Data JPA + H2
+- Spring Data JPA + PostgreSQL
 - Spring for Apache Kafka
 - `@Scheduled` 기반 Outbox Relay
 - 재시도 backoff, 시도 횟수, 마지막 오류 메시지 저장
@@ -88,20 +88,46 @@ flowchart LR
 
 ## 실행 방법
 
-### 1. Kafka 실행
+### 1. PostgreSQL + Kafka 실행
 
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/transactional_outbox
 docker compose up -d
 ```
 
-기본 Kafka 주소는 `localhost:9092`다.
+- PostgreSQL 포트: `5436`
+- DB 이름: `transactional_outbox`
+- 사용자: `sample_user`
+- 비밀번호: `sample_pass`
+- Kafka 주소: `localhost:9092`
 
 ### 2. 애플리케이션 실행
 
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/transactional_outbox
 ./gradlew bootRun
+```
+
+- 애플리케이션 포트: `8083`
+
+환경 변수로 접속 속성을 덮어쓸 수 있다.
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `KAFKA_BOOTSTRAP_SERVERS`
+
+## 샘플 데이터
+
+애플리케이션 시작 시 데이터가 비어 있으면 주문 3건과 대응되는 Outbox 이벤트가 자동 생성된다.
+
+## 통합 실행
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample
+./scripts/patterns-all-start.sh
 ```
 
 ### 3. 주문 생성 호출
@@ -139,7 +165,7 @@ cd /Users/revy/workspace_codex/spring_sample/transactional_outbox
 
 ## 참고
 
-- H2 메모리 DB를 사용하므로 재기동 시 데이터는 초기화된다.
+- PostgreSQL 기준으로 동작하며 로컬 실행용 컨테이너는 `docker compose down -v` 시 데이터가 함께 삭제된다.
 - 실무에서는 Outbox Relay를 별도 프로세스로 분리하거나 Debezium CDC로 확장할 수 있다.
 
 ## 관련 링크
