@@ -6,6 +6,9 @@ import com.example.samplesaga.order.domain.SagaOrder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 재고 예약을 담당하는 서비스다.
+ */
 @Service
 public class InventoryService {
 
@@ -15,6 +18,11 @@ public class InventoryService {
         this.inventoryReservationRepository = inventoryReservationRepository;
     }
 
+    /**
+     * 주문에 필요한 재고를 예약한다.
+     *
+     * @param order Saga 주문
+     */
     @Transactional(noRollbackFor = IllegalStateException.class)
     public void reserveInventory(SagaOrder order) {
         if ("LIMITED-STOCK".equalsIgnoreCase(order.getProductCode())) {

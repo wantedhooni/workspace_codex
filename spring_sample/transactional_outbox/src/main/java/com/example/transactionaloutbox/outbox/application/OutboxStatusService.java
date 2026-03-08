@@ -7,6 +7,9 @@ import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Outbox 이벤트 발행 결과에 따라 상태를 갱신한다.
+ */
 @Service
 public class OutboxStatusService {
 
@@ -18,12 +21,23 @@ public class OutboxStatusService {
         this.outboxRelayProperties = outboxRelayProperties;
     }
 
+    /**
+     * Outbox 이벤트를 발행 완료 상태로 전환한다.
+     *
+     * @param outboxEventId Outbox 이벤트 식별자
+     */
     @Transactional
     public void markPublished(String outboxEventId) {
         OutboxEvent event = getById(outboxEventId);
         event.markPublished(Instant.now());
     }
 
+    /**
+     * Outbox 이벤트를 재시도 대기 상태로 되돌린다.
+     *
+     * @param outboxEventId Outbox 이벤트 식별자
+     * @param errorMessage 마지막 오류 메시지
+     */
     @Transactional
     public void markFailed(String outboxEventId, String errorMessage) {
         OutboxEvent event = getById(outboxEventId);

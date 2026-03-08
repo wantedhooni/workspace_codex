@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * 주문 쓰기 모델의 핵심 애그리게이트다.
+ */
 @Entity
 public class PurchaseOrder {
 
@@ -56,6 +59,9 @@ public class PurchaseOrder {
         this.updatedAt = now;
     }
 
+    /**
+     * 주문 상태를 취소로 전환한다.
+     */
     public void cancel() {
         this.status = OrderStatus.CANCELLED;
         this.updatedAt = Instant.now();

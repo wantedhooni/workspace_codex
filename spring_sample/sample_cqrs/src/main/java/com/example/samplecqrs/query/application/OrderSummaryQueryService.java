@@ -7,6 +7,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 읽기 모델 전용 주문 조회 서비스를 제공한다.
+ */
 @Service
 public class OrderSummaryQueryService {
 
@@ -16,6 +19,11 @@ public class OrderSummaryQueryService {
         this.orderSummaryViewRepository = orderSummaryViewRepository;
     }
 
+    /**
+     * 최근 주문 프로젝션을 조회한다.
+     *
+     * @return 주문 요약 목록
+     */
     @Transactional(readOnly = true)
     public List<OrderSummaryResponse> getRecent() {
         return orderSummaryViewRepository.findTop20ByOrderByCreatedAtDesc().stream()
@@ -23,6 +31,12 @@ public class OrderSummaryQueryService {
                 .toList();
     }
 
+    /**
+     * 특정 고객의 주문 프로젝션을 조회한다.
+     *
+     * @param customerId 고객 식별자
+     * @return 주문 요약 목록
+     */
     @Transactional(readOnly = true)
     public List<OrderSummaryResponse> getByCustomerId(String customerId) {
         return orderSummaryViewRepository.findByCustomerIdOrderByCreatedAtDesc(customerId).stream()
@@ -30,6 +44,12 @@ public class OrderSummaryQueryService {
                 .toList();
     }
 
+    /**
+     * 주문 프로젝션 단건을 조회한다.
+     *
+     * @param orderId 주문 식별자
+     * @return 주문 요약 응답
+     */
     @Transactional(readOnly = true)
     public OrderSummaryResponse getById(String orderId) {
         return orderSummaryViewRepository.findById(orderId)

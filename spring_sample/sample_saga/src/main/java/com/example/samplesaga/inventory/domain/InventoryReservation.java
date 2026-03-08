@@ -8,6 +8,9 @@ import jakarta.persistence.Id;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * 재고 예약 결과를 저장하는 엔티티다.
+ */
 @Entity
 public class InventoryReservation {
 

@@ -9,6 +9,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 발행 가능한 Outbox 이벤트를 조회하고 선점 상태로 전환한다.
+ */
 @Service
 public class OutboxClaimService {
 
@@ -20,6 +23,11 @@ public class OutboxClaimService {
         this.outboxRelayProperties = outboxRelayProperties;
     }
 
+    /**
+     * 발행 대상 이벤트를 배치로 선점한다.
+     *
+     * @return 선점된 Outbox 이벤트 목록
+     */
     @Transactional
     public List<ClaimedOutboxEvent> claimBatch() {
         List<OutboxEvent> pendingEvents = outboxEventRepository

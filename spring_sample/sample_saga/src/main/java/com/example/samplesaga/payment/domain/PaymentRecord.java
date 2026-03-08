@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * 주문 결제 승인 및 취소 이력을 저장하는 엔티티다.
+ */
 @Entity
 public class PaymentRecord {
 
@@ -48,6 +51,9 @@ public class PaymentRecord {
         this.updatedAt = now;
     }
 
+    /**
+     * 결제 상태를 취소로 전환한다.
+     */
     public void cancel() {
         this.status = PaymentStatus.CANCELLED;
         this.updatedAt = Instant.now();

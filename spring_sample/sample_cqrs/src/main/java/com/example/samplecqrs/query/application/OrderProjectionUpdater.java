@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 주문 도메인 이벤트를 읽기 모델 프로젝션에 반영한다.
+ */
 @Component
 public class OrderProjectionUpdater {
 
@@ -17,6 +20,11 @@ public class OrderProjectionUpdater {
         this.orderSummaryViewRepository = orderSummaryViewRepository;
     }
 
+    /**
+     * 주문 생성 이벤트를 조회 프로젝션에 반영한다.
+     *
+     * @param event 주문 생성 이벤트
+     */
     @Transactional
     @EventListener
     public void handle(OrderCreatedEvent event) {
@@ -32,6 +40,11 @@ public class OrderProjectionUpdater {
         ));
     }
 
+    /**
+     * 주문 취소 이벤트를 기존 프로젝션에 반영한다.
+     *
+     * @param event 주문 취소 이벤트
+     */
     @Transactional
     @EventListener
     public void handle(OrderCancelledEvent event) {

@@ -1,5 +1,6 @@
 # 작업 내역
 
+- `sample_cqrs`, `sample_saga`, `transactional_outbox`의 주요 class / method에 한글 Javadoc 주석 추가 완료
 - `sample_cqrs`, `sample_saga`, `transactional_outbox`에 샘플 데이터 초기화와 목록 조회용 API를 추가하고 `sample-patterns-web` Next.js 대시보드 및 전체 start/stop 스크립트 작성 완료
 - `sample_cqrs`, `sample_saga`, `transactional_outbox`의 H2 구성을 PostgreSQL로 전환하고 `docker-compose.yml`, 애플리케이션 속성, Testcontainers 기반 테스트 설정 변경 완료
 - `sample_cqrs`, `sample_saga`, `transactional_outbox`의 `README.md`를 한글로 확장하고 아키텍처 상세 설명 및 관련 링크 추가 완료

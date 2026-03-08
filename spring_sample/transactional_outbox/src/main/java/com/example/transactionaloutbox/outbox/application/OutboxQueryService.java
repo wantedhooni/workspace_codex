@@ -7,6 +7,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Outbox 이벤트 운영 조회 서비스를 제공한다.
+ */
 @Service
 public class OutboxQueryService {
 
@@ -16,6 +19,11 @@ public class OutboxQueryService {
         this.outboxEventRepository = outboxEventRepository;
     }
 
+    /**
+     * 최근 Outbox 이벤트 목록을 조회한다.
+     *
+     * @return Outbox 이벤트 응답 목록
+     */
     @Transactional(readOnly = true)
     public List<OutboxEventResponse> getRecentEvents() {
         return outboxEventRepository.findTop50ByOrderByCreatedAtDesc().stream()

@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 주문 저장과 Outbox 이벤트 적재를 하나의 트랜잭션으로 처리한다.
+ */
 @Service
 public class OrderCommandService {
 
@@ -33,6 +36,12 @@ public class OrderCommandService {
         this.kafkaTopicsProperties = kafkaTopicsProperties;
     }
 
+    /**
+     * 주문을 생성하고 Kafka 발행용 Outbox 이벤트를 함께 저장한다.
+     *
+     * @param request 주문 생성 요청
+     * @return 생성된 주문 응답
+     */
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
         PurchaseOrder order = purchaseOrderRepository.save(
@@ -53,6 +62,12 @@ public class OrderCommandService {
         return OrderResponseMapper.toResponse(order);
     }
 
+    /**
+     * 이벤트 객체를 JSON 문자열로 직렬화한다.
+     *
+     * @param event 주문 생성 이벤트
+     * @return 직렬화된 JSON 문자열
+     */
     private String serialize(OrderCreatedEvent event) {
         try {
             return objectMapper.writeValueAsString(event);

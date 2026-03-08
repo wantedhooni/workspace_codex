@@ -9,10 +9,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+/**
+ * 로컬에서 Outbox 흐름을 바로 확인할 수 있도록 샘플 주문과 이벤트를 만든다.
+ */
 @Configuration
 @Profile("!test")
 public class SampleDataInitializer {
 
+    /**
+     * 샘플 주문을 초기 적재하는 러너를 만든다.
+     *
+     * @param purchaseOrderRepository 주문 존재 여부 확인용 저장소
+     * @param orderCommandService 주문 생성 서비스
+     * @return 애플리케이션 시작 후 실행되는 러너
+     */
     @Bean
     CommandLineRunner transactionalOutboxDataLoader(
             PurchaseOrderRepository purchaseOrderRepository,

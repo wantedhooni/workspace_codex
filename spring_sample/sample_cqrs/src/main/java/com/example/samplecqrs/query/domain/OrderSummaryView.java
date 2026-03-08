@@ -9,6 +9,9 @@ import jakarta.persistence.Id;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+/**
+ * 조회 전용으로 비정규화한 주문 요약 프로젝션이다.
+ */
 @Entity
 public class OrderSummaryView {
 
@@ -60,6 +63,11 @@ public class OrderSummaryView {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * 조회 모델의 주문 상태를 취소로 전환한다.
+     *
+     * @param updatedAt 상태 반영 시각
+     */
     public void markCancelled(Instant updatedAt) {
         this.status = OrderStatus.CANCELLED;
         this.updatedAt = updatedAt;

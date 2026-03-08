@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Saga 처리 대상 주문의 상태를 보관하는 도메인 엔티티다.
+ */
 @Entity
 public class SagaOrder {
 
@@ -59,18 +62,31 @@ public class SagaOrder {
         this.updatedAt = now;
     }
 
+    /**
+     * 모든 단계가 성공했을 때 주문을 완료 상태로 전환한다.
+     */
     public void markCompleted() {
         this.status = SagaOrderStatus.COMPLETED;
         this.failureReason = null;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 선행 단계에서 실패했을 때 주문을 실패 상태로 전환한다.
+     *
+     * @param reason 실패 사유
+     */
     public void markFailed(String reason) {
         this.status = SagaOrderStatus.FAILED;
         this.failureReason = reason;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 일부 단계 성공 후 보상까지 끝났을 때 주문을 보상 완료 상태로 전환한다.
+     *
+     * @param reason 보상 사유
+     */
     public void markCompensated(String reason) {
         this.status = SagaOrderStatus.COMPENSATED;
         this.failureReason = reason;

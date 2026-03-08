@@ -9,6 +9,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * 저장된 Outbox 이벤트를 주기적으로 Kafka로 릴레이한다.
+ */
 @Component
 public class OutboxRelayScheduler {
 
@@ -31,6 +34,9 @@ public class OutboxRelayScheduler {
         this.outboxRelayProperties = outboxRelayProperties;
     }
 
+    /**
+     * 발행 가능한 Outbox 이벤트를 배치로 조회해 Kafka 발행을 시도한다.
+     */
     @Scheduled(fixedDelayString = "${app.outbox.fixed-delay:3000ms}")
     public void publishPendingEvents() {
         List<ClaimedOutboxEvent> claimedEvents = outboxClaimService.claimBatch();
@@ -39,6 +45,11 @@ public class OutboxRelayScheduler {
         }
     }
 
+    /**
+     * 단일 Outbox 이벤트를 Kafka로 발행하고 상태를 갱신한다.
+     *
+     * @param claimedEvent 선점된 Outbox 이벤트
+     */
     private void publish(ClaimedOutboxEvent claimedEvent) {
         try {
             kafkaTemplate.send(claimedEvent.topic(), claimedEvent.aggregateId(), claimedEvent.payload())

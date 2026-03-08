@@ -1,9 +1,0 @@
-spring:
-  application:
-    name: sample-ai-bff
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics

@@ -9,6 +9,9 @@ import jakarta.persistence.Lob;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Kafka 발행 전 메시지를 저장하는 Outbox 엔티티다.
+ */
 @Entity
 public class OutboxEvent {
 
@@ -71,6 +74,16 @@ public class OutboxEvent {
         this.updatedAt = now;
     }
 
+    /**
+     * 신규 Outbox 이벤트를 발행 대기 상태로 생성한다.
+     *
+     * @param aggregateType 애그리게이트 타입
+     * @param aggregateId 애그리게이트 식별자
+     * @param eventType 이벤트 타입
+     * @param topic 발행 대상 토픽
+     * @param payload 직렬화된 이벤트 본문
+     * @return 신규 Outbox 엔티티
+     */
     public static OutboxEvent pending(
             String aggregateType,
             String aggregateId,
@@ -81,11 +94,21 @@ public class OutboxEvent {
         return new OutboxEvent(aggregateType, aggregateId, eventType, topic, payload);
     }
 
+    /**
+     * 이벤트를 현재 처리 중 상태로 전환한다.
+     *
+     * @param now 상태 반영 시각
+     */
     public void markProcessing(Instant now) {
         this.status = OutboxStatus.PROCESSING;
         this.updatedAt = now;
     }
 
+    /**
+     * 이벤트를 발행 완료 상태로 전환한다.
+     *
+     * @param now 상태 반영 시각
+     */
     public void markPublished(Instant now) {
         this.status = OutboxStatus.PUBLISHED;
         this.publishedAt = now;
@@ -93,6 +116,13 @@ public class OutboxEvent {
         this.updatedAt = now;
     }
 
+    /**
+     * 이벤트 발행 실패 시 재시도 가능 상태로 되돌린다.
+     *
+     * @param now 실패 반영 시각
+     * @param nextAttemptAt 다음 재시도 시각
+     * @param errorMessage 오류 메시지
+     */
     public void markFailed(Instant now, Instant nextAttemptAt, String errorMessage) {
         this.status = OutboxStatus.PENDING;
         this.attemptCount += 1;

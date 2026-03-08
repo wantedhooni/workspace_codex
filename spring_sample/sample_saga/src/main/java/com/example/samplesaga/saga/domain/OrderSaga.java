@@ -8,6 +8,9 @@ import jakarta.persistence.Id;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * 주문 Saga의 전체 실행 상태와 단계별 상태를 저장하는 엔티티다.
+ */
 @Entity
 public class OrderSaga {
 
@@ -52,29 +55,48 @@ public class OrderSaga {
         this.updatedAt = now;
     }
 
+    /**
+     * 결제 단계를 완료 상태로 반영한다.
+     */
     public void markPaymentCompleted() {
         this.status = SagaStatus.PAYMENT_COMPLETED;
         this.paymentStatus = SagaStepStatus.COMPLETED;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 재고 예약 단계를 완료 상태로 반영한다.
+     */
     public void markInventoryReserved() {
         this.status = SagaStatus.INVENTORY_RESERVED;
         this.inventoryStatus = SagaStepStatus.COMPLETED;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * Saga 전체를 완료 상태로 전환한다.
+     */
     public void markCompleted() {
         this.status = SagaStatus.COMPLETED;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * Saga를 실패 상태로 전환한다.
+     *
+     * @param reason 실패 사유
+     */
     public void markFailed(String reason) {
         this.status = SagaStatus.FAILED;
         this.failureReason = reason;
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * 보상 트랜잭션까지 완료된 Saga로 전환한다.
+     *
+     * @param reason 보상 사유
+     */
     public void markCompensated(String reason) {
         this.status = SagaStatus.COMPENSATED;
         this.inventoryStatus = SagaStepStatus.FAILED;
