@@ -234,51 +234,90 @@ body {
   min-width: 260px;
 }
 
-.ops-grid-table .ant-table-container {
-  border-radius: 14px;
+.ops-grid-card {
+  display: grid;
+  gap: 12px;
+}
+
+.ops-ag-grid-shell {
   overflow: hidden;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+  border-radius: 16px;
+  --ag-font-family: "SUIT", "Pretendard", sans-serif;
+  --ag-font-size: 13px;
+  --ag-border-color: #d6e0ea;
+  --ag-header-background-color: #eef4fa;
+  --ag-header-foreground-color: #20354f;
+  --ag-background-color: #ffffff;
+  --ag-odd-row-background-color: #f9fbfe;
+  --ag-row-hover-color: #edf4fb;
+  --ag-selected-row-background-color: #e3f0fb;
+  --ag-wrapper-border-radius: 16px;
+  --ag-cell-horizontal-padding: 14px;
+  --ag-row-height: 62px;
+  --ag-header-height: 52px;
 }
 
-.ops-grid-table .ant-table {
-  table-layout: fixed;
+.ops-ag-grid-shell .ag-header-cell-text {
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.ops-grid-table .ant-table-cell {
-  vertical-align: top;
+.ops-ag-grid-shell .ag-cell {
+  display: flex;
+  align-items: flex-start;
   line-height: 1.5;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
-.ops-grid-table .ant-table-thead > tr > th {
-  background: #eef4fa !important;
-  color: #20354f;
-  font-weight: 700;
-  white-space: nowrap;
-  border-bottom: 1px solid #d6e0ea;
+.ops-ag-grid-shell .ag-cell-wrapper,
+.ops-ag-grid-shell .ag-cell-value {
+  width: 100%;
 }
 
-.ops-grid-table .ant-table-tbody > tr > td .ant-typography,
-.ops-grid-table .ant-table-tbody > tr > td div,
-.ops-grid-table .ant-table-tbody > tr > td span,
-.ops-grid-table .ant-table-tbody > tr > td small {
-  overflow-wrap: anywhere;
+.ops-grid-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.ops-grid-table .ant-table-sticky-scroll {
-  bottom: 8px !important;
+.ops-grid-footer-meta {
+  display: grid;
+  gap: 2px;
+  color: #607087;
 }
 
-.ops-grid-table .ant-table-tbody > tr:nth-child(even) > td {
-  background: #f9fbfe;
+.ops-grid-footer-meta strong {
+  color: #14213d;
 }
 
-.ops-grid-table .ant-table-tbody > tr:hover > td {
-  background: #edf4fb !important;
+.ops-grid-footer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-.ops-grid-table .ant-pagination {
-  margin: 12px 0 0;
+.ops-grid-footer-actions select,
+.ops-grid-footer-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(20, 33, 61, 0.12);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+}
+
+.ops-grid-footer-actions button:disabled {
+  opacity: 0.5;
+}
+
+.ops-grid-empty {
+  color: #607087;
 }
 
 @media (max-width: 768px) {

@@ -1,23 +1,98 @@
 import { Link } from "react-router-dom";
+import type { ColDef } from "ag-grid-community";
+import type { PageResponse } from "../../shared/types/page";
 import type { Notification } from "./types";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type NotificationsPageProps = {
   loading: boolean;
   notifications: Notification[];
+  notificationRows: Notification[];
+  notificationPage: PageResponse<Notification>;
+  onNotificationPageChange: (page: number, pageSize: number) => void;
   unreadCount: number;
   readingNotificationId: string | null;
   onRead: (notificationId: string) => Promise<void>;
 };
 
+type NotificationCellParams = { data?: Notification };
+
 export function NotificationsPage({
   loading,
   notifications,
+  notificationRows,
+  notificationPage,
+  onNotificationPageChange,
   unreadCount,
   readingNotificationId,
   onRead,
 }: NotificationsPageProps) {
   const actionRequiredCount = notifications.filter((item) => item.severity === "ACTION_REQUIRED" && !item.read).length;
   const todayCount = notifications.filter((item) => isSameCalendarDay(item.createdAt)).length;
+  const columnDefs: ColDef<Notification>[] = [
+    {
+      headerName: "우선순위",
+      minWidth: 130,
+      cellRenderer: ({ data }: NotificationCellParams) => data ? (
+        <span className={`notification-pill severity-${data.severity.toLowerCase()}`}>
+          {formatSeverityLabel(data.severity)}
+        </span>
+      ) : "-",
+    },
+    {
+      headerName: "분류",
+      minWidth: 130,
+      cellRenderer: ({ data }: NotificationCellParams) => (data ? formatCategoryLabel(data.category) : "-"),
+    },
+    {
+      headerName: "알림 내용",
+      minWidth: 360,
+      sortable: false,
+      cellRenderer: ({ data }: NotificationCellParams) => data ? (
+        <div className="notification-cell">
+          <strong>{data.title}</strong>
+          <p>{data.message}</p>
+          <code>{data.actionPath}</code>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "도착 시각",
+      minWidth: 190,
+      cellRenderer: ({ data }: NotificationCellParams) => (data ? new Date(data.createdAt).toLocaleString() : "-"),
+    },
+    {
+      headerName: "상태",
+      minWidth: 130,
+      cellRenderer: ({ data }: NotificationCellParams) => data ? (
+        <span className={`notification-pill status-${data.read ? "read" : "unread"}`}>
+          {data.read ? "읽음" : "미확인"}
+        </span>
+      ) : "-",
+    },
+    {
+      headerName: "액션",
+      minWidth: 220,
+      sortable: false,
+      cellRenderer: ({ data }: NotificationCellParams) => data ? (
+        <div className="table-action-row">
+          <Link className="inline-link-button" to={data.actionPath === "/" ? "/" : data.actionPath}>
+            바로가기
+          </Link>
+          {!data.read ? (
+            <button
+              type="button"
+              className="table-inline-button"
+              disabled={readingNotificationId === data.id}
+              onClick={() => void onRead(data.id)}
+            >
+              {readingNotificationId === data.id ? "처리 중..." : "읽음 처리"}
+            </button>
+          ) : null}
+        </div>
+      ) : "-",
+    },
+  ];
 
   if (loading) {
     return (
@@ -72,78 +147,18 @@ export function NotificationsPage({
             </p>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 130 }} />
-              <col style={{ width: 130 }} />
-              <col style={{ width: 360 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 130 }} />
-              <col style={{ width: 220 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>우선순위</th>
-                <th>분류</th>
-                <th>알림 내용</th>
-                <th>도착 시각</th>
-                <th>상태</th>
-                <th>액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {notifications.length ? (
-                notifications.map((notification) => (
-                  <tr key={notification.id}>
-                    <td>
-                      <span className={`notification-pill severity-${notification.severity.toLowerCase()}`}>
-                        {formatSeverityLabel(notification.severity)}
-                      </span>
-                    </td>
-                    <td>{formatCategoryLabel(notification.category)}</td>
-                    <td>
-                      <div className="notification-cell">
-                        <strong>{notification.title}</strong>
-                        <p>{notification.message}</p>
-                        <code>{notification.actionPath}</code>
-                      </div>
-                    </td>
-                    <td>{new Date(notification.createdAt).toLocaleString()}</td>
-                    <td>
-                      <span className={`notification-pill status-${notification.read ? "read" : "unread"}`}>
-                        {notification.read ? "읽음" : "미확인"}
-                      </span>
-                    </td>
-                    <td className="table-action-cell">
-                      <div className="table-action-row">
-                        <Link className="inline-link-button" to={notification.actionPath === "/" ? "/" : notification.actionPath}>
-                          바로가기
-                        </Link>
-                        {!notification.read ? (
-                          <button
-                            type="button"
-                            className="table-inline-button"
-                            disabled={readingNotificationId === notification.id}
-                            onClick={() => void onRead(notification.id)}
-                          >
-                            {readingNotificationId === notification.id ? "처리 중..." : "읽음 처리"}
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="empty-row">
-                    아직 표시할 알림이 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={notificationRows}
+          columnDefs={columnDefs}
+          emptyMessage="아직 표시할 알림이 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: notificationPage.page + 1,
+            pageSize: notificationPage.size,
+            total: notificationPage.totalElements,
+            onChange: onNotificationPageChange,
+          }}
+        />
       </section>
     </>
   );

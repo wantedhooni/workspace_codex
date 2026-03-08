@@ -1,8 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
+import type { ColDef } from "ag-grid-community";
 import type { Account } from "../accounts/types";
 import type { FxRate } from "../fx/types";
 import type { CreateExchangeRequestPayload, ExchangeRequest } from "./types";
+import type { PageResponse } from "../../shared/types/page";
 import { formatAmount } from "../../shared/utils/format";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 const EXCHANGE_FEE_RATE = 0.0012;
 const EXCHANGE_CUTOFF_HOUR = 16;
@@ -17,9 +20,14 @@ type ExchangeRequestsPageProps = {
   accounts: Account[];
   fxRates: FxRate[];
   exchangeRequests: ExchangeRequest[];
+  exchangeRequestRows: ExchangeRequest[];
+  exchangeRequestPage: PageResponse<ExchangeRequest>;
+  onExchangeRequestPageChange: (page: number, pageSize: number) => void;
   onCreate: (payload: CreateExchangeRequestPayload) => Promise<void>;
   onCancel: (requestId: string, reason?: string) => Promise<void>;
 };
+
+type ExchangeRequestCellParams = { data?: ExchangeRequest };
 
 export function ExchangeRequestsPage({
   loading,
@@ -28,6 +36,9 @@ export function ExchangeRequestsPage({
   accounts,
   fxRates,
   exchangeRequests,
+  exchangeRequestRows,
+  exchangeRequestPage,
+  onExchangeRequestPageChange,
   onCreate,
   onCancel,
 }: ExchangeRequestsPageProps) {
@@ -75,6 +86,117 @@ export function ExchangeRequestsPage({
     && parsedFromAmount > 0
     && rateSnapshot,
   );
+  const columnDefs: ColDef<ExchangeRequest>[] = [
+    { headerName: "요청번호", field: "requestNumber", minWidth: 180, cellClass: "table-mono" },
+    {
+      headerName: "흐름",
+      minWidth: 210,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong>{resolveAccountLabel(accountById.get(data.sourceAccountId ?? ""), data.sourceAccountId, data.fromCurrency)}</strong>
+          <p>to {resolveAccountLabel(accountById.get(data.destinationAccountId), data.destinationAccountId, data.toCurrency)}</p>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "환전 금액",
+      minWidth: 240,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{formatAmount(data.fromAmount, data.fromCurrency)}</strong>
+            <p>{`gross ${formatAmount(data.toAmount, data.toCurrency)}`}</p>
+            <p>{`fee ${formatAmount(data.exchangeFeeAmount, data.toCurrency)} / net ${formatAmount(data.netToAmount, data.toCurrency)}`}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "요청 메모",
+      minWidth: 180,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <p className="table-note">{data.requestMemo ?? "미입력"}</p>
+          {data.status === "CANCELED" ? <p className="table-note">{`취소 사유: ${data.cancellationReason ?? "사용자 요청 취소"}`}</p> : null}
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "상태",
+      minWidth: 170,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "정책 플래그",
+      minWidth: 180,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{data.sameDaySettlementEligible ? "당일 정산" : "익영업일 정산"}</strong>
+            <p>{data.manualReviewRequired ? data.manualReviewReason ?? "수동 심사" : "추가 심사 없음"}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "예상 정산",
+      minWidth: 200,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{data.expectedSettlementAt ? new Date(data.expectedSettlementAt).toLocaleString() : "-"}</strong>
+            <p>{`rate ${new Date(data.appliedRateEffectiveAt).toLocaleString()}`}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "정산 거래",
+      minWidth: 230,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>출금</strong>
+            <p className="table-mono">{data.sourceTransactionNumber ?? "정산 대기"}</p>
+          </div>
+          <div>
+            <strong>입금</strong>
+            <p className="table-mono">{data.destinationTransactionNumber ?? "정산 대기"}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "액션",
+      minWidth: 120,
+      sortable: false,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => data ? (
+        canCancelExchangeRequest(data.status) ? (
+          <button
+            type="button"
+            className="secondary-button compact"
+            disabled={cancelingRequestId === data.id}
+            onClick={() => void requestCancel(data)}
+          >
+            {cancelingRequestId === data.id ? "취소 중..." : "요청 취소"}
+          </button>
+        ) : (
+          <span className="table-muted">-</span>
+        )
+      ) : "-",
+    },
+    {
+      headerName: "생성일시",
+      minWidth: 180,
+      cellRenderer: ({ data }: ExchangeRequestCellParams) => (data ? new Date(data.createdAt).toLocaleString() : "-"),
+    },
+  ];
 
   useEffect(() => {
     if (!bankingAccounts.length) {
@@ -424,121 +546,18 @@ export function ExchangeRequestsPage({
             <p className="section-copy">환전 흐름, 정산 결과, 취소 가능 여부를 표에서 바로 확인할 수 있습니다.</p>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 180 }} />
-              <col style={{ width: 210 }} />
-              <col style={{ width: 240 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 170 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 200 }} />
-              <col style={{ width: 230 }} />
-              <col style={{ width: 120 }} />
-              <col style={{ width: 180 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>요청번호</th>
-                <th>흐름</th>
-                <th>환전 금액</th>
-                <th>요청 메모</th>
-                <th>상태</th>
-                <th>정책 플래그</th>
-                <th>예상 정산</th>
-                <th>정산 거래</th>
-                <th>액션</th>
-                <th>생성일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {exchangeRequests.length ? (
-                exchangeRequests.map((item) => (
-                  <tr key={item.id}>
-                    <td className="table-mono">{item.requestNumber}</td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <strong>{resolveAccountLabel(accountById.get(item.sourceAccountId ?? ""), item.sourceAccountId, item.fromCurrency)}</strong>
-                        <p>to {resolveAccountLabel(accountById.get(item.destinationAccountId), item.destinationAccountId, item.toCurrency)}</p>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{formatAmount(item.fromAmount, item.fromCurrency)}</strong>
-                          <p>{`gross ${formatAmount(item.toAmount, item.toCurrency)}`}</p>
-                          <p>{`fee ${formatAmount(item.exchangeFeeAmount, item.toCurrency)} / net ${formatAmount(item.netToAmount, item.toCurrency)}`}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <p className="table-note">{item.requestMemo ?? "미입력"}</p>
-                        {item.status === "CANCELED" ? (
-                          <p className="table-note">{`취소 사유: ${item.cancellationReason ?? "사용자 요청 취소"}`}</p>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td>
-                      <b className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</b>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{item.sameDaySettlementEligible ? "당일 정산" : "익영업일 정산"}</strong>
-                          <p>{item.manualReviewRequired ? item.manualReviewReason ?? "수동 심사" : "추가 심사 없음"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{item.expectedSettlementAt ? new Date(item.expectedSettlementAt).toLocaleString() : "-"}</strong>
-                          <p>{`rate ${new Date(item.appliedRateEffectiveAt).toLocaleString()}`}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>출금</strong>
-                          <p className="table-mono">{item.sourceTransactionNumber ?? "정산 대기"}</p>
-                        </div>
-                        <div>
-                          <strong>입금</strong>
-                          <p className="table-mono">{item.destinationTransactionNumber ?? "정산 대기"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="table-action-cell">
-                      {canCancelExchangeRequest(item.status) ? (
-                        <button
-                          type="button"
-                          className="secondary-button compact"
-                          disabled={cancelingRequestId === item.id}
-                          onClick={() => void requestCancel(item)}
-                        >
-                          {cancelingRequestId === item.id ? "취소 중..." : "요청 취소"}
-                        </button>
-                      ) : (
-                        <span className="table-muted">-</span>
-                      )}
-                    </td>
-                    <td>{new Date(item.createdAt).toLocaleString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={10}>
-                    <strong>환전 요청 내역이 없습니다.</strong>
-                    <p>첫 환전 요청을 등록해 보세요.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={exchangeRequestRows}
+          columnDefs={columnDefs}
+          emptyMessage="환전 요청 내역이 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: exchangeRequestPage.page + 1,
+            pageSize: exchangeRequestPage.size,
+            total: exchangeRequestPage.totalElements,
+            onChange: onExchangeRequestPageChange,
+          }}
+        />
       </section>
     </>
   );

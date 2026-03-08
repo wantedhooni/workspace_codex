@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
+import type { ColDef } from "ag-grid-community";
 import type { Account } from "../accounts/types";
 import type { CreateStockOrderPayload, StockOrder, StockPosition } from "./types";
+import type { PageResponse } from "../../shared/types/page";
 import { formatAmount } from "../../shared/utils/format";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 const TRADING_FEE_RATE = 0.0015;
 const SELL_TAX_RATE = 0.0023;
@@ -15,9 +18,14 @@ type StockOrdersPageProps = {
   accounts: Account[];
   stockPositions: StockPosition[];
   stockOrders: StockOrder[];
+  stockOrderRows: StockOrder[];
+  stockOrderPage: PageResponse<StockOrder>;
+  onStockOrderPageChange: (page: number, pageSize: number) => void;
   onCreate: (payload: CreateStockOrderPayload) => Promise<void>;
   onCancel: (orderId: string, reason?: string) => Promise<void>;
 };
+
+type StockOrderCellParams = { data?: StockOrder };
 
 export function StockOrdersPage({
   loading,
@@ -26,6 +34,9 @@ export function StockOrdersPage({
   accounts,
   stockPositions,
   stockOrders,
+  stockOrderRows,
+  stockOrderPage,
+  onStockOrderPageChange,
   onCreate,
   onCancel,
 }: StockOrdersPageProps) {
@@ -129,6 +140,151 @@ export function StockOrdersPage({
     && hasEnoughCash
     && !iocOutsideRegular
   );
+  const columnDefs: ColDef<StockOrder>[] = [
+    { headerName: "주문번호", field: "orderNumber", minWidth: 190, cellClass: "table-mono" },
+    {
+      headerName: "종목",
+      minWidth: 150,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{data.symbol}</strong>
+            <p>{data.market}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "주문 조건",
+      minWidth: 220,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{data.side} · {renderTimeInForceLabel(data.timeInForce)}</strong>
+            <p>{Number(data.quantity).toLocaleString()} @ {formatAmount(data.limitPrice, data.currency)}</p>
+            <p>{data.orderMemo ?? "메모 없음"}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "상태",
+      minWidth: 170,
+      cellRenderer: ({ data }: StockOrderCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "정책 플래그",
+      minWidth: 200,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{data.manualReviewRequired ? "수동 심사" : "기본 승인"}</strong>
+            <p>{data.status === "CANCELED" ? data.cancellationReason ?? "사용자 요청 취소" : data.manualReviewRequired ? data.manualReviewReason ?? "추가 심사" : "추가 심사 없음"}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "체결 윈도우",
+      minWidth: 210,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{renderMarketSessionLabel(data.marketSession)}</strong>
+            <p>{new Date(data.expectedExecutionAt).toLocaleString()}</p>
+            <p>{data.referencePrice !== null ? `ref ${formatAmount(data.referencePrice, data.currency)} / dev ${data.priceDeviationRate !== null ? formatRatePercent(data.priceDeviationRate) : "-"}` : "기준 시세 없음"}</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "유효 만료",
+      minWidth: 190,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>{new Date(data.expiresAt).toLocaleString()}</strong>
+            <p>{data.timeInForce} 기준 만료</p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "체결 정보",
+      minWidth: 230,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        data.executions.length ? (
+          <div className="table-cell-stack">
+            <div>
+              <strong>{Number(data.executedQuantity ?? 0).toLocaleString()} / {Number(data.quantity).toLocaleString()} filled</strong>
+              <p>@ {formatAmount(data.executedPrice ?? 0, data.currency)}</p>
+            </div>
+            {data.executions.map((execution: StockOrder["executions"][number]) => (
+              <div key={execution.id}>
+                <strong className="table-mono">{execution.executionNumber}</strong>
+                <p>{Number(execution.executedQuantity).toLocaleString()} @ {formatAmount(execution.executedPrice, data.currency)}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="table-muted">체결 전</span>
+        )
+      ) : "-",
+    },
+    {
+      headerName: "정산 결과",
+      minWidth: 190,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        <div className="table-cell-stack">
+          <div>
+            <strong>
+              {data.status === "PENDING_APPROVAL"
+                ? "정산 대기"
+                : data.status === "CANCELED"
+                  ? "주문 취소"
+                  : formatAmount(data.netSettlementAmount, data.currency)}
+            </strong>
+            <p>
+              {data.status === "CANCELED" && data.canceledAt
+                ? `취소 시각 ${new Date(data.canceledAt).toLocaleString()}`
+                : `fee ${formatAmount(data.feeAmount, data.currency)} / tax ${formatAmount(data.taxAmount, data.currency)}`}
+            </p>
+          </div>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "액션",
+      minWidth: 120,
+      sortable: false,
+      cellRenderer: ({ data }: StockOrderCellParams) => data ? (
+        canCancelOrder(data.status) ? (
+          <button
+            type="button"
+            className="secondary-button compact"
+            disabled={cancelingOrderId === data.id}
+            onClick={() => void requestCancel(data)}
+          >
+            {cancelingOrderId === data.id ? "취소 중..." : "주문 취소"}
+          </button>
+        ) : (
+          <span className="table-muted">-</span>
+        )
+      ) : "-",
+    },
+    {
+      headerName: "생성일시",
+      minWidth: 180,
+      cellRenderer: ({ data }: StockOrderCellParams) => (data ? new Date(data.createdAt).toLocaleString() : "-"),
+    },
+  ];
 
   if (loading) {
     return (
@@ -463,162 +619,18 @@ export function StockOrdersPage({
             <p className="section-copy">체결 진척, 정산 결과, 취소 가능 상태를 표에서 한 번에 읽을 수 있도록 요약했습니다.</p>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 190 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 220 }} />
-              <col style={{ width: 170 }} />
-              <col style={{ width: 200 }} />
-              <col style={{ width: 210 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 230 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 120 }} />
-              <col style={{ width: 180 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>주문번호</th>
-                <th>종목</th>
-                <th>주문 조건</th>
-                <th>상태</th>
-                <th>정책 플래그</th>
-                <th>체결 윈도우</th>
-                <th>유효 만료</th>
-                <th>체결 정보</th>
-                <th>정산 결과</th>
-                <th>액션</th>
-                <th>생성일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stockOrders.length ? (
-                stockOrders.map((item) => (
-                  <tr key={item.id}>
-                    <td className="table-mono">{item.orderNumber}</td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{item.symbol}</strong>
-                          <p>{item.market}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{item.side} · {renderTimeInForceLabel(item.timeInForce)}</strong>
-                          <p>
-                            {Number(item.quantity).toLocaleString()} @ {formatAmount(item.limitPrice, item.currency)}
-                          </p>
-                          <p>{item.orderMemo ?? "메모 없음"}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <b className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</b>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{item.manualReviewRequired ? "수동 심사" : "기본 승인"}</strong>
-                          <p>
-                            {item.status === "CANCELED"
-                              ? item.cancellationReason ?? "사용자 요청 취소"
-                              : item.manualReviewRequired ? item.manualReviewReason ?? "추가 심사" : "추가 심사 없음"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{renderMarketSessionLabel(item.marketSession)}</strong>
-                          <p>{new Date(item.expectedExecutionAt).toLocaleString()}</p>
-                          <p>
-                            {item.referencePrice !== null
-                              ? `ref ${formatAmount(item.referencePrice, item.currency)} / dev ${item.priceDeviationRate !== null ? formatRatePercent(item.priceDeviationRate) : "-"}`
-                              : "기준 시세 없음"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>{new Date(item.expiresAt).toLocaleString()}</strong>
-                          <p>{item.timeInForce} 기준 만료</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      {item.executions.length ? (
-                        <div className="table-cell-stack">
-                          <div>
-                            <strong>{Number(item.executedQuantity ?? 0).toLocaleString()} / {Number(item.quantity).toLocaleString()} filled</strong>
-                            <p>@ {formatAmount(item.executedPrice ?? 0, item.currency)}</p>
-                          </div>
-                          {item.executions.map((execution) => (
-                            <div key={execution.id}>
-                              <strong className="table-mono">{execution.executionNumber}</strong>
-                              <p>
-                                {Number(execution.executedQuantity).toLocaleString()} @ {formatAmount(execution.executedPrice, item.currency)}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="table-muted">체결 전</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <div>
-                          <strong>
-                            {item.status === "PENDING_APPROVAL"
-                              ? "정산 대기"
-                              : item.status === "CANCELED"
-                                ? "주문 취소"
-                                : formatAmount(item.netSettlementAmount, item.currency)}
-                          </strong>
-                          <p>
-                            {item.status === "CANCELED" && item.canceledAt
-                              ? `취소 시각 ${new Date(item.canceledAt).toLocaleString()}`
-                              : `fee ${formatAmount(item.feeAmount, item.currency)} / tax ${formatAmount(item.taxAmount, item.currency)}`}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="table-action-cell">
-                      {canCancelOrder(item.status) ? (
-                        <button
-                          type="button"
-                          className="secondary-button compact"
-                          disabled={cancelingOrderId === item.id}
-                          onClick={() => void requestCancel(item)}
-                        >
-                          {cancelingOrderId === item.id ? "취소 중..." : "주문 취소"}
-                        </button>
-                      ) : (
-                        <span className="table-muted">-</span>
-                      )}
-                    </td>
-                    <td>{new Date(item.createdAt).toLocaleString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={11}>
-                    <strong>주식 주문 내역이 없습니다.</strong>
-                    <p>첫 주문을 등록해 보세요.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={stockOrderRows}
+          columnDefs={columnDefs}
+          emptyMessage="주식 주문 내역이 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: stockOrderPage.page + 1,
+            pageSize: stockOrderPage.size,
+            total: stockOrderPage.totalElements,
+            onChange: onStockOrderPageChange,
+          }}
+        />
       </section>
     </>
   );

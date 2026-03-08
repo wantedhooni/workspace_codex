@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from "react";
+import type { ColDef } from "ag-grid-community";
 import type { CreateLinkedBankAccountPayload, LinkedBankAccount } from "./types";
+import type { PageResponse } from "../../shared/types/page";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type LinkedBankAccountsPageProps = {
   loading: boolean;
@@ -7,11 +10,16 @@ type LinkedBankAccountsPageProps = {
   verifyingId: string | null;
   resendingId: string | null;
   linkedBankAccounts: LinkedBankAccount[];
+  linkedBankAccountRows: LinkedBankAccount[];
+  linkedBankAccountPage: PageResponse<LinkedBankAccount>;
+  onLinkedBankAccountPageChange: (page: number, pageSize: number) => void;
   onCreate: (payload: CreateLinkedBankAccountPayload) => Promise<void>;
   onMarkPrimary: (linkedBankAccountId: string) => Promise<void>;
   onVerify: (linkedBankAccountId: string, verificationReference: string) => Promise<void>;
   onResend: (linkedBankAccountId: string) => Promise<void>;
 };
+
+type LinkedBankAccountCellParams = { data?: LinkedBankAccount };
 
 export function LinkedBankAccountsPage({
   loading,
@@ -19,6 +27,9 @@ export function LinkedBankAccountsPage({
   verifyingId,
   resendingId,
   linkedBankAccounts,
+  linkedBankAccountRows,
+  linkedBankAccountPage,
+  onLinkedBankAccountPageChange,
   onCreate,
   onMarkPrimary,
   onVerify,
@@ -62,6 +73,76 @@ export function LinkedBankAccountsPage({
   const primaryCount = linkedBankAccounts.filter((item) => item.status === "ACTIVE" && item.primaryWithdrawal).length;
   const blockedCount = linkedBankAccounts.filter((item) => item.status === "BLOCKED").length;
   const primaryAccount = linkedBankAccounts.find((item) => item.status === "ACTIVE" && item.primaryWithdrawal);
+  const columnDefs: ColDef<LinkedBankAccount>[] = [
+    { headerName: "은행", field: "bankName", minWidth: 150 },
+    { headerName: "별칭", field: "accountAlias", minWidth: 180 },
+    { headerName: "예금주", field: "accountHolderName", minWidth: 160 },
+    {
+      headerName: "계좌번호",
+      minWidth: 220,
+      sortable: false,
+      cellRenderer: ({ data }: LinkedBankAccountCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong className="table-mono">{data.maskedAccountNumber}</strong>
+          {data.status === "PENDING_VERIFICATION" && data.verificationReference ? (
+            <p className="table-muted">
+              memo {data.verificationReference}{data.verificationExpired ? " · expired" : ""}
+            </p>
+          ) : null}
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "상태",
+      minWidth: 150,
+      cellRenderer: ({ data }: LinkedBankAccountCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "기본 출금",
+      minWidth: 130,
+      cellRenderer: ({ data }: LinkedBankAccountCellParams) => {
+        if (!data) {
+          return "-";
+        }
+        return data.status === "ACTIVE"
+          ? data.primaryWithdrawal ? "기본" : "-"
+          : data.primaryWithdrawal ? "기본 예정" : "-";
+      },
+    },
+    {
+      headerName: "검증시각",
+      minWidth: 190,
+      cellRenderer: ({ data }: LinkedBankAccountCellParams) => (data ? (data.verifiedAt ? new Date(data.verifiedAt).toLocaleString() : "검증 대기") : "-"),
+    },
+    {
+      headerName: "액션",
+      minWidth: 170,
+      sortable: false,
+      cellRenderer: ({ data }: LinkedBankAccountCellParams) => {
+        if (!data) {
+          return "-";
+        }
+        if (data.status === "ACTIVE") {
+          return data.primaryWithdrawal ? (
+            <span className="table-muted">현재 기본 계좌</span>
+          ) : (
+            <button
+              type="button"
+              className="table-inline-button"
+              disabled={submitting}
+              onClick={() => void onMarkPrimary(data.id)}
+            >
+              기본 출금 설정
+            </button>
+          );
+        }
+        if (data.status === "PENDING_VERIFICATION") {
+          return <span className="table-muted">인증 대기</span>;
+        }
+        return <span className="table-muted">{renderBlockReason(data.blockReasonCode)}</span>;
+      },
+    },
+  ];
 
   async function handleVerify(linkedBankAccount: LinkedBankAccount) {
     const verificationReference = (verificationInputs[linkedBankAccount.id] ?? linkedBankAccount.verificationReference ?? "").trim();
@@ -378,85 +459,18 @@ export function LinkedBankAccountsPage({
             <h2>내 연결 계좌 목록</h2>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 150 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 220 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 130 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 170 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>은행</th>
-                <th>별칭</th>
-                <th>예금주</th>
-                <th>계좌번호</th>
-                <th>상태</th>
-                <th>기본 출금</th>
-                <th>검증시각</th>
-                <th>액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {linkedBankAccounts.length ? (
-                linkedBankAccounts.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.bankName}</td>
-                    <td>{item.accountAlias}</td>
-                    <td>{item.accountHolderName}</td>
-                    <td className="table-mono">
-                      <div>{item.maskedAccountNumber}</div>
-                      {item.status === "PENDING_VERIFICATION" && item.verificationReference ? (
-                        <span className="table-muted">
-                          memo {item.verificationReference}{item.verificationExpired ? " · expired" : ""}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td><b className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</b></td>
-                    <td>
-                      {item.status === "ACTIVE"
-                        ? item.primaryWithdrawal ? "기본" : "-"
-                        : item.primaryWithdrawal ? "기본 예정" : "-"}
-                    </td>
-                    <td>{item.verifiedAt ? new Date(item.verifiedAt).toLocaleString() : "검증 대기"}</td>
-                    <td className="table-action-cell">
-                      {item.status === "ACTIVE" ? (
-                        item.primaryWithdrawal ? (
-                          <span className="table-muted">현재 기본 계좌</span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="table-inline-button"
-                            disabled={submitting}
-                            onClick={() => void onMarkPrimary(item.id)}
-                          >
-                            기본 출금 설정
-                          </button>
-                        )
-                      ) : item.status === "PENDING_VERIFICATION" ? (
-                        <span className="table-muted">인증 대기</span>
-                      ) : (
-                        <span className="table-muted">{renderBlockReason(item.blockReasonCode)}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={8}>
-                    <strong>연결 계좌가 없습니다.</strong>
-                    <p>외부 출금 목적지를 먼저 등록하세요.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={linkedBankAccountRows}
+          columnDefs={columnDefs}
+          emptyMessage="연결 계좌가 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: linkedBankAccountPage.page + 1,
+            pageSize: linkedBankAccountPage.size,
+            total: linkedBankAccountPage.totalElements,
+            onChange: onLinkedBankAccountPageChange,
+          }}
+        />
       </section>
     </>
   );

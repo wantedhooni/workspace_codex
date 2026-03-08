@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import type { ColDef } from "ag-grid-community";
 import type { Account } from "../accounts/types";
 import type { CreateFundingRequestPayload, FundingRequest } from "./types";
 import type { LinkedBankAccount } from "../linked-bank-accounts/types";
+import type { PageResponse } from "../../shared/types/page";
 import { formatAmount } from "../../shared/utils/format";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 const FUNDING_CUTOFF_HOUR = 16;
 const PRIORITY_FUNDING_CUTOFF_HOUR = 18;
@@ -33,9 +36,14 @@ type FundingRequestsPageProps = {
   accounts: Account[];
   linkedBankAccounts: LinkedBankAccount[];
   fundingRequests: FundingRequest[];
+  fundingRequestRows: FundingRequest[];
+  fundingRequestPage: PageResponse<FundingRequest>;
+  onFundingRequestPageChange: (page: number, pageSize: number) => void;
   onCreate: (payload: CreateFundingRequestPayload) => Promise<void>;
   onCancel: (requestId: string, reason?: string) => Promise<void>;
 };
+
+type FundingRequestCellParams = { data?: FundingRequest };
 
 export function FundingRequestsPage({
   loading,
@@ -44,6 +52,9 @@ export function FundingRequestsPage({
   accounts,
   linkedBankAccounts,
   fundingRequests,
+  fundingRequestRows,
+  fundingRequestPage,
+  onFundingRequestPageChange,
   onCreate,
   onCancel,
 }: FundingRequestsPageProps) {
@@ -108,9 +119,9 @@ export function FundingRequestsPage({
   );
   const filteredFundingRequests = useMemo(
     () => (statusFilter === "ALL"
-      ? fundingRequests
-      : fundingRequests.filter((item) => item.status === statusFilter)),
-    [fundingRequests, statusFilter],
+      ? fundingRequestRows
+      : fundingRequestRows.filter((item) => item.status === statusFilter)),
+    [fundingRequestRows, statusFilter],
   );
   const sameTypeTodayAmount = useMemo(
     () => fundingRequests
@@ -138,6 +149,123 @@ export function FundingRequestsPage({
     return reasons;
   }, [dailyLimitExceededPreview, isWithdrawal, parsedAmount, priorityProcessing, reviewThreshold]);
   const previewRequiresManualReview = previewReviewReasons.length > 0;
+  const columnDefs: ColDef<FundingRequest>[] = [
+    { headerName: "요청번호", field: "requestNumber", minWidth: 180, cellClass: "table-mono" },
+    {
+      headerName: "계좌",
+      minWidth: 190,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong>{data.accountNumber}</strong>
+          <p>{`${data.accountType} / ${data.currency}`}</p>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "유형",
+      minWidth: 140,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        <>
+          <b className={`status-pill ${data.requestType === "WITHDRAWAL" ? "rejected" : "approved"}`}>{data.requestType}</b>
+          {data.priorityProcessing ? <p className="table-priority-text">PRIORITY</p> : null}
+        </>
+      ) : "-",
+    },
+    {
+      headerName: "금액 / 스냅샷",
+      minWidth: 250,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong>{formatAmount(data.amount, data.currency)}</strong>
+          <p>{`base fee ${formatAmount(data.serviceFeeAmount, data.currency)} / priority fee ${formatAmount(data.priorityFeeAmount, data.currency)}`}</p>
+          <p>{`total debit ${formatAmount(data.totalDebitAmount, data.currency)}`}</p>
+          <p>{`snapshot ${formatAmount(data.balanceSnapshot, data.currency)}`}</p>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "외부 목적지",
+      minWidth: 200,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        data.requestType === "WITHDRAWAL" ? (
+          <div className="table-cell-stack">
+            <strong>{data.linkedBankName ?? "미지정"}</strong>
+            <p>{data.linkedBankAccountAlias ?? data.linkedBankAccountNumberMasked ?? "-"}</p>
+          </div>
+        ) : (
+          "-"
+        )
+      ) : "-",
+    },
+    {
+      headerName: "정책 / 심사",
+      minWidth: 240,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong>{data.expectedSettlementAt ? new Date(data.expectedSettlementAt).toLocaleString() : "-"}</strong>
+          <p>
+            {data.status === "CANCELED"
+              ? data.cancellationReason ?? "사용자 요청 취소"
+              : data.manualReviewRequired
+                ? data.manualReviewReason ?? "추가 심사"
+                : data.sameDaySettlementEligible
+                  ? "당일 정산 대상"
+                  : "다음 영업일 정산"}
+          </p>
+          {data.priorityProcessing ? <p>우선 처리 요청</p> : null}
+          {data.dailyLimitAmount !== null && data.dailyAccumulatedAmount !== null ? (
+            <p>{`누적 ${formatAmount(data.dailyAccumulatedAmount, data.currency)} / 한도 ${formatAmount(data.dailyLimitAmount, data.currency)}`}</p>
+          ) : null}
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "상태",
+      minWidth: 170,
+      cellRenderer: ({ data }: FundingRequestCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "정산 거래",
+      minWidth: 220,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        <div className="table-cell-stack">
+          <strong className="table-mono">{data.settlementTransactionNumber ?? "정산 대기"}</strong>
+          <p>
+            {data.status === "CANCELED" && data.canceledAt
+              ? `취소 ${new Date(data.canceledAt).toLocaleString()}`
+              : data.settledAt
+                ? new Date(data.settledAt).toLocaleString()
+                : new Date(data.createdAt).toLocaleString()}
+          </p>
+        </div>
+      ) : "-",
+    },
+    { headerName: "요청 메모", field: "note", minWidth: 180 },
+    {
+      headerName: "액션",
+      minWidth: 120,
+      sortable: false,
+      cellRenderer: ({ data }: FundingRequestCellParams) => data ? (
+        canCancelFundingRequest(data.status) ? (
+          <button
+            type="button"
+            className="secondary-button compact"
+            disabled={cancelingRequestId === data.id}
+            onClick={() => void requestCancel(data)}
+          >
+            {cancelingRequestId === data.id ? "취소 중..." : "요청 취소"}
+          </button>
+        ) : (
+          <span className="table-muted">-</span>
+        )
+      ) : "-",
+    },
+  ];
 
   useEffect(() => {
     if (isWithdrawal && !form.linkedBankAccountId && activeLinkedBankAccounts.length) {
@@ -556,131 +684,18 @@ export function FundingRequestsPage({
             </select>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 180 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 210 }} />
-              <col style={{ width: 240 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 210 }} />
-              <col style={{ width: 190 }} />
-              <col style={{ width: 220 }} />
-              <col style={{ width: 180 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>요청번호</th>
-                <th>계좌</th>
-                <th>유형</th>
-                <th>금액 / 스냅샷</th>
-                <th>외부 목적지</th>
-                <th>정책 / 심사</th>
-                <th>상태</th>
-                <th>정산 거래</th>
-                <th>요청 메모</th>
-                <th>액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredFundingRequests.length ? (
-                filteredFundingRequests.map((item) => (
-                  <tr key={item.id}>
-                    <td className="table-mono">{item.requestNumber}</td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <strong>{item.accountNumber}</strong>
-                        <p>{`${item.accountType} / ${item.currency}`}</p>
-                      </div>
-                    </td>
-                    <td>
-                      <b className={`status-pill ${item.requestType === "WITHDRAWAL" ? "rejected" : "approved"}`}>
-                        {item.requestType}
-                      </b>
-                      {item.priorityProcessing ? <p className="table-priority-text">PRIORITY</p> : null}
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <strong>{formatAmount(item.amount, item.currency)}</strong>
-                        <p>{`base fee ${formatAmount(item.serviceFeeAmount, item.currency)} / priority fee ${formatAmount(item.priorityFeeAmount, item.currency)}`}</p>
-                        <p>{`total debit ${formatAmount(item.totalDebitAmount, item.currency)}`}</p>
-                        <p>{`snapshot ${formatAmount(item.balanceSnapshot, item.currency)}`}</p>
-                      </div>
-                    </td>
-                    <td>
-                      {item.requestType === "WITHDRAWAL" ? (
-                        <div className="table-cell-stack">
-                          <strong>{item.linkedBankName ?? "미지정"}</strong>
-                          <p>{item.linkedBankAccountAlias ?? item.linkedBankAccountNumberMasked ?? "-"}</p>
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <strong>{item.expectedSettlementAt ? new Date(item.expectedSettlementAt).toLocaleString() : "-"}</strong>
-                        <p>
-                          {item.status === "CANCELED"
-                            ? item.cancellationReason ?? "사용자 요청 취소"
-                            : item.manualReviewRequired
-                            ? item.manualReviewReason ?? "추가 심사"
-                            : item.sameDaySettlementEligible
-                              ? "당일 정산 대상"
-                              : "다음 영업일 정산"}
-                        </p>
-                        {item.priorityProcessing ? <p>우선 처리 요청</p> : null}
-                        {item.dailyLimitAmount !== null && item.dailyAccumulatedAmount !== null ? (
-                          <p>
-                            {`누적 ${formatAmount(item.dailyAccumulatedAmount, item.currency)} / 한도 ${formatAmount(item.dailyLimitAmount, item.currency)}`}
-                          </p>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td>
-                      <b className={`status-pill ${item.status.toLowerCase()}`}>{item.status}</b>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <strong className="table-mono">{item.settlementTransactionNumber ?? "정산 대기"}</strong>
-                        <p>
-                          {item.status === "CANCELED" && item.canceledAt
-                            ? `취소 ${new Date(item.canceledAt).toLocaleString()}`
-                            : item.settledAt
-                              ? new Date(item.settledAt).toLocaleString()
-                              : new Date(item.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </td>
-                    <td>{item.note ?? "-"}</td>
-                    <td>
-                      {canCancelFundingRequest(item.status) ? (
-                        <button
-                          type="button"
-                          className="secondary-button compact"
-                          disabled={cancelingRequestId === item.id}
-                          onClick={() => void requestCancel(item)}
-                        >
-                          {cancelingRequestId === item.id ? "취소 중..." : "요청 취소"}
-                        </button>
-                      ) : (
-                        <span className="table-muted">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={10}>
-                    <strong>{statusFilter === "ALL" ? "입출금 요청 내역이 없습니다." : "선택한 상태의 요청이 없습니다."}</strong>
-                    <p>{statusFilter === "ALL" ? "첫 요청을 등록하면 운영 승인 상태를 여기서 추적할 수 있습니다." : "다른 상태 필터로 전환해 요청 이력을 확인하세요."}</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={filteredFundingRequests}
+          columnDefs={columnDefs}
+          emptyMessage={statusFilter === "ALL" ? "입출금 요청 내역이 없습니다." : "선택한 상태의 요청이 없습니다."}
+          getRowId={(row) => row.id}
+          pagination={{
+            current: fundingRequestPage.page + 1,
+            pageSize: fundingRequestPage.size,
+            total: fundingRequestPage.totalElements,
+            onChange: onFundingRequestPageChange,
+          }}
+        />
       </section>
     </>
   );

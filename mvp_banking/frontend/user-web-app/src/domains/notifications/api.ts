@@ -1,9 +1,10 @@
-import { request } from "../../shared/api/http";
+import { request, withQuery } from "../../shared/api/http";
+import type { PaginationState } from "../../shared/types/page";
 import type { Notification, NotificationList } from "./types";
 
 export const notificationApi = {
-  list(token: string) {
-    return request<NotificationList>("/api/user/notifications", {}, token);
+  list(token: string, pagination: PaginationState) {
+    return request<NotificationList>(withQuery("/api/user/notifications", pagination), {}, token);
   },
   markRead(token: string, notificationId: string) {
     return request<Notification>(

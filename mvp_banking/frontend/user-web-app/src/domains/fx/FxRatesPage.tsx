@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
+import type { ColDef } from "ag-grid-community";
 import { formatAmount } from "../../shared/utils/format";
+import type { PageResponse } from "../../shared/types/page";
 import type { FxRate } from "./types";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type FxRatesPageProps = {
   loading: boolean;
   fxRates: FxRate[];
+  fxRateRows: FxRate[];
+  fxRatePage: PageResponse<FxRate>;
+  onFxRatePageChange: (page: number, pageSize: number) => void;
 };
 
-export function FxRatesPage({ loading, fxRates }: FxRatesPageProps) {
+type FxRateCellParams = { data?: FxRate };
+
+export function FxRatesPage({ loading, fxRates, fxRateRows, fxRatePage, onFxRatePageChange }: FxRatesPageProps) {
   const [selectedRateId, setSelectedRateId] = useState("");
   const [amount, setAmount] = useState("1000");
   const [direction, setDirection] = useState<"baseToQuote" | "quoteToBase">("baseToQuote");
@@ -45,6 +53,24 @@ export function FxRatesPage({ loading, fxRates }: FxRatesPageProps) {
     : direction === "baseToQuote"
       ? parsedAmount * Number(selectedRate.rate)
       : parsedAmount / Number(selectedRate.rate);
+  const columnDefs: ColDef<FxRate>[] = [
+    {
+      headerName: "페어",
+      minWidth: 180,
+      cellRenderer: ({ data }: FxRateCellParams) => (data ? <span className="table-mono">{data.baseCurrency}/{data.quoteCurrency}</span> : "-"),
+    },
+    {
+      headerName: "환율",
+      minWidth: 160,
+      cellRenderer: ({ data }: FxRateCellParams) => (data ? <span className="table-amount">{Number(data.rate).toLocaleString()}</span> : "-"),
+    },
+    { headerName: "Source", field: "source", minWidth: 180 },
+    {
+      headerName: "Effective",
+      minWidth: 220,
+      cellRenderer: ({ data }: FxRateCellParams) => (data ? new Date(data.effectiveAt).toLocaleString() : "-"),
+    },
+  ];
 
   if (loading) {
     return (
@@ -171,36 +197,18 @@ export function FxRatesPage({ loading, fxRates }: FxRatesPageProps) {
             <h2>실시간 환율 보드</h2>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 180 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 220 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>페어</th>
-                <th>환율</th>
-                <th>Source</th>
-                <th>Effective</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fxRates.map((rate) => (
-                <tr key={rate.id}>
-                  <td className="table-mono">
-                    {rate.baseCurrency}/{rate.quoteCurrency}
-                  </td>
-                  <td className="table-amount">{Number(rate.rate).toLocaleString()}</td>
-                  <td>{rate.source}</td>
-                  <td>{new Date(rate.effectiveAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={fxRateRows}
+          columnDefs={columnDefs}
+          emptyMessage="표시할 환율 데이터가 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: fxRatePage.page + 1,
+            pageSize: fxRatePage.size,
+            total: fxRatePage.totalElements,
+            onChange: onFxRatePageChange,
+          }}
+        />
       </section>
     </>
   );

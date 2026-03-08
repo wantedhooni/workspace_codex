@@ -100,3 +100,5 @@
 - [x] user 입출금/환전/주식 주문 화면에 요약 카드·편의 안내 스트립·섹션 설명을 추가해 입력 전 판단 정보 가시성 개선
 - [x] user 업무 표의 글자 밀림을 줄이기 위해 공통 `data-table`에 x/y 스크롤, sticky header, 고정 레이아웃을 적용하고 환전/입출금/주식 주문 표의 컬럼 폭을 명시적으로 조정
 - [x] admin 공통 `OperationsGridTable`에도 기본 컬럼 폭/ellipsis/고정 레이아웃을 적용하고 user의 나머지 표(계좌/거래/알림/환율/포지션/연결계좌)까지 컬럼 폭 규칙을 전체 확장
+- [x] `admin-portal` / `user-web-app` 전 표를 `AG Grid React Community` 기준으로 공통 래퍼와 함께 전환하고, x/y 스크롤·sticky header·컬럼 폭 규칙을 AG Grid 테마로 통일
+- [x] user-api 목록 응답의 `page/size/total` 구조를 user-web-app 공통 `PageResponse`와 연결하고, 계좌/거래/입출금/환전/주식/알림/환율/연결계좌 그리드에 서버 페이징 footer를 적용

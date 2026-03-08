@@ -1527,6 +1527,97 @@ body {
   white-space: nowrap;
 }
 
+.app-ag-grid-shell {
+  height: 500px;
+  overflow: hidden;
+  border: 1px solid rgba(16, 42, 67, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --ag-font-family: "SUIT", "Pretendard", sans-serif;
+  --ag-font-size: 13px;
+  --ag-border-color: rgba(16, 42, 67, 0.08);
+  --ag-header-background-color: rgba(15, 106, 180, 0.06);
+  --ag-header-foreground-color: #6b7c93;
+  --ag-background-color: #ffffff;
+  --ag-odd-row-background-color: rgba(242, 247, 252, 0.72);
+  --ag-row-hover-color: rgba(230, 240, 249, 0.92);
+  --ag-wrapper-border-radius: 22px;
+  --ag-cell-horizontal-padding: 18px;
+  --ag-row-height: 72px;
+  --ag-header-height: 54px;
+}
+
+.app-ag-grid-shell .ag-header-cell-text {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.app-ag-grid-shell .ag-cell {
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.app-ag-grid-shell .ag-cell-wrapper,
+.app-ag-grid-shell .ag-cell-value {
+  width: 100%;
+}
+
+.app-grid-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.app-grid-footer-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #52667a;
+  font-size: 14px;
+}
+
+.app-grid-footer-meta strong {
+  color: #102a43;
+}
+
+.app-grid-footer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.app-grid-footer-actions select,
+.app-grid-footer-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 42, 67, 0.12);
+  background: #fff;
+  color: #102a43;
+  font: inherit;
+}
+
+.app-grid-footer-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.app-grid-empty {
+  color: #52667a;
+}
+
 .table-empty-row td {
   padding: 28px 24px;
 }

@@ -1,9 +1,10 @@
-import { request } from "../../shared/api/http";
+import { request, withQuery } from "../../shared/api/http";
+import type { PageResponse, PaginationState } from "../../shared/types/page";
 import type { CancelExchangeRequestPayload, CreateExchangeRequestPayload, ExchangeRequest } from "./types";
 
 export const exchangeApi = {
-  list(token: string) {
-    return request<ExchangeRequest[]>("/api/user/exchange-requests", {}, token);
+  list(token: string, pagination: PaginationState) {
+    return request<PageResponse<ExchangeRequest>>(withQuery("/api/user/exchange-requests", pagination), {}, token);
   },
   create(token: string, payload: CreateExchangeRequestPayload) {
     return request<ExchangeRequest>(

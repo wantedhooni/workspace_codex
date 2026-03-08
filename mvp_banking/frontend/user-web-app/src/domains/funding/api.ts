@@ -1,9 +1,10 @@
-import { request } from "../../shared/api/http";
+import { request, withQuery } from "../../shared/api/http";
+import type { PageResponse, PaginationState } from "../../shared/types/page";
 import type { CancelFundingRequestPayload, CreateFundingRequestPayload, FundingRequest } from "./types";
 
 export const fundingApi = {
-  list(token: string) {
-    return request<FundingRequest[]>("/api/user/funding-requests", {}, token);
+  list(token: string, pagination: PaginationState) {
+    return request<PageResponse<FundingRequest>>(withQuery("/api/user/funding-requests", pagination), {}, token);
   },
   create(token: string, payload: CreateFundingRequestPayload) {
     return request<FundingRequest>(

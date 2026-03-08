@@ -1,19 +1,33 @@
 import { useDeferredValue, useState } from "react";
+import type { ColDef } from "ag-grid-community";
 import { formatAmount } from "../../shared/utils/format";
+import type { PageResponse } from "../../shared/types/page";
 import type { Transaction } from "./types";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type TransactionsPageProps = {
   loading: boolean;
   transactions: Transaction[];
+  transactionRows: Transaction[];
+  transactionPage: PageResponse<Transaction>;
+  onTransactionPageChange: (page: number, pageSize: number) => void;
 };
 
-export function TransactionsPage({ loading, transactions }: TransactionsPageProps) {
+type TransactionCellParams = { data?: Transaction };
+
+export function TransactionsPage({
+  loading,
+  transactions,
+  transactionRows,
+  transactionPage,
+  onTransactionPageChange,
+}: TransactionsPageProps) {
   const [transactionFilter, setTransactionFilter] = useState("");
   const [transactionStatusFilter, setTransactionStatusFilter] = useState("ALL");
 
   const deferredTransactionFilter = useDeferredValue(transactionFilter);
 
-  const filteredTransactions = transactions.filter((transaction) => {
+  const filteredTransactions = transactionRows.filter((transaction) => {
     const normalized = deferredTransactionFilter.trim().toLowerCase();
     const matchesQuery =
       !normalized ||
@@ -27,6 +41,25 @@ export function TransactionsPage({ loading, transactions }: TransactionsPageProp
   const pendingCount = transactions.filter((transaction) => transaction.status === "PENDING").length;
   const completedCount = transactions.filter((transaction) => transaction.status === "COMPLETED").length;
   const latestTransaction = [...transactions].sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt))[0];
+  const columnDefs: ColDef<Transaction>[] = [
+    { headerName: "거래 유형", field: "transactionType", minWidth: 150 },
+    { headerName: "거래번호", field: "transactionNumber", minWidth: 210, cellClass: "table-mono" },
+    {
+      headerName: "금액",
+      minWidth: 170,
+      cellRenderer: ({ data }: TransactionCellParams) => (data ? <span className="table-amount">{formatAmount(data.amount, data.currency)}</span> : "-"),
+    },
+    {
+      headerName: "상태",
+      minWidth: 150,
+      cellRenderer: ({ data }: TransactionCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "일시",
+      minWidth: 190,
+      cellRenderer: ({ data }: TransactionCellParams) => (data ? new Date(data.occurredAt).toLocaleString() : "-"),
+    },
+  ];
 
   if (loading) {
     return (
@@ -95,48 +128,18 @@ export function TransactionsPage({ loading, transactions }: TransactionsPageProp
             </button>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 150 }} />
-              <col style={{ width: 210 }} />
-              <col style={{ width: 170 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 190 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>거래 유형</th>
-                <th>거래번호</th>
-                <th>금액</th>
-                <th>상태</th>
-                <th>일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.length ? (
-                filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td>{transaction.transactionType}</td>
-                    <td className="table-mono">{transaction.transactionNumber}</td>
-                    <td className="table-amount">{formatAmount(transaction.amount, transaction.currency)}</td>
-                    <td>
-                      <b className={`status-pill ${transaction.status.toLowerCase()}`}>{transaction.status}</b>
-                    </td>
-                    <td>{new Date(transaction.occurredAt).toLocaleString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={5}>
-                    <strong>조건에 맞는 거래가 없습니다.</strong>
-                    <p>검색어 또는 상태 필터를 조정해 주세요.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={filteredTransactions}
+          columnDefs={columnDefs}
+          emptyMessage="조건에 맞는 거래가 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: transactionPage.page + 1,
+            pageSize: transactionPage.size,
+            total: transactionPage.totalElements,
+            onChange: onTransactionPageChange,
+          }}
+        />
       </section>
     </>
   );

@@ -1,16 +1,24 @@
 import { useDeferredValue, useState } from "react";
+import type { ColDef } from "ag-grid-community";
 import type { Transaction } from "../transactions/types";
 import type { Account } from "./types";
+import type { PageResponse } from "../../shared/types/page";
 import { formatAmount } from "../../shared/utils/format";
 import { sortTransactionsByRecent } from "../../shared/utils/transactions";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type AccountsPageProps = {
   loading: boolean;
   accounts: Account[];
+  accountRows: Account[];
+  accountPage: PageResponse<Account>;
+  onAccountPageChange: (page: number, pageSize: number) => void;
   transactions: Transaction[];
 };
 
-export function AccountsPage({ loading, accounts, transactions }: AccountsPageProps) {
+type AccountCellParams = { data?: Account };
+
+export function AccountsPage({ loading, accounts, accountRows, accountPage, onAccountPageChange, transactions }: AccountsPageProps) {
   const [accountFilter, setAccountFilter] = useState("");
   const deferredAccountFilter = useDeferredValue(accountFilter);
   const activeAccounts = accounts.filter((account) => account.status === "ACTIVE");
@@ -18,7 +26,7 @@ export function AccountsPage({ loading, accounts, transactions }: AccountsPagePr
   const securitiesAccounts = accounts.filter((account) => account.accountType === "SECURITIES");
   const currencyCoverage = new Set(accounts.map((account) => account.currency)).size;
 
-  const filteredAccounts = accounts.filter((account) => {
+  const filteredAccounts = accountRows.filter((account) => {
     const normalized = deferredAccountFilter.trim().toLowerCase();
     if (!normalized) {
       return true;
@@ -30,6 +38,52 @@ export function AccountsPage({ loading, accounts, transactions }: AccountsPagePr
       account.accountNumber.toLowerCase().includes(normalized)
     );
   });
+  const columnDefs: ColDef<Account>[] = [
+    { headerName: "계좌번호", field: "accountNumber", minWidth: 190, cellClass: "table-mono" },
+    { headerName: "유형", field: "accountType", minWidth: 150 },
+    {
+      headerName: "잔액",
+      minWidth: 180,
+      cellRenderer: ({ data }: AccountCellParams) => (data ? <span className="table-amount">{formatAmount(data.balance, data.currency)}</span> : "-"),
+    },
+    {
+      headerName: "상태",
+      minWidth: 150,
+      cellRenderer: ({ data }: AccountCellParams) => (data ? <b className={`status-pill ${data.status.toLowerCase()}`}>{data.status}</b> : "-"),
+    },
+    {
+      headerName: "고객 ID",
+      minWidth: 150,
+      cellRenderer: ({ data }: AccountCellParams) => (data ? <span className="table-mono">{data.customerId.slice(0, 8)}</span> : "-"),
+    },
+    {
+      headerName: "최근 연결 거래",
+      minWidth: 320,
+      sortable: false,
+      cellRenderer: ({ data }: AccountCellParams) => {
+        if (!data) {
+          return "-";
+        }
+        const linkedTransactions = transactions
+          .filter((transaction) => transaction.accountId === data.id)
+          .sort(sortTransactionsByRecent);
+        return linkedTransactions.length ? (
+          <div className="table-cell-stack">
+            {linkedTransactions.slice(0, 3).map((transaction) => (
+              <div key={transaction.id}>
+                <strong>{transaction.transactionType}</strong>
+                <p>
+                  {formatAmount(transaction.amount, transaction.currency)} · {new Date(transaction.occurredAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="table-muted">연결된 거래 없음</span>
+        );
+      },
+    },
+  ];
 
   if (loading) {
     return (
@@ -89,72 +143,18 @@ export function AccountsPage({ loading, accounts, transactions }: AccountsPagePr
             </button>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 190 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 150 }} />
-              <col style={{ width: 320 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>계좌번호</th>
-                <th>유형</th>
-                <th>잔액</th>
-                <th>상태</th>
-                <th>고객 ID</th>
-                <th>최근 연결 거래</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAccounts.length ? (
-                filteredAccounts.map((account) => {
-                  const linkedTransactions = transactions
-                    .filter((transaction) => transaction.accountId === account.id)
-                    .sort(sortTransactionsByRecent);
-
-                  return (
-                    <tr key={account.id}>
-                      <td className="table-mono">{account.accountNumber}</td>
-                      <td>{account.accountType}</td>
-                      <td className="table-amount">{formatAmount(account.balance, account.currency)}</td>
-                      <td>
-                        <b className={`status-pill ${account.status.toLowerCase()}`}>{account.status}</b>
-                      </td>
-                      <td className="table-mono">{account.customerId.slice(0, 8)}</td>
-                      <td>
-                        {linkedTransactions.length ? (
-                          <div className="table-cell-stack">
-                            {linkedTransactions.slice(0, 3).map((transaction) => (
-                              <div key={transaction.id}>
-                                <strong>{transaction.transactionType}</strong>
-                                <p>
-                                  {formatAmount(transaction.amount, transaction.currency)} · {new Date(transaction.occurredAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="table-muted">연결된 거래 없음</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={6}>
-                    <strong>조건에 맞는 계좌가 없습니다.</strong>
-                    <p>검색어를 지우거나 상태를 다시 확인해 주세요.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={filteredAccounts}
+          columnDefs={columnDefs}
+          emptyMessage="조건에 맞는 계좌가 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: accountPage.page + 1,
+            pageSize: accountPage.size,
+            total: accountPage.totalElements,
+            onChange: onAccountPageChange,
+          }}
+        />
       </section>
     </>
   );

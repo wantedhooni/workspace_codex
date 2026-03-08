@@ -1,9 +1,10 @@
-import { request } from "../../shared/api/http";
+import { request, withQuery } from "../../shared/api/http";
+import type { PageResponse, PaginationState } from "../../shared/types/page";
 import type { CreateLinkedBankAccountPayload, LinkedBankAccount, VerifyLinkedBankAccountPayload } from "./types";
 
 export const linkedBankAccountApi = {
-  list(token: string) {
-    return request<LinkedBankAccount[]>("/api/user/linked-bank-accounts", {}, token);
+  list(token: string, pagination: PaginationState) {
+    return request<PageResponse<LinkedBankAccount>>(withQuery("/api/user/linked-bank-accounts", pagination), {}, token);
   },
   create(token: string, payload: CreateLinkedBankAccountPayload) {
     return request<LinkedBankAccount>(

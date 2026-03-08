@@ -1,11 +1,12 @@
 package com.revy.mvpbanking.transaction.presentation;
 
 import com.revy.mvpbanking.common.api.ApiResponse;
+import com.revy.mvpbanking.common.api.PageResponse;
 import com.revy.mvpbanking.common.support.CurrentPrincipalProvider;
 import com.revy.mvpbanking.transaction.application.TransactionQueryService;
-import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,12 +27,17 @@ public class UserTransactionController {
     }
 
     @GetMapping
-    public ApiResponse<List<TransactionSummaryResponse>> list() {
+    public ApiResponse<PageResponse<TransactionSummaryResponse>> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         var principal = currentPrincipalProvider.getCurrentPrincipal();
-        return ApiResponse.ok(
+        return ApiResponse.ok(PageResponse.from(
                 transactionQueryService.getTransactionsForEndUser(principal.getPrincipalId()).stream()
                         .map(TransactionSummaryResponse::from)
-                        .toList()
-        );
+                        .toList(),
+                page,
+                size
+        ));
     }
 }

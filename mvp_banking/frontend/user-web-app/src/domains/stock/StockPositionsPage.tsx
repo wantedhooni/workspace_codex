@@ -1,15 +1,86 @@
+import type { ColDef } from "ag-grid-community";
 import { formatAmount } from "../../shared/utils/format";
+import type { PageResponse } from "../../shared/types/page";
 import type { StockPosition } from "./types";
+import { AppGridTable } from "../../shared/components/AppGridTable";
 
 type StockPositionsPageProps = {
   loading: boolean;
   stockPositions: StockPosition[];
+  stockPositionRows: StockPosition[];
+  stockPositionPage: PageResponse<StockPosition>;
+  onStockPositionPageChange: (page: number, pageSize: number) => void;
 };
 
-export function StockPositionsPage({ loading, stockPositions }: StockPositionsPageProps) {
+type StockPositionCellParams = { data?: StockPosition };
+
+export function StockPositionsPage({
+  loading,
+  stockPositions,
+  stockPositionRows,
+  stockPositionPage,
+  onStockPositionPageChange,
+}: StockPositionsPageProps) {
   const totalMarketValue = stockPositions.reduce((sum, item) => sum + Number(item.marketValue ?? item.costBasis), 0);
   const totalUnrealizedPnl = stockPositions.reduce((sum, item) => sum + Number(item.unrealizedProfitLoss ?? 0), 0);
   const totalRealizedPnl = stockPositions.reduce((sum, item) => sum + Number(item.realizedProfitLoss), 0);
+  const columnDefs: ColDef<StockPosition>[] = [
+    { headerName: "종목", field: "symbol", minWidth: 130, cellClass: "table-mono" },
+    { headerName: "시장", field: "market", minWidth: 130 },
+    {
+      headerName: "보유 수량",
+      minWidth: 130,
+      cellRenderer: ({ data }: StockPositionCellParams) => (data ? `${Number(data.quantity).toLocaleString()}주` : "-"),
+    },
+    {
+      headerName: "평균 단가",
+      minWidth: 160,
+      cellRenderer: ({ data }: StockPositionCellParams) => (data ? <span className="table-amount">{formatAmount(data.averagePrice, data.currency)}</span> : "-"),
+    },
+    {
+      headerName: "현재가",
+      minWidth: 160,
+      cellRenderer: ({ data }: StockPositionCellParams) => (data ? <span className="table-amount">{data.currentPrice !== null ? formatAmount(data.currentPrice, data.currency) : "-"}</span> : "-"),
+    },
+    {
+      headerName: "평가금액",
+      minWidth: 170,
+      cellRenderer: ({ data }: StockPositionCellParams) => (data ? <span className="table-amount">{data.marketValue !== null ? formatAmount(data.marketValue, data.currency) : formatAmount(data.costBasis, data.currency)}</span> : "-"),
+    },
+    {
+      headerName: "평가 손익",
+      minWidth: 180,
+      cellRenderer: ({ data }: StockPositionCellParams) => data ? (
+        <div className="table-cell-stack">
+          <b className={`status-pill ${Number(data.unrealizedProfitLoss ?? 0) >= 0 ? "approved" : "rejected"}`}>
+            {data.unrealizedProfitLoss !== null ? formatAmount(data.unrealizedProfitLoss, data.currency) : "-"}
+          </b>
+          <p>
+            {data.unrealizedProfitRate !== null
+              ? `${(Number(data.unrealizedProfitRate) * 100).toFixed(2)}%`
+              : "시세 대기"}
+          </p>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "실현 손익",
+      minWidth: 180,
+      cellRenderer: ({ data }: StockPositionCellParams) => data ? (
+        <div className="table-cell-stack">
+          <b className={`status-pill ${Number(data.realizedProfitLoss) >= 0 ? "approved" : "rejected"}`}>
+            {formatAmount(data.realizedProfitLoss, data.currency)}
+          </b>
+          <p>{data.quoteSource ?? "quote n/a"}</p>
+        </div>
+      ) : "-",
+    },
+    {
+      headerName: "업데이트 일시",
+      minWidth: 200,
+      cellRenderer: ({ data }: StockPositionCellParams) => (data ? new Date(data.quoteEffectiveAt ?? data.updatedAt).toLocaleString() : "-"),
+    },
+  ];
 
   if (loading) {
     return (
@@ -51,80 +122,18 @@ export function StockPositionsPage({ loading, stockPositions }: StockPositionsPa
             <h2>보유 포지션</h2>
           </div>
         </div>
-        <div className="table-shell">
-          <table className="data-table">
-            <colgroup>
-              <col style={{ width: 130 }} />
-              <col style={{ width: 130 }} />
-              <col style={{ width: 130 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 160 }} />
-              <col style={{ width: 170 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 180 }} />
-              <col style={{ width: 200 }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>종목</th>
-                <th>시장</th>
-                <th>보유 수량</th>
-                <th>평균 단가</th>
-                <th>현재가</th>
-                <th>평가금액</th>
-                <th>평가 손익</th>
-                <th>실현 손익</th>
-                <th>업데이트 일시</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stockPositions.length ? (
-                stockPositions.map((item) => (
-                  <tr key={item.id}>
-                    <td className="table-mono">{item.symbol}</td>
-                    <td>{item.market}</td>
-                    <td>{Number(item.quantity).toLocaleString()}주</td>
-                    <td className="table-amount">{formatAmount(item.averagePrice, item.currency)}</td>
-                    <td className="table-amount">
-                      {item.currentPrice !== null ? formatAmount(item.currentPrice, item.currency) : "-"}
-                    </td>
-                    <td className="table-amount">
-                      {item.marketValue !== null ? formatAmount(item.marketValue, item.currency) : formatAmount(item.costBasis, item.currency)}
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <b className={`status-pill ${Number(item.unrealizedProfitLoss ?? 0) >= 0 ? "approved" : "rejected"}`}>
-                          {item.unrealizedProfitLoss !== null ? formatAmount(item.unrealizedProfitLoss, item.currency) : "-"}
-                        </b>
-                        <p>
-                          {item.unrealizedProfitRate !== null
-                            ? `${(Number(item.unrealizedProfitRate) * 100).toFixed(2)}%`
-                            : "시세 대기"}
-                        </p>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="table-cell-stack">
-                        <b className={`status-pill ${Number(item.realizedProfitLoss) >= 0 ? "approved" : "rejected"}`}>
-                          {formatAmount(item.realizedProfitLoss, item.currency)}
-                        </b>
-                        <p>{item.quoteSource ?? "quote n/a"}</p>
-                      </div>
-                    </td>
-                    <td>{new Date(item.quoteEffectiveAt ?? item.updatedAt).toLocaleString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr className="table-empty-row">
-                  <td colSpan={9}>
-                    <strong>보유 포지션이 없습니다.</strong>
-                    <p>승인된 주식 주문이 생기면 포지션이 표시됩니다.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <AppGridTable
+          rowData={stockPositionRows}
+          columnDefs={columnDefs}
+          emptyMessage="보유 포지션이 없습니다."
+          getRowId={(row) => row.id}
+          pagination={{
+            current: stockPositionPage.page + 1,
+            pageSize: stockPositionPage.size,
+            total: stockPositionPage.totalElements,
+            onChange: onStockPositionPageChange,
+          }}
+        />
       </section>
     </>
   );

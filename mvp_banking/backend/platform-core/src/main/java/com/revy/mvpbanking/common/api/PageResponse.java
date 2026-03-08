@@ -19,4 +19,20 @@ public record PageResponse<T>(
                 page.getTotalPages()
         );
     }
+
+    public static <T> PageResponse<T> from(List<T> items, int page, int size) {
+        int normalizedPage = Math.max(page, 0);
+        int normalizedSize = Math.max(size, 1);
+        int totalElements = items.size();
+        int fromIndex = Math.min(normalizedPage * normalizedSize, totalElements);
+        int toIndex = Math.min(fromIndex + normalizedSize, totalElements);
+        int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / normalizedSize);
+        return new PageResponse<>(
+                items.subList(fromIndex, toIndex),
+                normalizedPage,
+                normalizedSize,
+                totalElements,
+                totalPages
+        );
+    }
 }

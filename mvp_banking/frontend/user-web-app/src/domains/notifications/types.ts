@@ -1,3 +1,5 @@
+import type { PageResponse } from "../../shared/types/page";
+
 export type Notification = {
   id: string;
   category: string;
@@ -14,5 +16,4 @@ export type Notification = {
 
 export type NotificationList = {
   unreadCount: number;
-  items: Notification[];
-};
+} & PageResponse<Notification>;
