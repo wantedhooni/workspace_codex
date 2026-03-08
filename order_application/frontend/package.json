@@ -1,0 +1,13 @@
+{
+  "name": "order-application-frontend",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:admin": "npm run dev --workspace admin-app",
+    "dev:web": "npm run dev --workspace web-app",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
+}

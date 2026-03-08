@@ -1,0 +1,5 @@
+rootProject.name = "order-application-backend"
+
+include("backend-common")
+include("api-admin")
+include("web-api")
