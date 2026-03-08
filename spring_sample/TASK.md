@@ -1,5 +1,13 @@
 # 작업 내역
 
+- `sample_cqrs`, `sample_saga`, `transactional_outbox`의 `README.md`를 한글로 확장하고 아키텍처 상세 설명 및 관련 링크 추가 완료
+- `sample_cqrs` 폴더에 Spring Boot 기반 CQRS 샘플 프로젝트 생성 및 구현 완료
+- 명령 모델/조회 모델 분리, 이벤트 기반 프로젝션 갱신, 조회 API, 통합 테스트, 실행 문서 작성 완료
+- `sample_saga` 폴더에 Spring Boot 기반 Saga 샘플 프로젝트 생성 및 구현 완료
+- Saga 오케스트레이션, 결제/재고 단계, 보상 트랜잭션, 상태 조회 API, 통합 테스트, 실행 문서 작성 완료
+- `transactional_outbox` 폴더에 Spring Boot + JPA + Kafka 기반 Transactional Outbox 샘플 프로젝트 생성 완료
+- 주문 저장과 아웃박스 적재를 동일 트랜잭션으로 처리하는 애플리케이션 서비스 및 도메인 모델 구현 완료
+- 스케줄러 기반 Outbox Relay, Kafka 발행, 상태 조회 API, 통합 테스트, 실행 문서 작성 완료
 - `sample_redisson` 폴더에 Spring Boot Redisson 샘플 애플리케이션 생성 완료
 - Redisson 기본 연결 설정 및 Redis 단일 노드 접속 구성 완료
 - 키-값 저장, 원자 카운터, 분산 락 예제 API 추가 완료
