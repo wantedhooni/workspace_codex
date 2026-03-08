@@ -239,8 +239,15 @@ body {
   overflow: hidden;
 }
 
+.ops-grid-table .ant-table {
+  table-layout: fixed;
+}
+
 .ops-grid-table .ant-table-cell {
   vertical-align: top;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .ops-grid-table .ant-table-thead > tr > th {
@@ -249,6 +256,17 @@ body {
   font-weight: 700;
   white-space: nowrap;
   border-bottom: 1px solid #d6e0ea;
+}
+
+.ops-grid-table .ant-table-tbody > tr > td .ant-typography,
+.ops-grid-table .ant-table-tbody > tr > td div,
+.ops-grid-table .ant-table-tbody > tr > td span,
+.ops-grid-table .ant-table-tbody > tr > td small {
+  overflow-wrap: anywhere;
+}
+
+.ops-grid-table .ant-table-sticky-scroll {
+  bottom: 8px !important;
 }
 
 .ops-grid-table .ant-table-tbody > tr:nth-child(even) > td {

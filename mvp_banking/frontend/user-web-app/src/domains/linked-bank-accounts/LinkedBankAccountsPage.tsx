@@ -380,6 +380,16 @@ export function LinkedBankAccountsPage({
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 150 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 220 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 170 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>은행</th>
@@ -414,7 +424,7 @@ export function LinkedBankAccountsPage({
                         : item.primaryWithdrawal ? "기본 예정" : "-"}
                     </td>
                     <td>{item.verifiedAt ? new Date(item.verifiedAt).toLocaleString() : "검증 대기"}</td>
-                    <td>
+                    <td className="table-action-cell">
                       {item.status === "ACTIVE" ? (
                         item.primaryWithdrawal ? (
                           <span className="table-muted">현재 기본 계좌</span>

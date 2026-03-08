@@ -74,6 +74,14 @@ export function NotificationsPage({
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 130 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 360 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 220 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>우선순위</th>
@@ -107,7 +115,7 @@ export function NotificationsPage({
                         {notification.read ? "읽음" : "미확인"}
                       </span>
                     </td>
-                    <td>
+                    <td className="table-action-cell">
                       <div className="table-action-row">
                         <Link className="inline-link-button" to={notification.actionPath === "/" ? "/" : notification.actionPath}>
                           바로가기

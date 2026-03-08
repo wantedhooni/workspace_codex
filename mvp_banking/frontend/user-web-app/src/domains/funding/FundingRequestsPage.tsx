@@ -558,6 +558,17 @@ export function FundingRequestsPage({
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 180 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 240 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 220 }} />
+              <col style={{ width: 180 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>요청번호</th>

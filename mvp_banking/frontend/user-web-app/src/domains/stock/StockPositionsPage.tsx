@@ -53,6 +53,17 @@ export function StockPositionsPage({ loading, stockPositions }: StockPositionsPa
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 130 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 130 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 200 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>종목</th>

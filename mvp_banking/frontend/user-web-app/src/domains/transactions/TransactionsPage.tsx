@@ -97,6 +97,13 @@ export function TransactionsPage({ loading, transactions }: TransactionsPageProp
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 150 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 190 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>거래 유형</th>

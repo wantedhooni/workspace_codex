@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 const DEFAULT_PAGE_SIZE_OPTIONS = ["10", "20", "50", "100"];
 const DEFAULT_SCROLL_HEIGHT = 500;
+const DEFAULT_COLUMN_WIDTH = 160;
 
 type OperationsGridTableProps<RecordType extends object> = TableProps<RecordType>;
 
@@ -78,14 +79,25 @@ function resolveColumns<RecordType extends object>(
         children: resolveColumns(column.children),
       };
     }
+    const resolvedWidth = "width" in column && column.width ? column.width : DEFAULT_COLUMN_WIDTH;
     if (!("dataIndex" in column) || column.sorter) {
-      return column;
+      return {
+        ...column,
+        width: resolvedWidth,
+        ellipsis: "ellipsis" in column ? column.ellipsis : true,
+      };
     }
     if (typeof column.dataIndex === "undefined") {
-      return column;
+      return {
+        ...column,
+        width: resolvedWidth,
+        ellipsis: "ellipsis" in column ? column.ellipsis : true,
+      };
     }
     return {
       ...column,
+      width: resolvedWidth,
+      ellipsis: "ellipsis" in column ? column.ellipsis : true,
       sorter: (a: RecordType, b: RecordType) => compareValues(
         extractDataIndexValue(a, column.dataIndex),
         extractDataIndexValue(b, column.dataIndex),

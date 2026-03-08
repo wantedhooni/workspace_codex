@@ -173,6 +173,12 @@ export function FxRatesPage({ loading, fxRates }: FxRatesPageProps) {
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 180 }} />
+              <col style={{ width: 160 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 220 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>페어</th>

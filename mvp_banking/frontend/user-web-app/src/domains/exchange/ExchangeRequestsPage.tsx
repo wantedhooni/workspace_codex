@@ -426,6 +426,18 @@ export function ExchangeRequestsPage({
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 180 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 240 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 200 }} />
+              <col style={{ width: 230 }} />
+              <col style={{ width: 120 }} />
+              <col style={{ width: 180 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>요청번호</th>
@@ -499,7 +511,7 @@ export function ExchangeRequestsPage({
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="table-action-cell">
                       {canCancelExchangeRequest(item.status) ? (
                         <button
                           type="button"

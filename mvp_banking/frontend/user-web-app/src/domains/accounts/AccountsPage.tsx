@@ -91,6 +91,14 @@ export function AccountsPage({ loading, accounts, transactions }: AccountsPagePr
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 190 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 320 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>계좌번호</th>

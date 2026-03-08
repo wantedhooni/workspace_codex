@@ -1414,7 +1414,8 @@ body {
 }
 
 .table-shell {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 500px;
   border: 1px solid rgba(16, 42, 67, 0.08);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.78);
@@ -1422,13 +1423,17 @@ body {
 }
 
 .data-table {
-  width: 100%;
-  min-width: 860px;
+  width: max-content;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
 .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 16px 18px;
   text-align: left;
   font-size: 12px;
@@ -1437,6 +1442,7 @@ body {
   text-transform: uppercase;
   color: #6b7c93;
   background: rgba(15, 106, 180, 0.06);
+  white-space: nowrap;
 }
 
 .data-table tbody td {
@@ -1444,6 +1450,7 @@ body {
   vertical-align: top;
   border-top: 1px solid rgba(16, 42, 67, 0.08);
   color: #334e68;
+  line-height: 1.5;
 }
 
 .data-table tbody tr:nth-child(even) {
@@ -1458,6 +1465,8 @@ body {
   font-family: "SFMono-Regular", "Menlo", monospace;
   font-size: 13px;
   color: #243b53;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .table-amount {
@@ -1468,17 +1477,22 @@ body {
 .table-cell-stack {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .table-cell-stack strong {
   color: #102a43;
   font-size: 14px;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .table-cell-stack p {
   margin: 0;
   color: #607087;
   font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .table-priority-text {
@@ -1496,9 +1510,21 @@ body {
 
 .table-note {
   margin: 0;
-  max-width: 320px;
   color: #52667a;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.table-action-cell {
+  min-width: 112px;
+}
+
+.table-action-cell .secondary-button.compact,
+.table-action-cell .table-inline-button,
+.table-action-cell .inline-link-button {
+  width: 100%;
+  white-space: nowrap;
 }
 
 .table-empty-row td {

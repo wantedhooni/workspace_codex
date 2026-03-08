@@ -465,6 +465,19 @@ export function StockOrdersPage({
         </div>
         <div className="table-shell">
           <table className="data-table">
+            <colgroup>
+              <col style={{ width: 190 }} />
+              <col style={{ width: 150 }} />
+              <col style={{ width: 220 }} />
+              <col style={{ width: 170 }} />
+              <col style={{ width: 200 }} />
+              <col style={{ width: 210 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 230 }} />
+              <col style={{ width: 190 }} />
+              <col style={{ width: 120 }} />
+              <col style={{ width: 180 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>주문번호</th>
@@ -578,7 +591,7 @@ export function StockOrdersPage({
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="table-action-cell">
                       {canCancelOrder(item.status) ? (
                         <button
                           type="button"
