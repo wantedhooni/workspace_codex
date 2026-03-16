@@ -1,0 +1,8 @@
+.DS_Store
+.env
+.idea
+.vscode
+node_modules
+frontend/.next
+frontend/out
+backend/target

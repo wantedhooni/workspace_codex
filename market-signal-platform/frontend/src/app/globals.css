@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(200, 116, 56, 0.18), transparent 22%),
+    radial-gradient(circle at 85% 12%, rgba(28, 88, 73, 0.12), transparent 24%),
+    linear-gradient(180deg, #fbf8ef 0%, #f1ead9 100%);
+  color: #10212b;
+  font-family: var(--font-manrope), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+table {
+  border-collapse: collapse;
+}

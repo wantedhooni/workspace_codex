@@ -1,0 +1,159 @@
+{
+  "snapshotDate": "2026-03-13",
+  "sources": [
+    "Stooq daily OHLCV",
+    "FRED DGS10",
+    "Stooq ETF proxies for dollar, oil, and index futures"
+  ],
+  "defaultWatchlist": [
+    { "ticker": "XOM", "companyName": "Exxon Mobil" },
+    { "ticker": "CVX", "companyName": "Chevron" },
+    { "ticker": "NFLX", "companyName": "Netflix" },
+    { "ticker": "NVDA", "companyName": "NVIDIA" },
+    { "ticker": "META", "companyName": "Meta Platforms" }
+  ],
+  "macroSnapshot": {
+    "tenYearYieldChange": 0.06,
+    "dxyChange": 0.76,
+    "oilChange": 1.27,
+    "futuresChange": -0.57
+  },
+  "sectorSnapshots": [
+    { "sectorName": "ENERGY", "strengthScore": 74.67 },
+    { "sectorName": "SOFTWARE", "strengthScore": 53.38 },
+    { "sectorName": "CLOUD", "strengthScore": 47.76 },
+    { "sectorName": "SEMICONDUCTOR", "strengthScore": 39.70 }
+  ],
+  "stockSnapshots": [
+    {
+      "ticker": "NVDA",
+      "companyName": "NVIDIA",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "MSFT",
+      "companyName": "Microsoft",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "GOOGL",
+      "companyName": "Alphabet",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "AMZN",
+      "companyName": "Amazon",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": true,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "TSLA",
+      "companyName": "Tesla",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "META",
+      "companyName": "Meta Platforms",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": true,
+      "negativeNewsWeakPrice": true
+    },
+    {
+      "ticker": "AAPL",
+      "companyName": "Apple",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "AVGO",
+      "companyName": "Broadcom",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": true,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "XOM",
+      "companyName": "Exxon Mobil",
+      "above20Dma": true,
+      "above50Dma": true,
+      "relativeStrengthStrong": true,
+      "earningsReactionPositive": true,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "CVX",
+      "companyName": "Chevron",
+      "above20Dma": true,
+      "above50Dma": true,
+      "relativeStrengthStrong": true,
+      "earningsReactionPositive": true,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "JPM",
+      "companyName": "JPMorgan Chase",
+      "above20Dma": false,
+      "above50Dma": false,
+      "relativeStrengthStrong": false,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "PLTR",
+      "companyName": "Palantir",
+      "above20Dma": true,
+      "above50Dma": false,
+      "relativeStrengthStrong": true,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    },
+    {
+      "ticker": "NFLX",
+      "companyName": "Netflix",
+      "above20Dma": true,
+      "above50Dma": true,
+      "relativeStrengthStrong": true,
+      "earningsReactionPositive": false,
+      "volumeSurge": false,
+      "negativeNewsWeakPrice": false
+    }
+  ]
+}

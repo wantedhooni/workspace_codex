@@ -1,0 +1,8 @@
+.git
+.gitignore
+.env
+backend/target
+frontend/.next
+frontend/node_modules
+node_modules
+**/.DS_Store

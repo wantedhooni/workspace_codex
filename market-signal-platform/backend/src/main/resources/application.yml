@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: market-signal-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/market_signal}
+    username: ${DB_USERNAME:market_signal}
+    password: ${DB_PASSWORD:market_signal}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+      schema: classpath:db/batch/schema-postgresql-idempotent.sql
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+      schema: classpath:db/quartz/tables-postgresql-idempotent.sql
+    overwrite-existing-jobs: true
+    properties:
+      org.quartz.scheduler.instanceName: marketSignalScheduler
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.threadPool.threadCount: 5
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.useProperties: false
+      org.quartz.jobStore.misfireThreshold: 60000
+      org.quartz.jobStore.tablePrefix: QRTZ_
+      org.quartz.jobStore.isClustered: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    issuer: market-signal-platform
+    access-token-expiration-minutes: 30
+    refresh-token-expiration-days: 14
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  seed:
+    enabled: ${SEED_DATA_ENABLED:${DEMO_DATA_ENABLED:true}}
+    replace-market-data: ${SEED_REPLACE_MARKET_DATA:true}
+  batch:
+    report:
+      cron: ${REPORT_BATCH_CRON:0 0 8 ? * MON-FRI}
+      zone-id: ${REPORT_BATCH_ZONE:Asia/Seoul}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.hibernate.SQL: warn
