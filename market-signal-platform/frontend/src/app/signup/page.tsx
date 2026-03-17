@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SignupForm } from "@/features/auth/signup-form";
+import { SignupForm } from "@/features/auth/components/signup-form";
 
 const signupBenefits = [
   "리포트, 관심 종목, 뉴스 분석을 보호된 워크스페이스에서 관리",

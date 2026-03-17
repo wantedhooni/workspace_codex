@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LoginForm } from "@/features/auth/login-form";
+import { LoginForm } from "@/features/auth/components/login-form";
 
 const valueProps = [
   "시장 레짐과 선도 섹터를 아침 브리핑 카드로 즉시 확인",

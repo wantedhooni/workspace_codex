@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { BatchControlView } from "@/features/batch/batch-control-view";
+import { BatchControlView } from "@/features/batch/components/batch-control-view";
 
 export default function BatchOperationsPage() {
   return (

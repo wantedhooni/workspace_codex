@@ -6,6 +6,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 `blue-green-nginx`는 Docker 없이 Nginx + 로컬 프로세스 기반 Blue-Green 배포를 `sh` 스크립트로 운영하는 샘플이다.
 `bllue-green-docker`는 Docker Compose + Nginx 업스트림 전환 기반 Blue-Green 배포/롤백 샘플이다.
 `sample_file_stream`은 JPA 메타데이터와 Local/S3 저장소를 분리해 파일 업로드/다운로드를 처리하는 샘플이다.
+`smaple_multi-tenancy`는 JWT와 `tenant_id` 분리를 결합해 멀티테넌시를 시연하는 백엔드/프론트엔드 통합 샘플이다.
 
 ## 프로젝트 지도
 
@@ -28,6 +29,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | --- | --- | --- |
 | `sample_redisson` | Redis 기반 키-값 저장, 원자 카운터, 분산 락 샘플 | Spring Boot, Redisson, Redis |
 | `sample_file_stream` | JPA 메타데이터 + Local/S3 파일 저장/다운로드 샘플 | Spring Boot, JPA, H2, AWS S3 SDK |
+| `smaple_multi-tenancy` | JWT 기반 테넌트 분리와 관리 화면을 함께 보여주는 샘플 | Spring Boot, JPA, Spring Security, JWT, Next.js |
 | `sample_batch` | DB 기반 Spring Batch + Quartz 대용량 처리 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
 | `sample_batch_quartz_dashboard` | Batch/Quartz 메타데이터와 운영 화면을 함께 제공하는 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
 | `sample_native_image` | GraalVM Native Image 빌드 준비 샘플 | Spring Boot, AOT, RuntimeHints |
@@ -92,6 +94,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_secure_bff && ./gradlew boot
 cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew bootRun --args='--server.port=8085'
 cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8086'
 cd /Users/revy/workspace_codex/spring_sample/sample_file_stream && ./gradlew bootRun --args='--server.port=8087'
+cd /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy && ./scripts/all-start.sh
 ```
 
 위 명령은 동시 실행 기준 예시다. 개별 프로젝트만 실행할 때는 각 프로젝트 `README.md`의 기본 포트를 그대로 사용하면 된다.
@@ -153,6 +156,8 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | --- | --- |
 | `sample_redisson` | `8080` |
 | `sample_file_stream` | `8080` |
+| `smaple_multi-tenancy/backend` | `8086` |
+| `smaple_multi-tenancy/frontend` | `3000` |
 | `sample_batch` | `8080` |
 | `sample_ai_bff` | `8080` |
 | `sample_secure_bff` | `8080` |
@@ -191,6 +196,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 
 - [sample_redisson/README.md](/Users/revy/workspace_codex/spring_sample/sample_redisson/README.md)
 - [sample_file_stream/README.md](/Users/revy/workspace_codex/spring_sample/sample_file_stream/README.md)
+- [smaple_multi-tenancy/README.md](/Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/README.md)
 - [sample_batch/README.md](/Users/revy/workspace_codex/spring_sample/sample_batch/README.md)
 - [sample_ai_bff/README.md](/Users/revy/workspace_codex/spring_sample/sample_ai_bff/README.md)
 - [sample_secure_bff/README.md](/Users/revy/workspace_codex/spring_sample/sample_secure_bff/README.md)
@@ -219,6 +225,11 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample_redisson && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_file_stream && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/backend && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/frontend && npm install && npm run build
+sh -n /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/scripts/all-start.sh
+sh -n /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/scripts/all-stop.sh
+sh -n /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/scripts/all-restart.sh
 cd /Users/revy/workspace_codex/spring_sample/sample_batch && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_ai_bff && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_secure_bff && ./gradlew test

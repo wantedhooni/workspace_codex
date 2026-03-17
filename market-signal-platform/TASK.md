@@ -21,6 +21,8 @@
 - Quartz / Spring Batch를 JDBC 메타데이터 기반으로 운영 관리하도록 고도화 완료
 - 배치 운영 상세 API에 JobExecution / StepExecution / Quartz Trigger JDBC 조회 추가 완료
 - Spring Batch PostgreSQL 시퀀스 호환 문제(`batch_job_seq`) 수정으로 시작 배치 자동 실행 복구 완료
+- 백엔드 도메인별 소스 경로를 `controller / service / entity / repository / api` 기준으로 재정렬 완료
+- 프론트엔드 feature 경로를 `api / components / types / context` 기준으로 재정렬 완료
 - README와 테스트 시나리오를 최신 기능 기준으로 재정리 완료
 
 ## 검증 결과
@@ -44,3 +46,4 @@
 - `frontend`: `/operations/batch` 운영 화면과 대시보드 배치 운영 요약 UI 추가 후 `npm run build` 통과
 - `runtime`: PostgreSQL `batch_job_seq`, `batch_job_execution`, `batch_step_execution`, `qrtz_triggers` 기준으로 시작 시드 배치와 수동 리포트 배치가 모두 `COMPLETED` 기록되는 것 확인
 - `runtime`: `GET /api/batch/jobs`, `GET /api/batch/jobs/{jobName}/metadata`, `POST /api/batch/jobs/daily-report-generate/run`, `http://localhost:13000/operations/batch` 응답 200 확인
+- `structure`: 백엔드 도메인 디렉터리를 `controller / service / entity / repository / api` 기준으로 재정렬하고, 프론트엔드 feature 디렉터리를 `api / components / types / context` 기준으로 재정렬한 뒤 import 정리 완료

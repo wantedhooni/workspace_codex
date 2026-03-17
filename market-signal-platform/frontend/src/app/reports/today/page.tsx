@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { ReportTable } from "@/features/report/report-table";
+import { ReportTable } from "@/features/report/components/report-table";
 
 export default function TodayReportPage() {
   return (

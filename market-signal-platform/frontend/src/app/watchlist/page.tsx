@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { WatchlistView } from "@/features/watchlist/watchlist-view";
+import { WatchlistView } from "@/features/watchlist/components/watchlist-view";
 
 export default function WatchlistPage() {
   return (

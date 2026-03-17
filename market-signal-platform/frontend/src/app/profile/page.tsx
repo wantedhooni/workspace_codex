@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { ProfileForm } from "@/features/profile/profile-form";
+import { ProfileForm } from "@/features/profile/components/profile-form";
 
 export default function ProfilePage() {
   return (

@@ -110,3 +110,8 @@
 - `sample-ai-bot/scripts/all-start.sh`에 Backend/Frontend 백그라운드 기동을 재반영하고, 짧은 PID 생존 확인 후 종료되는 단순 실행 흐름으로 수정 완료
 - `sample-ai-bot/scripts/all-start.sh`를 `bootJar + java -jar` 기반으로 보강해 백엔드 PID 추적 안정화 및 포트 점유/대기 검증 로직 반영 완료
 - `sample-ai-bot/frontend` 채팅 로그에 하단 anchor 스크롤을 추가해 사용자/AI 최신 메시지 기준으로 자동 포커스 이동되도록 수정 완료
+- `smaple_multi-tenancy` 폴더에 Spring Boot + JPA + JWT + Next.js 기반 멀티테넌시 데모 프로젝트 생성 완료
+- `backend`에 JWT 로그인, `tenant_id` 기반 데이터 격리, 프로젝트 대시보드/등록/상태 변경 API, 시드 데이터, 통합 테스트 구현 완료
+- `frontend`에 테넌트 전환 로그인, 대시보드, 프로젝트 등록/상태 변경 데모 페이지 구현 완료
+- `smaple_multi-tenancy/scripts`에 전체 시작/중지/재시작 스크립트와 접속 URL/데모 계정 출력 기능 추가 완료
+- `smaple_multi-tenancy/README.md`, 루트 `README.md`, `PLANS.md`, `TASK.md`를 신규 프로젝트 기준으로 최신화 완료

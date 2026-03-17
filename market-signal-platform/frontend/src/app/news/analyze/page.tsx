@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { NewsAnalyzeForm } from "@/features/news/news-analyze-form";
+import { NewsAnalyzeForm } from "@/features/news/components/news-analyze-form";
 
 export default function NewsAnalyzePage() {
   return (

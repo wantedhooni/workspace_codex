@@ -1,0 +1,30 @@
+server:
+  port: ${BACKEND_PORT:8086}
+
+spring:
+  application:
+    name: smaple-multi-tenancy-backend
+  datasource:
+    url: jdbc:h2:file:./runtime/data/multitenancy;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+
+app:
+  security:
+    jwt:
+      issuer: smaple-multi-tenancy
+      secret: smaple-multi-tenancy-demo-secret-key-2026-for-jwt-signing
+      expiration-minutes: 480

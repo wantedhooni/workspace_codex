@@ -25,6 +25,13 @@ market-signal-platform
 - `redis`: 오늘의 리포트 캐시 저장
 - `docker`: 프론트엔드/백엔드 이미지 빌드용 Dockerfile 보관
 
+### 도메인 폴더 규칙
+- `backend/src/main/java/com/example/marketsignal/<domain>`: 도메인 기준 루트
+- 백엔드 하위 폴더: `controller`, `service`, `entity`, `repository`, `api`
+- 백엔드는 물리 폴더만 세분화하고 Java package는 기존 도메인 단위(`com.example.marketsignal.<domain>`)를 유지해 운영 중 import churn과 테스트 리스크를 낮췄습니다.
+- `frontend/src/features/<domain>`: 기능 기준 루트
+- 프론트엔드 하위 폴더: `api`, `components`, `types`, `context`
+
 ### 핵심 흐름
 1. 사용자는 회원가입 또는 로그인으로 access token을 발급받습니다.
 2. refresh token은 쿠키로 유지되고, 프론트엔드 API 클라이언트가 401 응답 시 자동 재발급을 시도합니다.
@@ -148,7 +155,7 @@ npm run dev
 
 시드 데이터:
 - 시장 시드 파일은 [real-market-seed.json](/Users/revy/workspace_codex/market-signal-platform/backend/src/main/resources/seed/real-market-seed.json) 에 저장됩니다.
-- 적재 서비스는 [RealMarketSeedService.java](/Users/revy/workspace_codex/market-signal-platform/backend/src/main/java/com/example/marketsignal/batch/RealMarketSeedService.java) 에서 동작하고, 시작 시 [BatchStartupInitializer.java](/Users/revy/workspace_codex/market-signal-platform/backend/src/main/java/com/example/marketsignal/batch/BatchStartupInitializer.java) 가 Spring Batch 작업으로 실행합니다.
+- 적재 서비스는 [RealMarketSeedService.java](/Users/revy/workspace_codex/market-signal-platform/backend/src/main/java/com/example/marketsignal/batch/service/RealMarketSeedService.java) 에서 동작하고, 시작 시 [BatchStartupInitializer.java](/Users/revy/workspace_codex/market-signal-platform/backend/src/main/java/com/example/marketsignal/batch/service/BatchStartupInitializer.java) 가 Spring Batch 작업으로 실행합니다.
 - `earningsReactionPositive`, `negativeNewsWeakPrice` 는 실제 가격/거래량 흐름을 반영한 보수적 프록시로 저장됩니다.
 
 ### 뉴스 분석

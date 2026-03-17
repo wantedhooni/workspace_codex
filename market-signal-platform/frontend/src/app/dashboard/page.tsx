@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AuthGuard } from "@/components/layout/auth-guard";
-import { DashboardView } from "@/features/dashboard/dashboard-view";
+import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 
 export default function DashboardPage() {
   return (
