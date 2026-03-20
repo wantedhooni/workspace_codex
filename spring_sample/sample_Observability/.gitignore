@@ -1,0 +1,6 @@
+/.gradle/
+/build/
+/runtime/data/*.db
+/runtime/data/*.trace.db
+/runtime/logs/*.log
+/runtime/pids/*.pid

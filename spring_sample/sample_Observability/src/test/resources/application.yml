@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:observability-test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+
+app:
+  security:
+    jwt:
+      issuer: sample-observability-test
+      secret: sample-observability-test-secret-key-2026-for-jwt-signing
+      expiration-minutes: 60
