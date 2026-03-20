@@ -7,6 +7,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 `bllue-green-docker`는 Docker Compose + Nginx 업스트림 전환 기반 Blue-Green 배포/롤백 샘플이다.
 `sample_file_stream`은 JPA 메타데이터와 Local/S3 저장소를 분리해 파일 업로드/다운로드를 처리하는 샘플이다.
 `smaple_multi-tenancy`는 JWT와 `tenant_id` 분리를 결합해 멀티테넌시를 시연하는 백엔드/프론트엔드 통합 샘플이다.
+`sample_Observability`는 JPA, JWT, Prometheus, Grafana를 하나의 운영형 API에 묶어 관측 흐름을 시연하는 샘플이다.
 
 ## 프로젝트 지도
 
@@ -34,6 +35,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | `sample_batch_quartz_dashboard` | Batch/Quartz 메타데이터와 운영 화면을 함께 제공하는 샘플 | Spring Boot, Spring Batch, Quartz, PostgreSQL |
 | `sample_native_image` | GraalVM Native Image 빌드 준비 샘플 | Spring Boot, AOT, RuntimeHints |
 | `sample_grafana_prometheus` | Prometheus 수집과 Grafana 대시보드 프로비저닝 샘플 | Spring Boot, Micrometer, Prometheus, Grafana |
+| `sample_Observability` | JWT 인증 주문 API와 운영 메트릭 대시보드를 함께 제공하는 샘플 | Spring Boot, JPA, Spring Security, JWT, Prometheus, Grafana |
 | `r2dbc` | PostgreSQL 기반 반응형 고객 계정 CRUD 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
 | `r2dbc-auditlog` | 승인 요청과 감사 로그를 함께 저장하는 반응형 샘플 | Spring Boot, WebFlux, Spring Data R2DBC, PostgreSQL |
 | `blue-green-nginx` | Docker 없이 로컬 프로세스 Blue-Green 배포/롤백 샘플 | Spring Boot, Nginx, POSIX Shell |
@@ -81,6 +83,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_event_driven && docker compo
 cd /Users/revy/workspace_codex/spring_sample/sample_kafka_integration && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && docker compose up -d
+cd /Users/revy/workspace_codex/spring_sample/sample_Observability && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/r2dbc && docker compose up -d
 cd /Users/revy/workspace_codex/spring_sample/r2dbc-auditlog && docker compose up -d
@@ -95,6 +98,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./grad
 cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8086'
 cd /Users/revy/workspace_codex/spring_sample/sample_file_stream && ./gradlew bootRun --args='--server.port=8087'
 cd /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy && ./scripts/all-start.sh
+cd /Users/revy/workspace_codex/spring_sample/sample_Observability && ./scripts/all-start.sh
 ```
 
 위 명령은 동시 실행 기준 예시다. 개별 프로젝트만 실행할 때는 각 프로젝트 `README.md`의 기본 포트를 그대로 사용하면 된다.
@@ -170,6 +174,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | `sample_kafka_integration` | `8080` |
 | `sample_rabbitmq_integration` | `8080` |
 | `sample_grafana_prometheus` | `8080` |
+| `sample_Observability` | `8089` (앱), `9099` (Prometheus), `3010` (Grafana) |
 | `sample_spring_admin` | `8080` |
 | `sample_batch_quartz_dashboard` | `8080` |
 | `sample_mcp_server` | `8090` |
@@ -211,6 +216,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 - [sample_kafka_integration/README.md](/Users/revy/workspace_codex/spring_sample/sample_kafka_integration/README.md)
 - [sample_rabbitmq_integration/README.md](/Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration/README.md)
 - [sample_grafana_prometheus/README.md](/Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus/README.md)
+- [sample_Observability/README.md](/Users/revy/workspace_codex/spring_sample/sample_Observability/README.md)
 - [sample_spring_admin/README.md](/Users/revy/workspace_codex/spring_sample/sample_spring_admin/README.md)
 - [sample_batch_quartz_dashboard/README.md](/Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard/README.md)
 - [r2dbc/README.md](/Users/revy/workspace_codex/spring_sample/r2dbc/README.md)
@@ -244,6 +250,10 @@ cd /Users/revy/workspace_codex/spring_sample/sample_gateway_observability && ./g
 cd /Users/revy/workspace_codex/spring_sample/sample_kafka_integration && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_rabbitmq_integration && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_grafana_prometheus && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_Observability && ./gradlew test
+sh -n /Users/revy/workspace_codex/spring_sample/sample_Observability/scripts/all-start.sh
+sh -n /Users/revy/workspace_codex/spring_sample/sample_Observability/scripts/all-stop.sh
+sh -n /Users/revy/workspace_codex/spring_sample/sample_Observability/scripts/all-restart.sh
 cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_batch_quartz_dashboard && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/r2dbc && ./gradlew test

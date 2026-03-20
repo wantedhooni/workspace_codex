@@ -6,3 +6,5 @@
 4. 주문 오케스트레이션, 결제/재고 단계, 보상 트랜잭션, 상태 조회, 테스트, `README.md`, `TASK.md`를 한글로 정리한다.
 5. `smaple_multi-tenancy` 폴더에 Spring Boot + JPA + JWT + Next.js 기반 멀티테넌시 데모 프로젝트를 생성한다.
 6. 테넌트 분리 API, 데모 UI, 전체 실행 스크립트, 문서를 한글로 정리한다.
+7. `sample_Observability` 폴더에 Spring Boot + JPA + JWT + Prometheus + Grafana 기반 관측성 샘플 프로젝트를 생성한다.
+8. 주문 운영 API, 관측 메트릭, 전체 실행 스크립트, 문서를 한글로 정리한다.

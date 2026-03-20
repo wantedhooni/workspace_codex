@@ -115,3 +115,7 @@
 - `frontend`에 테넌트 전환 로그인, 대시보드, 프로젝트 등록/상태 변경 데모 페이지 구현 완료
 - `smaple_multi-tenancy/scripts`에 전체 시작/중지/재시작 스크립트와 접속 URL/데모 계정 출력 기능 추가 완료
 - `smaple_multi-tenancy/README.md`, 루트 `README.md`, `PLANS.md`, `TASK.md`를 신규 프로젝트 기준으로 최신화 완료
+- `sample_Observability` 폴더에 Spring Boot + JPA + JWT + Prometheus + Grafana 기반 관측성 샘플 프로젝트 생성 완료
+- 주문 운영 API, JWT 로그인, 시드 데이터, 비즈니스 메트릭(`sample_order_*`) 및 Actuator Prometheus 노출 구성 완료
+- `sample_Observability/scripts`에 전체 시작/중지/재시작 스크립트와 접속 URL/데모 계정 출력 기능 추가 완료
+- `sample_Observability/README.md`, 루트 `README.md`, `PLANS.md`, `TASK.md`를 신규 프로젝트 기준으로 최신화 완료
