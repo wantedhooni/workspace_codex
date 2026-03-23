@@ -1,0 +1,10 @@
+/backend/.gradle
+/backend/build
+/frontend/node_modules
+/frontend/dist
+/runtime/data
+/runtime/logs/*.log
+/runtime/pids/*.pid
+/backend/.env
+/frontend/.env.local
+/.env

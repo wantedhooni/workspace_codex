@@ -1,0 +1,49 @@
+server:
+  port: ${BACKEND_PORT:8087}
+  servlet:
+    session:
+      cookie:
+        same-site: lax
+
+spring:
+  application:
+    name: sample-google-oauth-backend
+  datasource:
+    url: jdbc:h2:file:./runtime/data/google-oauth;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+
+app:
+  auth:
+    frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+    login-success-path: ${APP_LOGIN_SUCCESS_PATH:/?login=success}
+    login-failure-path: ${APP_LOGIN_FAILURE_PATH:/?login=error}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
