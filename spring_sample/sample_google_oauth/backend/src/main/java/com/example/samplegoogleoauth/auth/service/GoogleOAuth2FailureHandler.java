@@ -8,6 +8,7 @@ import java.io.IOException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * Google OAuth 로그인 실패 시 프론트엔드로 오류 상태를 전달하는 핸들러다.
@@ -15,8 +16,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class GoogleOAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
+    private final AppAuthProperties properties;
+
     public GoogleOAuth2FailureHandler(AppAuthProperties properties) {
-        setDefaultFailureUrl(properties.failureRedirectUrl());
+        this.properties = properties;
     }
 
     @Override
@@ -25,6 +28,11 @@ public class GoogleOAuth2FailureHandler extends SimpleUrlAuthenticationFailureHa
         HttpServletResponse response,
         AuthenticationException exception
     ) throws IOException, ServletException {
-        super.onAuthenticationFailure(request, response, exception);
+        String redirectUrl = UriComponentsBuilder
+            .fromUriString(properties.failureRedirectUrl())
+            .queryParam("login", "error")
+            .build(true)
+            .toUriString();
+        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

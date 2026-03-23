@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 /**
- * OAuth 로그인 사용자의 기본 계정 정보와 가입 완료 상태를 저장한다.
+ * OAuth 로그인 사용자의 기본 계정 정보와 가입 완료 상태를 RDBMS에 저장한다.
  */
 @Entity
 @Table(name = "oauth_member")

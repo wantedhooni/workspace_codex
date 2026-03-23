@@ -8,6 +8,7 @@ RUNTIME_DIR="$ROOT_DIR/runtime"
 PID_DIR="$RUNTIME_DIR/pids"
 LOG_DIR="$RUNTIME_DIR/logs"
 DATA_DIR="$RUNTIME_DIR/data"
+REDIS_LOG_FILE="$LOG_DIR/redis.log"
 ENV_FILE="$ROOT_DIR/.env"
 FRONTEND_ENV_FILE="$FRONTEND_DIR/.env.local"
 
@@ -50,8 +51,10 @@ load_env_defaults "$FRONTEND_ENV_FILE"
 
 BACKEND_PORT="${BACKEND_PORT:-8087}"
 FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+REDIS_PORT="${REDIS_PORT:-6379}"
 APP_FRONTEND_URL="${APP_FRONTEND_URL:-http://localhost:${FRONTEND_PORT}}"
 VITE_API_BASE_URL="${VITE_API_BASE_URL:-http://localhost:${BACKEND_PORT}}"
+APP_REDISSON_ADDRESS="${APP_REDISSON_ADDRESS:-redis://localhost:${REDIS_PORT}}"
 
 BACKEND_PID_FILE="$PID_DIR/backend.pid"
 FRONTEND_PID_FILE="$PID_DIR/frontend.pid"
@@ -145,14 +148,41 @@ start_backend() {
       APP_FRONTEND_URL="$APP_FRONTEND_URL" \
       GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:-google-client-id}" \
       GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-google-client-secret}" \
-      APP_LOGIN_SUCCESS_PATH="${APP_LOGIN_SUCCESS_PATH:-/?login=success}" \
-      APP_LOGIN_FAILURE_PATH="${APP_LOGIN_FAILURE_PATH:-/?login=error}" \
+      APP_LOGIN_SUCCESS_PATH="${APP_LOGIN_SUCCESS_PATH:-/}" \
+      APP_LOGIN_FAILURE_PATH="${APP_LOGIN_FAILURE_PATH:-/}" \
+      APP_JWT_SECRET="${APP_JWT_SECRET:-sample-google-oauth-demo-secret-key-for-jwt-signing-please-change}" \
+      APP_JWT_ACCESS_TOKEN_MINUTES="${APP_JWT_ACCESS_TOKEN_MINUTES:-30}" \
+      APP_JWT_REFRESH_TOKEN_DAYS="${APP_JWT_REFRESH_TOKEN_DAYS:-7}" \
+      APP_REDISSON_ADDRESS="$APP_REDISSON_ADDRESS" \
+      APP_REDISSON_PASSWORD="${APP_REDISSON_PASSWORD:-}" \
       java -jar "$backend_jar" >>"$BACKEND_LOG_FILE" 2>&1 &
     echo "$!" >"$BACKEND_PID_FILE"
   )
 
   wait_for_port "Backend" "$BACKEND_PORT" "$(cat "$BACKEND_PID_FILE")" 45 "$BACKEND_LOG_FILE"
   BACKEND_STARTED="true"
+}
+
+start_redis() {
+  echo "[INFO] Redis 실행"
+  (
+    cd "$ROOT_DIR"
+    docker compose up -d redis
+  ) >>"$REDIS_LOG_FILE" 2>&1
+
+  i=0
+  while [ "$i" -lt 20 ]; do
+    if [ -n "$(listener_pid "$REDIS_PORT")" ]; then
+      echo "[OK] Redis 기동 완료 (PORT: $REDIS_PORT)"
+      return 0
+    fi
+
+    i=$((i + 1))
+    sleep 1
+  done
+
+  echo "[ERROR] Redis 포트 오픈 대기 시간 초과 (PORT: $REDIS_PORT, 로그: $REDIS_LOG_FILE)" >&2
+  return 1
 }
 
 start_frontend() {
@@ -179,6 +209,11 @@ start_frontend() {
 }
 
 cleanup_on_failure() {
+  (
+    cd "$ROOT_DIR"
+    docker compose stop redis >/dev/null 2>&1 || true
+  )
+
   if [ "$FRONTEND_STARTED" = "true" ] && [ -f "$FRONTEND_PID_FILE" ]; then
     kill "$(cat "$FRONTEND_PID_FILE")" 2>/dev/null || true
     rm -f "$FRONTEND_PID_FILE"
@@ -191,6 +226,11 @@ cleanup_on_failure() {
 }
 
 trap 'cleanup_on_failure' INT TERM HUP
+
+if ! start_redis; then
+  cleanup_on_failure
+  exit 1
+fi
 
 if ! start_backend; then
   cleanup_on_failure
@@ -206,6 +246,7 @@ trap - INT TERM HUP
 
 cat <<INFO
 [DONE] sample_google_oauth 전체 기동 완료
+- Redis URL: ${APP_REDISSON_ADDRESS}
 - Frontend URL: http://localhost:${FRONTEND_PORT}
 - Backend URL: http://localhost:${BACKEND_PORT}
 - Google Redirect URI: http://localhost:${BACKEND_PORT}/login/oauth2/code/google
@@ -216,12 +257,14 @@ cat <<INFO
 
 - 테스트용 안내
   - Google Cloud Console OAuth 테스트 사용자 계정을 사용한다.
-  - 루트 .env 파일에 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET 값을 채운다.
+  - 루트 .env 파일에 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_JWT_SECRET 값을 채운다.
   - 최초 로그인 후 표시 이름, 조직, 직무를 입력해 회원가입을 완료한다.
+  - OAuth 승인 요청과 refresh token은 Redis에 저장된다.
   - 승인된 JavaScript 원본: http://localhost:${FRONTEND_PORT}
   - 승인된 리디렉션 URI: http://localhost:${BACKEND_PORT}/login/oauth2/code/google
 
 - 로그 경로
+  - Redis: ${REDIS_LOG_FILE}
   - Backend: ${BACKEND_LOG_FILE}
   - Frontend: ${FRONTEND_LOG_FILE}
 INFO

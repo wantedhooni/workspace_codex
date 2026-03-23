@@ -50,4 +50,10 @@ stop_by_pid_file() {
 stop_by_pid_file "Frontend" "$FRONTEND_PID_FILE"
 stop_by_pid_file "Backend" "$BACKEND_PID_FILE"
 
+echo "[INFO] Redis 중지"
+(
+  cd "$ROOT_DIR"
+  docker compose stop redis >/dev/null 2>&1 || true
+)
+
 echo "[DONE] 전체 중지 완료"

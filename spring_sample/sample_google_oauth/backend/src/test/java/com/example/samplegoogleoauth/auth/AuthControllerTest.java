@@ -1,30 +1,39 @@
 package com.example.samplegoogleoauth.auth;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.samplegoogleoauth.auth.entity.OAuthMember;
+import com.example.samplegoogleoauth.auth.repository.OAuthMemberRepository;
+import com.example.samplegoogleoauth.auth.security.AuthenticatedMemberPrincipal;
+import com.example.samplegoogleoauth.auth.security.JwtTokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.samplegoogleoauth.auth.repository.OAuthMemberRepository;
 import com.example.samplegoogleoauth.auth.service.OAuthMemberSyncService;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @SpringBootTest(properties = {
@@ -37,6 +46,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AuthControllerTest {
 
+    @MockBean
+    private RedissonClient redissonClient;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -46,10 +58,13 @@ class AuthControllerTest {
     @Autowired
     private OAuthMemberSyncService oauthMemberSyncService;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @Test
     @DisplayName("인증된 사용자는 현재 사용자 정보를 조회할 수 있다")
     void shouldReturnCurrentUser() throws Exception {
-        oauthMemberRepository.save(new OAuthMember(
+        OAuthMember savedMember = oauthMemberRepository.save(new OAuthMember(
             "GOOGLE",
             "google-100",
             "hong@example.com",
@@ -58,12 +73,7 @@ class AuthControllerTest {
         ));
 
         mockMvc.perform(get("/api/auth/me")
-                .with(oauth2Login().attributes(attributes -> {
-                    attributes.put("sub", "google-100");
-                    attributes.put("name", "홍길동");
-                    attributes.put("email", "hong@example.com");
-                    attributes.put("picture", "https://example.com/profile.png");
-                })))
+                .with(authentication(memberAuthentication(savedMember))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.authenticated").value(true))
             .andExpect(jsonPath("$.registered").value(false))
@@ -82,21 +92,44 @@ class AuthControllerTest {
     @Test
     @DisplayName("로그아웃 API는 인증된 사용자를 종료한다")
     void shouldLogoutAuthenticatedUser() throws Exception {
+        OAuthMember savedMember = oauthMemberRepository.save(new OAuthMember(
+            "GOOGLE",
+            "google-logout",
+            "logout@example.com",
+            "로그아웃 사용자",
+            "https://example.com/logout.png"
+        ));
+
+        @SuppressWarnings("unchecked")
+        RBucket<String> bucket = mock(RBucket.class);
+        String refreshToken = jwtTokenProvider.issueTokenPair(savedMember).refreshToken();
+        when(redissonClient.<String>getBucket(anyString())).thenReturn(bucket);
+        when(bucket.get()).thenReturn(refreshToken);
+
         mockMvc.perform(post("/api/auth/logout")
-                .with(oauth2Login()))
+                .with(authentication(memberAuthentication(savedMember)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "refreshToken": "%s"
+                    }
+                    """.formatted(refreshToken)))
             .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("OAuth 로그인 사용자는 추가 정보를 입력해 회원가입을 완료할 수 있다")
     void shouldSignupOauthUser() throws Exception {
+        OAuthMember savedMember = oauthMemberRepository.save(new OAuthMember(
+            "GOOGLE",
+            "google-101",
+            "yerin@example.com",
+            "김예린",
+            "https://example.com/yerin.png"
+        ));
+
         mockMvc.perform(post("/api/auth/signup")
-                .with(oauth2Login().attributes(attributes -> {
-                    attributes.put("sub", "google-101");
-                    attributes.put("name", "김예린");
-                    attributes.put("email", "yerin@example.com");
-                    attributes.put("picture", "https://example.com/yerin.png");
-                }))
+                .with(authentication(memberAuthentication(savedMember)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {
@@ -141,5 +174,18 @@ class AuthControllerTest {
 
         Assertions.assertEquals("seojun@example.com", member.getEmail());
         Assertions.assertFalse(member.isRegistered());
+    }
+
+    private Authentication memberAuthentication(OAuthMember member) {
+        return new UsernamePasswordAuthenticationToken(
+            new AuthenticatedMemberPrincipal(
+                member.getId(),
+                member.getProvider(),
+                member.getProviderUserId(),
+                member.getEmail()
+            ),
+            "access-token",
+            List.of(new SimpleGrantedAuthority("ROLE_MEMBER"))
+        );
     }
 }

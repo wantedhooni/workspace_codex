@@ -1,0 +1,7 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    container_name: sample-google-oauth-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: ["redis-server", "--appendonly", "yes"]

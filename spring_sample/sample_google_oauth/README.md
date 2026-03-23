@@ -1,12 +1,12 @@
 # sample_google_oauth
 
-Spring Boot와 React를 분리해 구성한 Google OAuth 로그인 및 회원가입 샘플이다. 백엔드는 Spring Security OAuth2 Client로 Google 인증을 처리하고 로그인 직후 기본 회원 정보를 H2에 저장하며, 가입 완료 시 서비스 프로필을 갱신한다. 프론트엔드는 세션 기반 로그인 상태 조회와 추가 가입 입력 화면을 제공한다.
+Spring Boot와 React를 분리해 구성한 Google OAuth 로그인/회원가입 샘플이다. 세션은 사용하지 않고, OAuth 승인 요청과 refresh token은 Redis로 관리하며, OAuth 완료 이후 API 인증은 JWT Bearer 토큰으로 처리한다. 로그인 직후 기본 회원 정보는 H2 RDBMS에 저장되고, 추가 회원가입 완료 시 동일 레코드가 갱신된다.
 
 ## 목적
 
-- Google 소셜 로그인을 실무형 분리 아키텍처로 빠르게 검증할 수 있는 샘플 제공
-- 백엔드에서 OAuth 인증, 세션 관리, 로그인 직후 회원 기본정보 저장, 가입 프로필 저장을 담당하고 프론트엔드는 상태 조회와 가입 경험에 집중
-- 로컬 개발 환경에서 `.env` 설정만 채우면 바로 실행 가능한 구조 제공
+- Google OAuth 이후를 세션이 아닌 JWT 기반으로 운영하는 실무형 구조 제공
+- 스케일 아웃 환경에서 OAuth state, refresh token을 Redis로 공유하는 패턴 제공
+- OAuth 로그인 직후 회원 기본 정보 저장과 가입 완료 프로필 갱신을 RDBMS에서 확인할 수 있게 구성
 
 ## 디렉터리 구조
 
@@ -17,6 +17,7 @@ sample_google_oauth
 ├── TASK.md
 ├── README.md
 ├── .env.example
+├── docker-compose.yml
 ├── backend
 ├── frontend
 ├── runtime
@@ -27,25 +28,43 @@ sample_google_oauth
 
 - Backend
   - Spring Boot 3.4.4
-  - Spring Security
-  - OAuth2 Client
+  - Spring Security OAuth2 Client
+  - JWT(`jjwt`)
   - Spring Data JPA
   - H2
+  - Redisson
 - Frontend
   - React 19
   - Vite 6
   - TypeScript
+- Infra
+  - Redis 7
+  - Docker Compose
 
-## 인증 및 회원가입 흐름
+## 인증 구조
 
-1. 프론트엔드에서 `Google로 로그인` 버튼을 클릭한다.
-2. 브라우저가 백엔드 `GET /oauth2/authorization/google` 로 이동한다.
-3. Spring Security가 Google 인증 후 세션을 생성한다.
-4. 백엔드는 프론트엔드로 다시 리다이렉트한다.
-5. 로그인 성공 핸들러가 Google 계정의 기본 정보(email, name, picture, providerUserId)를 `oauth_member` 테이블에 저장하거나 갱신한다.
-6. 프론트엔드는 `GET /api/auth/me` 호출로 현재 사용자 정보를 조회한다.
-7. 가입 완료 전 상태라면 추가 프로필 입력 폼을 노출한다.
-8. `POST /api/auth/signup` 으로 표시 이름, 조직, 직무를 저장해 가입을 완료한다.
+1. 프론트엔드가 `GET /oauth2/authorization/google` 로 브라우저를 이동시킨다.
+2. OAuth authorization request는 Redis에 저장된다.
+3. Google 로그인 성공 후 백엔드가 회원 기본 정보를 H2 `oauth_member` 테이블에 upsert한다.
+4. 백엔드는 JWT access token / refresh token을 발급한다.
+5. refresh token은 Redis에 저장된다.
+6. 프론트엔드는 URL 파라미터로 전달받은 토큰을 저장하고 이후 API를 Bearer 방식으로 호출한다.
+7. access token 만료 시 `POST /api/auth/refresh` 로 새 토큰 쌍을 발급받는다.
+8. 회원가입 완료 전 상태라면 `POST /api/auth/signup` 으로 추가 프로필을 저장한다.
+
+## 저장 위치
+
+### Redis
+
+- OAuth 승인 요청(state 기반)
+- refresh token
+
+### RDBMS(H2)
+
+- OAuth 로그인 직후 생성되는 회원 기본 정보
+- 가입 완료 여부(`registered`)
+- 표시 이름, 조직, 직무, 마케팅 동의 여부
+- 마지막 로그인 시각
 
 ## 사전 준비
 
@@ -63,11 +82,17 @@ Google Cloud Console에서 OAuth Client ID를 만든 뒤 아래 값을 등록한
 ```env
 BACKEND_PORT=8087
 FRONTEND_PORT=5173
+REDIS_PORT=6379
 GOOGLE_CLIENT_ID=발급받은_클라이언트_ID
 GOOGLE_CLIENT_SECRET=발급받은_클라이언트_SECRET
 APP_FRONTEND_URL=http://localhost:5173
-APP_LOGIN_SUCCESS_PATH=/?login=success
-APP_LOGIN_FAILURE_PATH=/?login=error
+APP_LOGIN_SUCCESS_PATH=/
+APP_LOGIN_FAILURE_PATH=/
+APP_JWT_SECRET=충분히_긴_JWT_서명_시크릿
+APP_JWT_ACCESS_TOKEN_MINUTES=30
+APP_JWT_REFRESH_TOKEN_DAYS=7
+APP_REDISSON_ADDRESS=redis://localhost:6379
+APP_REDISSON_PASSWORD=
 ```
 
 프론트엔드용 환경 변수는 아래 예제를 복사해 사용한다.
@@ -95,6 +120,7 @@ cp frontend/.env.local.example frontend/.env.local
 
 실행 후 확인 정보:
 
+- Redis: `redis://localhost:6379`
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:8087`
 - Redirect URI: `http://localhost:8087/login/oauth2/code/google`
@@ -116,12 +142,21 @@ cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth
 
 ## 개별 실행
 
+### Redis
+
+```bash
+cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth
+docker compose up -d redis
+```
+
 ### Backend
 
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth/backend
 export GOOGLE_CLIENT_ID=발급받은_클라이언트_ID
 export GOOGLE_CLIENT_SECRET=발급받은_클라이언트_SECRET
+export APP_JWT_SECRET=충분히_긴_JWT_서명_시크릿
+export APP_REDISSON_ADDRESS=redis://localhost:6379
 ./gradlew bootRun
 ```
 
@@ -136,27 +171,19 @@ npm run dev
 
 ## 주요 API
 
-### 로그인 시작
-
-```bash
-open http://localhost:8087/oauth2/authorization/google
-```
-
-### 로그인 사용자 조회
+### 현재 로그인 사용자 조회
 
 ```bash
 curl http://localhost:8087/api/auth/me \
-  -H "Cookie: JSESSIONID=<세션값>"
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
-
-로그인만 완료한 직후에도 `oauth_member` 테이블에는 기본 회원 정보가 저장된다. 이 시점에는 `registered=false` 상태다.
 
 ### 회원가입 완료
 
 ```bash
 curl -X POST http://localhost:8087/api/auth/signup \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
-  -H "Cookie: JSESSIONID=<세션값>" \
   -d '{
     "displayName": "리비",
     "organization": "플랫폼실",
@@ -165,12 +192,31 @@ curl -X POST http://localhost:8087/api/auth/signup \
   }'
 ```
 
+### 토큰 재발급
+
+```bash
+curl -X POST http://localhost:8087/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "<REFRESH_TOKEN>"
+  }'
+```
+
 ### 로그아웃
 
 ```bash
 curl -X POST http://localhost:8087/api/auth/logout \
-  -H "Cookie: JSESSIONID=<세션값>"
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "<REFRESH_TOKEN>"
+  }'
 ```
+
+## 토큰 처리 참고
+
+- 이 샘플은 데모 단순화를 위해 OAuth 성공 후 JWT를 프론트엔드 URL query parameter로 전달한다.
+- 실제 운영에서는 백엔드 포 프론트엔드(BFF), 짧은 수명 access token, HttpOnly cookie, HTTPS 강제, CSP/redirect whitelist를 함께 검토하는 편이 안전하다.
 
 ## 검증
 
@@ -179,21 +225,20 @@ cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth/backend
 ./gradlew test
 
 cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth/frontend
-npm install
 npm run build
 
 cd /Users/revy/workspace_codex/spring_sample/sample_google_oauth
 sh -n scripts/all-start.sh
 sh -n scripts/all-stop.sh
 sh -n scripts/all-restart.sh
+FRONTEND_PORT=5184 APP_FRONTEND_URL=http://localhost:5184 ./scripts/all-start.sh
+./scripts/all-stop.sh
 ```
 
 ## 확인 포인트
 
-- 로그인 성공 후 프론트엔드로 정상 복귀하는지 확인
-- 최초 로그인 계정은 회원가입 입력 폼이 표시되는지 확인
 - OAuth 로그인 직후 H2 `oauth_member` 테이블에 기본 회원 정보가 저장되는지 확인
-- 회원가입 완료 후 동일 레코드의 `registered`, `display_name`, `organization`, `job_title` 값이 갱신되는지 확인
-- 새로고침 후에도 가입 상태와 사용자 정보가 유지되는지 확인
-- 로그아웃 후 사용자 정보 카드가 초기 상태로 돌아가는지 확인
-- Google Cloud Console의 테스트 사용자 제한에 따라 허용 계정만 로그인되는지 확인
+- OAuth 승인 요청과 refresh token이 Redis에 저장되는지 확인
+- 프론트가 access token을 `Authorization: Bearer` 헤더로 전송하는지 확인
+- access token 만료 시 refresh token으로 자동 재발급되는지 확인
+- 로그아웃 후 Redis refresh token이 제거되고 API가 다시 401을 반환하는지 확인

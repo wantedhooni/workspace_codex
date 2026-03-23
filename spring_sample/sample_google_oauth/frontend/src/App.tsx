@@ -13,7 +13,16 @@ type UserProfile = {
   marketingConsent: boolean;
 };
 
+type TokenResponse = {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresInSeconds: number;
+};
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:8087";
+const accessTokenKey = "sample_google_oauth_access_token";
+const refreshTokenKey = "sample_google_oauth_refresh_token";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -31,23 +40,109 @@ function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get("accessToken");
+    const refreshToken = params.get("refreshToken");
     const loginStatus = params.get("login");
 
-    if (loginStatus === "error") {
-      setErrorMessage("Google 로그인에 실패했습니다. 콘솔 설정과 리다이렉트 URI를 다시 확인하세요.");
+    if (accessToken && refreshToken) {
+      persistTokens({ accessToken, refreshToken });
+      window.history.replaceState({}, "", "/");
+    } else if (loginStatus === "error") {
+      setErrorMessage("Google 로그인에 실패했습니다. Redis, OAuth 설정, 리디렉트 URI를 다시 확인하세요.");
+      window.history.replaceState({}, "", "/");
     }
 
     void fetchCurrentUser();
   }, []);
 
+  function persistTokens(tokens: { accessToken: string; refreshToken: string }) {
+    window.localStorage.setItem(accessTokenKey, tokens.accessToken);
+    window.localStorage.setItem(refreshTokenKey, tokens.refreshToken);
+  }
+
+  function clearTokens() {
+    window.localStorage.removeItem(accessTokenKey);
+    window.localStorage.removeItem(refreshTokenKey);
+  }
+
+  function getAccessToken() {
+    return window.localStorage.getItem(accessTokenKey);
+  }
+
+  function getRefreshToken() {
+    return window.localStorage.getItem(refreshTokenKey);
+  }
+
+  async function refreshAccessToken() {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      clearTokens();
+      return null;
+    }
+
+    const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (!response.ok) {
+      clearTokens();
+      return null;
+    }
+
+    const tokens = (await response.json()) as TokenResponse;
+    persistTokens(tokens);
+    return tokens.accessToken;
+  }
+
+  async function authorizedFetch(input: string, init: RequestInit = {}, allowRetry = true) {
+    const accessToken = getAccessToken();
+    const headers = new Headers(init.headers ?? {});
+
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+
+    const response = await fetch(input, {
+      ...init,
+      headers
+    });
+
+    if (response.status === 401 && allowRetry) {
+      const refreshedAccessToken = await refreshAccessToken();
+      if (!refreshedAccessToken) {
+        return response;
+      }
+
+      const retryHeaders = new Headers(init.headers ?? {});
+      retryHeaders.set("Authorization", `Bearer ${refreshedAccessToken}`);
+
+      return fetch(input, {
+        ...init,
+        headers: retryHeaders
+      });
+    }
+
+    return response;
+  }
+
   async function fetchCurrentUser() {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      setLoading(false);
+      setUser(null);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
-        credentials: "include"
-      });
+      const response = await authorizedFetch(`${apiBaseUrl}/api/auth/me`);
 
-      if (response.status === 401 || response.status === 302) {
+      if (response.status === 401) {
+        clearTokens();
         setUser(null);
         return;
       }
@@ -66,6 +161,7 @@ function App() {
       });
     } catch (error) {
       setUser(null);
+      clearTokens();
       setErrorMessage(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -74,15 +170,26 @@ function App() {
 
   async function logout() {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include"
-      });
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        clearTokens();
+        setUser(null);
+        return;
+      }
 
-      if (!response.ok) {
+      const response = await authorizedFetch(`${apiBaseUrl}/api/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ refreshToken })
+      }, false);
+
+      if (!response.ok && response.status !== 401) {
         throw new Error("로그아웃에 실패했습니다.");
       }
 
+      clearTokens();
       setUser(null);
       setErrorMessage("");
       window.history.replaceState({}, "", "/");
@@ -98,12 +205,11 @@ function App() {
       setSignupLoading(true);
       setErrorMessage("");
 
-      const response = await fetch(`${apiBaseUrl}/api/auth/signup`, {
+      const response = await authorizedFetch(`${apiBaseUrl}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        credentials: "include",
         body: JSON.stringify(signupForm)
       });
 
@@ -125,11 +231,11 @@ function App() {
     <main className="app-shell">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Spring Boot + React + Google OAuth</p>
-          <h1>실무형 소셜 로그인 흐름을 바로 검증할 수 있는 데모</h1>
+          <p className="eyebrow">Spring Boot + Redis + JWT + Google OAuth</p>
+          <h1>세션 없이 스케일 아웃 가능한 OAuth 로그인 샘플</h1>
           <p className="description">
-            백엔드는 Spring Security OAuth2 Client로 Google 인증을 처리하고,
-            프론트엔드는 세션 기반 사용자 상태를 조회해 로그인 결과를 즉시 보여준다.
+            OAuth 승인 요청과 refresh token은 Redis로 관리하고,
+            로그인 완료 후에는 JWT Bearer 토큰으로 API를 호출한다.
           </p>
           <div className="actions">
             <a className="primary-button" href={loginUrl}>
@@ -146,22 +252,22 @@ function App() {
             </div>
             <div>
               <dt>Backend</dt>
-              <dd>Spring Boot 3.4 / Spring Security</dd>
+              <dd>Spring Boot 3.4 / JWT</dd>
             </div>
             <div>
-              <dt>세션</dt>
-              <dd>JSESSIONID 기반 유지</dd>
+              <dt>OAuth 상태</dt>
+              <dd>Redis Authorization Request</dd>
             </div>
             <div>
-              <dt>API</dt>
-              <dd>{apiBaseUrl}</dd>
+              <dt>API 인증</dt>
+              <dd>Bearer Access Token</dd>
             </div>
           </dl>
         </div>
 
         <div className="status-card">
           <span className="card-label">로그인 상태</span>
-          {loading ? <p className="muted">사용자 상태를 확인하는 중입니다.</p> : null}
+          {loading ? <p className="muted">JWT 기반 사용자 상태를 확인하는 중입니다.</p> : null}
           {!loading && user?.registered ? (
             <>
               <div className="profile">
@@ -180,7 +286,7 @@ function App() {
           ) : null}
           {!loading && user && !user.registered ? (
             <form className="signup-form" onSubmit={(event) => void signup(event)}>
-              <p className="signup-copy">Google 인증은 완료되었습니다. 서비스 가입을 마치려면 추가 정보를 입력해 주세요.</p>
+              <p className="signup-copy">OAuth 로그인 후 기본 회원은 이미 저장되었습니다. 서비스 가입 완료를 위해 추가 프로필을 입력해 주세요.</p>
               <label>
                 <span>표시 이름</span>
                 <input
@@ -224,7 +330,7 @@ function App() {
           {!loading && !user ? (
             <div className="empty-state">
               <p>아직 로그인되지 않았습니다.</p>
-              <p className="muted">Google Cloud Console에 등록한 테스트 계정으로 로그인해 주세요.</p>
+              <p className="muted">로그인 후 access/refresh token이 브라우저에 저장되고 이후 API는 Bearer 방식으로 호출됩니다.</p>
             </div>
           ) : null}
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
@@ -237,17 +343,17 @@ function App() {
           <ol>
             <li>Google Cloud Console에서 OAuth Client ID를 생성한다.</li>
             <li>승인된 리디렉션 URI에 <code>http://localhost:8087/login/oauth2/code/google</code> 를 등록한다.</li>
-            <li><code>.env</code> 와 <code>frontend/.env.local</code> 에 설정을 채운다.</li>
+            <li>Redis를 실행하고 <code>.env</code> 의 JWT/Redis 설정을 채운다.</li>
             <li>최초 로그인 후 표시 이름, 조직, 직무를 입력해 가입을 완료한다.</li>
           </ol>
         </article>
         <article className="guide-card">
           <h2>확인 포인트</h2>
           <ol>
-            <li>로그인 성공 후 프론트엔드로 복귀하는지 확인한다.</li>
+            <li>OAuth 성공 후 URL 파라미터로 받은 토큰이 저장되는지 확인한다.</li>
             <li>최초 로그인 계정은 회원가입 폼이 노출되는지 확인한다.</li>
-            <li>가입 완료 후 새로고침해도 가입 상태가 유지되는지 확인한다.</li>
-            <li>로그아웃 후 <code>/api/auth/me</code> 가 다시 인증을 요구하는지 확인한다.</li>
+            <li>access token 만료 시 refresh token으로 자동 재발급되는지 확인한다.</li>
+            <li>로그아웃 후 Redis의 refresh token이 제거되는지 확인한다.</li>
           </ol>
         </article>
       </section>

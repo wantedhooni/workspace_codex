@@ -8,7 +8,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 `sample_file_stream`은 JPA 메타데이터와 Local/S3 저장소를 분리해 파일 업로드/다운로드를 처리하는 샘플이다.
 `smaple_multi-tenancy`는 JWT와 `tenant_id` 분리를 결합해 멀티테넌시를 시연하는 백엔드/프론트엔드 통합 샘플이다.
 `sample_Observability`는 JPA, JWT, Prometheus, Grafana를 하나의 운영형 API에 묶어 관측 흐름을 시연하는 샘플이다.
-`sample_google_oauth`는 Spring Security OAuth2 Client와 React 프론트엔드를 결합해 Google 로그인, 회원가입, 세션 조회 흐름을 보여주는 샘플이다.
+`sample_google_oauth`는 Spring Security OAuth2 Client와 React 프론트엔드를 결합해 Google 로그인, JWT 인증, Redis 기반 토큰/상태 관리 흐름을 보여주는 샘플이다.
 
 ## 프로젝트 지도
 
@@ -18,7 +18,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | --- | --- | --- |
 | `sample_ai_bff` | 내부 지식 문서를 검색하고 답변을 조합하는 AI BFF 샘플 | Spring Boot, Web, SSE |
 | `sample_secure_bff` | 인증/인가와 API composition을 적용한 Secure BFF 샘플 | Spring Boot, Security, RestClient, HTTP Interface |
-| `sample_google_oauth` | Google 소셜 로그인과 추가 회원가입 연동 샘플 | Spring Boot, Spring Security OAuth2 Client, JPA, H2, React, Vite |
+| `sample_google_oauth` | Google OAuth 이후 JWT/Redis 기반 인증으로 확장한 샘플 | Spring Boot, Spring Security OAuth2 Client, JWT, Redisson, JPA, H2, React, Vite |
 | `sample_observability_api` | 메트릭과 observation 중심의 운영형 REST API 샘플 | Spring Boot, Actuator, Micrometer, Prometheus |
 | `sample_websocket_realtime` | STOMP 기반 가격/작업 진행률 실시간 전송 샘플 | Spring Boot, WebSocket, STOMP |
 | `sample_gateway_observability` | Gateway 라우팅과 메트릭 노출을 결합한 샘플 | Spring Boot, Spring Cloud Gateway, Prometheus |
