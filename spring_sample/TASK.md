@@ -128,3 +128,8 @@
 - 추천 조회 API, 고객 행동 적재 API, 상품 목록 API, H2 시드 데이터, 통합 테스트 구성 완료
 - `sample_recommend/scripts`에 전체 시작/중지/재시작 스크립트와 접속 URL/데모 고객 출력 기능 추가 완료
 - `sample_recommend/README.md`, 루트 `README.md`, `PLANS.md`, `TASK.md`를 신규 프로젝트 기준으로 최신화 완료
+- `sample_file_manage` 폴더에 Spring Boot + JPA 기반 파일 관리 서버 프로젝트 생성 완료
+- 파일 메타데이터 테이블(`stored_files`)과 다운로드 이력 테이블(`file_download_histories`) 설계 및 구현 완료
+- 파일 업로드, 목록/상세 조회, 다운로드, 삭제, 다운로드 이력 조회 API 및 로컬 저장소 구성 완료
+- `sample_file_manage/scripts`에 전체 시작/중지/재시작 스크립트와 접속 URL/데모 정보 출력 기능 추가 완료
+- `sample_file_manage/README.md`, 루트 `README.md`, `PLANS.md`, `TASK.md`를 신규 프로젝트 기준으로 최신화 완료

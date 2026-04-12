@@ -6,6 +6,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 `blue-green-nginx`는 Docker 없이 Nginx + 로컬 프로세스 기반 Blue-Green 배포를 `sh` 스크립트로 운영하는 샘플이다.
 `bllue-green-docker`는 Docker Compose + Nginx 업스트림 전환 기반 Blue-Green 배포/롤백 샘플이다.
 `sample_file_stream`은 JPA 메타데이터와 Local/S3 저장소를 분리해 파일 업로드/다운로드를 처리하는 샘플이다.
+`sample_file_manage`는 JPA 메타데이터와 다운로드 이력 테이블을 분리해 파일 관리 API를 구성하는 샘플이다.
 `smaple_multi-tenancy`는 JWT와 `tenant_id` 분리를 결합해 멀티테넌시를 시연하는 백엔드/프론트엔드 통합 샘플이다.
 `sample_Observability`는 JPA, JWT, Prometheus, Grafana를 하나의 운영형 API에 묶어 관측 흐름을 시연하는 샘플이다.
 `sample_google_oauth`는 Spring Security OAuth2 Client와 React 프론트엔드를 결합해 Google 로그인, JWT 인증, Redis 기반 토큰/상태 관리 흐름을 보여주는 샘플이다.
@@ -34,6 +35,7 @@ Spring Boot 기반 실전형 샘플 프로젝트 모음이다. 각 폴더는 독
 | --- | --- | --- |
 | `sample_redisson` | Redis 기반 키-값 저장, 원자 카운터, 분산 락 샘플 | Spring Boot, Redisson, Redis |
 | `sample_file_stream` | JPA 메타데이터 + Local/S3 파일 저장/다운로드 샘플 | Spring Boot, JPA, H2, AWS S3 SDK |
+| `sample_file_manage` | 파일 메타데이터 + 다운로드 이력 관리 샘플 | Spring Boot, JPA, H2 |
 | `sample_recommend` | 고객 선호와 행동 이력을 함께 반영하는 상품 추천 서버 샘플 | Spring Boot, JPA, H2, Actuator |
 | `sample_ranking` | 점수 이벤트와 시즌 리더보드를 함께 관리하는 랭킹 서버 샘플 | Spring Boot, JPA, H2, Actuator |
 | `smaple_multi-tenancy` | JWT 기반 테넌트 분리와 관리 화면을 함께 보여주는 샘플 | Spring Boot, JPA, Spring Security, JWT, Next.js |
@@ -103,6 +105,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_secure_bff && ./gradlew boot
 cd /Users/revy/workspace_codex/spring_sample/sample_websocket_realtime && ./gradlew bootRun --args='--server.port=8085'
 cd /Users/revy/workspace_codex/spring_sample/sample_spring_admin && ./gradlew bootRun --args='--server.port=8086'
 cd /Users/revy/workspace_codex/spring_sample/sample_file_stream && ./gradlew bootRun --args='--server.port=8087'
+cd /Users/revy/workspace_codex/spring_sample/sample_file_manage && ./scripts/all-start.sh
 cd /Users/revy/workspace_codex/spring_sample/sample_ranking && ./scripts/all-start.sh
 cd /Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy && ./scripts/all-start.sh
 cd /Users/revy/workspace_codex/spring_sample/sample_Observability && ./scripts/all-start.sh
@@ -167,6 +170,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 | --- | --- |
 | `sample_redisson` | `8080` |
 | `sample_file_stream` | `8080` |
+| `sample_file_manage` | `8080` |
 | `sample_recommend` | `8080` |
 | `sample_ranking` | `8092` |
 | `smaple_multi-tenancy/backend` | `8086` |
@@ -210,6 +214,7 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 
 - [sample_redisson/README.md](/Users/revy/workspace_codex/spring_sample/sample_redisson/README.md)
 - [sample_file_stream/README.md](/Users/revy/workspace_codex/spring_sample/sample_file_stream/README.md)
+- [sample_file_manage/README.md](/Users/revy/workspace_codex/spring_sample/sample_file_manage/README.md)
 - [sample_recommend/README.md](/Users/revy/workspace_codex/spring_sample/sample_recommend/README.md)
 - [sample_ranking/README.md](/Users/revy/workspace_codex/spring_sample/sample_ranking/README.md)
 - [smaple_multi-tenancy/README.md](/Users/revy/workspace_codex/spring_sample/smaple_multi-tenancy/README.md)
@@ -243,6 +248,10 @@ cd /Users/revy/workspace_codex/spring_sample/sample_mcp_client && ./gradlew boot
 ```bash
 cd /Users/revy/workspace_codex/spring_sample/sample_redisson && ./gradlew test
 cd /Users/revy/workspace_codex/spring_sample/sample_file_stream && ./gradlew test
+cd /Users/revy/workspace_codex/spring_sample/sample_file_manage && ./gradlew test
+sh -n /Users/revy/workspace_codex/spring_sample/sample_file_manage/scripts/all-start.sh
+sh -n /Users/revy/workspace_codex/spring_sample/sample_file_manage/scripts/all-stop.sh
+sh -n /Users/revy/workspace_codex/spring_sample/sample_file_manage/scripts/all-restart.sh
 cd /Users/revy/workspace_codex/spring_sample/sample_recommend && ./gradlew test
 sh -n /Users/revy/workspace_codex/spring_sample/sample_recommend/scripts/all-start.sh
 sh -n /Users/revy/workspace_codex/spring_sample/sample_recommend/scripts/all-stop.sh
