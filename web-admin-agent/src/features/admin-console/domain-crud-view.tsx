@@ -5,8 +5,8 @@ import { Check, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AdminApiService } from "@/services/admin-api-service";
-import type { AuthSession, DomainConfig, FieldConfig, JsonRecord } from "@/types/admin-api";
+import type { BaseCrudService } from "@/services/base-crud-service";
+import type { DomainConfig, FieldConfig, JsonRecord } from "@/types/admin-api";
 import { RestAgGridTemplate } from "./rest-ag-grid-template";
 
 function initialValues(fields: FieldConfig[], source?: JsonRecord): JsonRecord {
@@ -43,13 +43,11 @@ function getRowId(row: JsonRecord | null): string | undefined {
  * DomainConfig만 교체하면 관리자, 계좌, 계좌 거래 화면으로 재사용됩니다.
  */
 export function DomainCrudView({
-  apiService,
   config,
-  session,
+  crudService,
 }: {
-  apiService: AdminApiService;
   config: DomainConfig;
-  session: AuthSession;
+  crudService: BaseCrudService;
 }) {
   const [searchValues, setSearchValues] = useState<JsonRecord>(() =>
     initialValues(config.searchFields)
@@ -60,7 +58,12 @@ export function DomainCrudView({
   const [rows, setRows] = useState<JsonRecord[]>([]);
   const [selectedRow, setSelectedRow] = useState<JsonRecord | null>(null);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [pageInfo, setPageInfo] = useState({ page: 0, size: 20, totalElements: 0 });
+  const [pageInfo, setPageInfo] = useState({
+    page: 0,
+    size: 20,
+    totalElements: 0,
+    totalPages: 0,
+  });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -72,24 +75,25 @@ export function DomainCrudView({
     [config.label, mode]
   );
 
-  const handleSearch = async (page = 0) => {
+  const resetForm = () => {
+    setMode("create");
+    setSelectedRow(null);
+    setFormValues(initialValues(config.formFields));
+  };
+
+  const handleSearch = async (page = 0, nextSize = pageInfo.size) => {
     setIsLoading(true);
     setError("");
     setMessage("");
 
     try {
-      const response = await apiService.search(
-        config.endpoint,
-        session.accessToken || "",
-        normalizePayload(searchValues),
-        page,
-        pageInfo.size
-      );
+      const response = await crudService.search(normalizePayload(searchValues), page, nextSize);
       setRows(response.content ?? []);
       setPageInfo({
         page: response.page ?? page,
-        size: response.size ?? pageInfo.size,
+        size: response.size ?? nextSize,
         totalElements: response.totalElements ?? 0,
+        totalPages: response.totalPages ?? 0,
       });
       setSelectedRow(null);
     } catch (errorValue) {
@@ -99,16 +103,28 @@ export function DomainCrudView({
     }
   };
 
-  const handleSelect = (row: JsonRecord) => {
+  const handleSelect = async (row: JsonRecord) => {
     setSelectedRow(row);
     setMode("edit");
     setFormValues(initialValues(config.formFields, row));
+
+    const id = getRowId(row);
+    if (!id) {
+      return;
+    }
+
+    try {
+      const detail = await crudService.get(id);
+      const merged = { ...row, ...detail };
+      setSelectedRow(merged);
+      setFormValues(initialValues(config.formFields, merged));
+    } catch {
+      // 상세 API 응답 스키마가 비어 있는 도메인은 목록 데이터만으로 편집합니다.
+    }
   };
 
   const handleNew = () => {
-    setMode("create");
-    setSelectedRow(null);
-    setFormValues(initialValues(config.formFields));
+    resetForm();
     setMessage("");
     setError("");
   };
@@ -127,15 +143,16 @@ export function DomainCrudView({
           throw new Error("수정할 행의 id가 없습니다.");
         }
 
-        await apiService.update(config.endpoint, session.accessToken || "", selectedId, payload);
+        await crudService.update(selectedId, payload);
+        await handleSearch(pageInfo.page);
+        resetForm();
         setMessage("수정이 완료되었습니다.");
       } else {
-        await apiService.create(config.endpoint, session.accessToken || "", payload);
+        await crudService.create(payload);
+        await handleSearch(0);
+        resetForm();
         setMessage("생성이 완료되었습니다.");
       }
-
-      await handleSearch(pageInfo.page);
-      handleNew();
     } catch (errorValue) {
       setError(errorValue instanceof Error ? errorValue.message : "저장에 실패했습니다.");
     } finally {
@@ -158,10 +175,10 @@ export function DomainCrudView({
     setMessage("");
 
     try {
-      await apiService.delete(config.endpoint, session.accessToken || "", selectedId);
-      setMessage("삭제가 완료되었습니다.");
+      await crudService.delete(selectedId);
       await handleSearch(pageInfo.page);
-      handleNew();
+      resetForm();
+      setMessage("삭제가 완료되었습니다.");
     } catch (errorValue) {
       setError(errorValue instanceof Error ? errorValue.message : "삭제에 실패했습니다.");
     } finally {
@@ -247,11 +264,33 @@ export function DomainCrudView({
             >
               이전
             </Button>
-            <span className="text-sm text-slate-500">{pageInfo.page + 1} 페이지</span>
+            <div className="flex items-center gap-3 text-sm text-slate-500">
+              <span>
+                {pageInfo.page + 1} / {Math.max(pageInfo.totalPages, 1)} 페이지
+              </span>
+              <label className="flex items-center gap-2">
+                <span>페이지 크기</span>
+                <select
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm"
+                  value={pageInfo.size}
+                  onChange={(event) => void handleSearch(0, Number(event.target.value))}
+                >
+                  {[10, 20, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
             <Button
               variant="outline"
               size="sm"
-              disabled={rows.length < pageInfo.size || isLoading}
+              disabled={
+                isLoading ||
+                (pageInfo.totalPages > 0 && pageInfo.page + 1 >= pageInfo.totalPages) ||
+                rows.length < pageInfo.size
+              }
               onClick={() => void handleSearch(pageInfo.page + 1)}
             >
               다음

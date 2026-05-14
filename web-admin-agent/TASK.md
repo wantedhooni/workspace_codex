@@ -16,3 +16,31 @@
 - `npm run build` 검증을 통과했다.
 - Playwright 브라우저로 로그인 화면, 세션 주입 후 대시보드, 관리자 CRUD 화면과 AG Grid 렌더링을 확인했다.
 - 실제 개발 서버 포트 3333과 데모 계정 정보를 README 및 실행 스크립트에 반영했다.
+- 목록 검색 query를 `searchRequest.email` 같은 prefix 방식에서 `email` 같은 flat query parameter 방식으로 변경했다.
+- 도메인 전환 시 CRUD 화면 상태가 섞이지 않도록 도메인 key 기반 remount를 적용했다.
+- 생성/수정/삭제 성공 메시지가 사라지지 않도록 폼 초기화 흐름을 보정했다.
+- 행 선택 시 단건 상세 조회를 시도하고, 응답이 있으면 수정 폼에 반영하도록 개선했다.
+- 페이지 크기 선택과 전체 페이지 표시를 추가했다.
+- `npm run lint`, `npm run build`, `bash -n script/*.sh` 재검증을 통과했다.
+- Playwright로 관리자 CRUD 화면을 다시 열어 AG Grid와 페이지 크기 UI가 콘솔 오류 없이 렌더링되는 것을 확인했다.
+- REST API CORS 오류 해결을 위해 Next.js Route Handler 기반 `/api/admin-proxy/[...path]` BFF 프록시를 추가했다.
+- 브라우저 REST 서비스 기본 호출 대상을 백엔드 직접 URL에서 same-origin `/api/admin-proxy`로 변경했다.
+- 프록시 백엔드 대상 환경변수 `ADMIN_API_BASE_URL`을 문서화하고, `NEXT_PUBLIC_API_URL` fallback을 유지했다.
+- `curl http://localhost:3333/api/admin-proxy/api/v1/auth/me`로 프록시가 백엔드 인증 응답을 전달하는 것을 확인했다.
+- 백엔드 API URL 기준 환경변수를 `NEXT_PUBLIC_API_URL` 우선 사용 방식으로 변경했다.
+- `admin-proxy` 미사용 요청에 따라 프록시 Route Handler를 제거하고, REST 서비스가 `NEXT_PUBLIC_API_URL`을 직접 호출하도록 변경했다.
+- 백엔드에서 `http://localhost:3333` CORS 허용이 필요함을 README에 명시했다.
+- `src/services/api-client.ts`를 추가해 JWT accessToken 첨부, refreshToken 재발급, 401 재시도, 세션 저장소 구독을 분리했다.
+- CRUD 화면에서 accessToken을 직접 넘기지 않도록 수정했다.
+- `npm run lint`, `npm run build` 검증을 통과했다.
+- `api-docs.json`의 controller tag 기준으로 `AuthService`, `AdminService`, `AccountService`, `AccountTransactionService`를 추가했다.
+- 공통 CRUD 요청을 재사용하는 `BaseCrudService`를 추가했다.
+- `AdminApiService` 파사드를 제거하고 화면이 `AuthService`와 도메인별 CRUD 서비스를 직접 사용하도록 정리했다.
+- `DomainConfig`에서 서비스 호출에 쓰지 않는 `endpoint` 필드를 제거했다.
+- `npm run lint`, `npm run build`를 통과했다.
+- Playwright로 대시보드 세션 복원과 관리자 CRUD 화면 렌더링을 확인했다.
+- `axios` 의존성을 추가하고 `ApiClient`의 HTTP 요청 구현을 fetch에서 axios 인스턴스 기반으로 변경했다.
+- axios request interceptor에서 JWT accessToken을 자동 첨부하고, response interceptor에서 401 응답 시 refreshToken으로 갱신 후 원 요청을 1회 재시도하도록 구현했다.
+- 로그인/refresh 요청별 401 오류 메시지를 분리했다.
+- `npm run lint`, `npm run build`를 통과했다.
+- `api-client.ts`를 단일 `request` 메서드 중심으로 단순화하고 `authRequest/publicRequest` 분기를 제거했다.

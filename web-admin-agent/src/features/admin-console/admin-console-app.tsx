@@ -14,7 +14,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AdminApiService, AuthStorageService } from "@/services/admin-api-service";
+import { AccountService, AccountTransactionService, AdminService, ApiClient, AuthService, AuthStorageService } from "@/services";
+import type { BaseCrudService } from "@/services/base-crud-service";
 import type { AuthSession, DomainKey, NavigationKey } from "@/types/admin-api";
 import { cn } from "@/lib/utils";
 import { domainConfigs } from "./domain-config";
@@ -36,7 +37,18 @@ const navigationItems: Array<{
  * 인증 상태에 따라 로그인 페이지와 운영 대시보드를 전환합니다.
  */
 export function AdminConsoleApp() {
-  const apiService = useMemo(() => new AdminApiService(), []);
+  const services = useMemo(() => {
+    const apiClient = new ApiClient();
+
+    return {
+      auth: new AuthService(apiClient),
+      domains: {
+        admin: new AdminService(apiClient),
+        account: new AccountService(apiClient),
+        accounttransaction: new AccountTransactionService(apiClient),
+      } satisfies Record<DomainKey, BaseCrudService>,
+    };
+  }, []);
   const authStorage = useMemo(() => new AuthStorageService(), []);
   const sessionRaw = useSyncExternalStore(
     (onStoreChange) => authStorage.subscribe(onStoreChange),
@@ -50,6 +62,10 @@ export function AdminConsoleApp() {
   const [activeMenu, setActiveMenu] = useState<NavigationKey>("dashboard");
 
   const activeDomain = domainConfigs.find((domain) => domain.key === activeMenu);
+  const activeCrudService =
+    activeDomain && activeDomain.key in services.domains
+      ? services.domains[activeDomain.key]
+      : null;
 
   const handleLogin = (nextSession: AuthSession) => {
     authStorage.write(nextSession);
@@ -57,20 +73,16 @@ export function AdminConsoleApp() {
   };
 
   const handleLogout = async () => {
-    if (session) {
-      try {
-        await apiService.logout(session);
-      } catch {
-        // 서버 로그아웃 실패 시에도 브라우저 세션은 제거해 재인증을 유도합니다.
-      }
+    try {
+      await services.auth.logout();
+    } catch {
+      authStorage.clear();
     }
-
-    authStorage.clear();
     setActiveMenu("dashboard");
   };
 
   if (!session?.accessToken) {
-    return <LoginPage apiService={apiService} onLogin={handleLogin} />;
+    return <LoginPage authService={services.auth} onLogin={handleLogin} />;
   }
 
   return (
@@ -116,12 +128,10 @@ export function AdminConsoleApp() {
             <div className="text-sm font-semibold">
               {activeMenu === "dashboard" ? "대시보드" : activeDomain?.label}
             </div>
-              <div className="text-xs text-slate-500">
-                API 서버:{" "}
-                {process.env.NEXT_PUBLIC_API_BASE_URL ??
-                  process.env.NEXT_PUBLIC_API_URL ??
-                  "http://localhost:8081"}
-              </div>
+            <div className="text-xs text-slate-500">
+              API 서버:{" "}
+              {process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081"}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
@@ -139,11 +149,11 @@ export function AdminConsoleApp() {
           {activeMenu === "dashboard" ? (
             <DashboardIndex session={session} onNavigate={(key) => setActiveMenu(key)} />
           ) : (
-            activeDomain && (
+            activeDomain && activeCrudService && (
               <DomainCrudView
-                apiService={apiService}
+                key={activeDomain.key}
                 config={activeDomain}
-                session={session}
+                crudService={activeCrudService}
               />
             )
           )}
@@ -154,10 +164,10 @@ export function AdminConsoleApp() {
 }
 
 function LoginPage({
-  apiService,
+  authService,
   onLogin,
 }: {
-  apiService: AdminApiService;
+  authService: AuthService;
   onLogin: (session: AuthSession) => void;
 }) {
   const [email, setEmail] = useState("");
@@ -171,7 +181,7 @@ function LoginPage({
     setIsLoading(true);
 
     try {
-      const session = await apiService.login({ email, password });
+      const session = await authService.login({ email, password });
       onLogin(session);
     } catch (errorValue) {
       setError(errorValue instanceof Error ? errorValue.message : "로그인에 실패했습니다.");

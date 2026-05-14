@@ -24,6 +24,14 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface LogoutRequest {
+  refreshToken?: string;
+}
+
 export interface AdminAuthResponse {
   accessToken?: string;
   refreshToken?: string;
@@ -33,6 +41,28 @@ export interface AdminAuthResponse {
 export interface AuthSession extends AdminAuthResponse {
   email: string;
 }
+
+export interface PageableRequest extends JsonRecord {
+  page?: number;
+  size?: number;
+  sort?: string[];
+}
+
+export interface AdminRequest extends JsonRecord {
+  email: string;
+  name: string;
+  password: string;
+}
+
+export type AdminSearchRequest = Partial<AdminRequest>;
+
+export type AccountRequest = JsonRecord;
+
+export type AccountSearchRequest = JsonRecord;
+
+export type AccountTransactionRequest = JsonRecord;
+
+export type AccountTransactionSearchRequest = JsonRecord;
 
 export interface FieldConfig {
   name: string;
@@ -46,7 +76,6 @@ export interface DomainConfig {
   key: DomainKey;
   label: string;
   description: string;
-  endpoint: string;
   searchFields: FieldConfig[];
   formFields: FieldConfig[];
   columnFields: string[];

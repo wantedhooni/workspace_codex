@@ -5,7 +5,6 @@ export const domainConfigs: DomainConfig[] = [
     key: "admin",
     label: "관리자",
     description: "운영자 계정 생성, 검색, 수정, 삭제를 관리합니다.",
-    endpoint: "/api/v1/admin",
     searchFields: [
       { name: "email", label: "이메일", type: "email", placeholder: "admin@example.com" },
       { name: "name", label: "이름", placeholder: "관리자명" },
@@ -21,7 +20,6 @@ export const domainConfigs: DomainConfig[] = [
     key: "account",
     label: "계좌",
     description: "계좌 정보를 검색하고 등록 데이터를 운영합니다.",
-    endpoint: "/api/v1/account",
     searchFields: [
       { name: "accountNumber", label: "계좌번호", placeholder: "계좌번호" },
       { name: "name", label: "예금주", placeholder: "예금주" },
@@ -39,7 +37,6 @@ export const domainConfigs: DomainConfig[] = [
     key: "accounttransaction",
     label: "계좌 거래",
     description: "입출금 거래 이력을 검색하고 보정 데이터를 관리합니다.",
-    endpoint: "/api/v1/accounttransaction",
     searchFields: [
       { name: "accountId", label: "계좌 ID", type: "number", placeholder: "계좌 ID" },
       { name: "transactionType", label: "거래 유형", placeholder: "DEPOSIT" },

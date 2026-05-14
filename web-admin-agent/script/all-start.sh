@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PID_FILE="$ROOT_DIR/.next-dev.pid"
 LOG_FILE="$ROOT_DIR/.next-dev.log"
 APP_URL="${APP_URL:-http://localhost:3333}"
-API_URL="${NEXT_PUBLIC_API_BASE_URL:-${NEXT_PUBLIC_API_URL:-http://localhost:8081}}"
+API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:8081}"
 DEMO_ID="${DEMO_ID:-admin@example.com}"
 DEMO_PASSWORD="${DEMO_PASSWORD:-Qwer1234!}"
 
