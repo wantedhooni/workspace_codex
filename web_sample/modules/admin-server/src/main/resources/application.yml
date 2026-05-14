@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: admin-server
+  datasource:
+    url: ${ADMIN_DB_URL:jdbc:postgresql://localhost:5433/admin_sample}
+    username: ${ADMIN_DB_USERNAME:admin_sample}
+    password: ${ADMIN_DB_PASSWORD:admin_sample_pw}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
+
+server:
+  port: ${ADMIN_SERVER_PORT:8081}
+
+app:
+  jwt:
+    issuer: ${JWT_ISSUER:web-sample}
+    secret: ${JWT_SECRET:web-sample-local-development-secret-key-minimum-256-bits}
+    access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:60}
+    refresh-token-expiration-days: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:14}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

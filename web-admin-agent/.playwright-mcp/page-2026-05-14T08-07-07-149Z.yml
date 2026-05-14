@@ -1,0 +1,104 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e17]:
+    - complementary [ref=e18]:
+      - generic [ref=e19]:
+        - img [ref=e21]
+        - generic [ref=e24]:
+          - generic [ref=e25]: ADMIN Console
+          - generic [ref=e26]: JWT 운영 관리자
+      - navigation [ref=e27]:
+        - button "대시보드" [ref=e28]:
+          - img [ref=e29]
+          - text: 대시보드
+        - button "관리자" [ref=e34]:
+          - img [ref=e35]
+          - text: 관리자
+        - button "계좌" [ref=e40]:
+          - img [ref=e41]
+          - text: 계좌
+        - button "계좌 거래" [ref=e45]:
+          - img [ref=e46]
+          - text: 계좌 거래
+    - generic [ref=e50]:
+      - banner [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: 관리자
+          - generic [ref=e54]: "API 서버: http://localhost:8081"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: demo@example.com
+            - generic [ref=e58]: Bearer 인증
+          - button "로그아웃" [ref=e59]:
+            - img
+            - text: 로그아웃
+      - main [ref=e60]:
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]:
+              - heading "관리자" [level=1] [ref=e124]
+              - paragraph [ref=e125]: 운영자 계정 생성, 검색, 수정, 삭제를 관리합니다.
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - text: 이메일
+                - textbox "이메일" [ref=e128]:
+                  - /placeholder: admin@example.com
+              - generic [ref=e129]:
+                - text: 이름
+                - textbox "이름" [ref=e130]:
+                  - /placeholder: 관리자명
+              - generic [ref=e131]:
+                - button "검색" [ref=e132]:
+                  - img
+                  - text: 검색
+                - button "초기화" [ref=e133]:
+                  - img
+                  - text: 초기화
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - generic [ref=e136]:
+                - generic [ref=e137]: 총 0건
+                - generic [ref=e138]:
+                  - button "새로고침" [ref=e139]:
+                    - img
+                    - text: 새로고침
+                  - button "신규" [ref=e140]:
+                    - img
+                    - text: 신규
+                  - button "삭제" [disabled]:
+                    - img
+                    - text: 삭제
+              - generic [ref=e143]:
+                - button "이전" [disabled]
+                - generic [ref=e144]: 1 페이지
+                - button "다음" [disabled]
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e147]:
+                  - heading "관리자 생성" [level=2] [ref=e148]
+                  - paragraph [ref=e149]: "선택 행 ID: 신규 입력"
+                - img [ref=e150]
+              - generic [ref=e153]:
+                - generic [ref=e154]:
+                  - text: 이메일
+                  - textbox "이메일" [ref=e155]
+                - generic [ref=e156]:
+                  - text: 이름
+                  - textbox "이름" [ref=e157]
+                - generic [ref=e158]:
+                  - text: 비밀번호
+                  - textbox "비밀번호" [ref=e159]
+                - generic [ref=e160]:
+                  - button "생성" [ref=e161]
+                  - button "취소" [ref=e162]
+  - generic [ref=e115] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e116]:
+      - img [ref=e117]
+    - generic [ref=e163]:
+      - button "Open issues overlay" [ref=e164]:
+        - generic [ref=e165]:
+          - generic [ref=e166]: "0"
+          - generic [ref=e167]: "1"
+        - generic [ref=e168]: Issue
+      - button "Collapse issues badge" [ref=e169]:
+        - img [ref=e170]
+  - alert [ref=e120]

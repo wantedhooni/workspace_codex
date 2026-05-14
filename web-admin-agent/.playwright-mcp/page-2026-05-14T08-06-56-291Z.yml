@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - heading "ADMIN API 로그인" [level=1] [ref=e9]
+      - paragraph [ref=e10]: JWT 기반 관리자 콘솔입니다. 발급받은 관리자 계정으로 로그인하세요.
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - text: 이메일
+        - textbox "이메일" [ref=e13]:
+          - /placeholder: admin@example.com
+      - generic [ref=e14]:
+        - text: 비밀번호
+        - textbox "비밀번호" [ref=e15]
+      - button "로그인" [ref=e16]
+  - alert [ref=e17]
