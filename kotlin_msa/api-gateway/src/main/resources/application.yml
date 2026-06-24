@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: product-service
+              uri: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/products/**
+            - id: inventory-service
+              uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/inventories/**
+            - id: payment-service
+              uri: ${PAYMENT_SERVICE_URL:http://localhost:8083}
+              predicates:
+                - Path=/api/payments/**
+            - id: order-service
+              uri: ${ORDER_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/orders/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+

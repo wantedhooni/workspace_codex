@@ -1,0 +1,40 @@
+### Gateway readiness
+GET http://localhost:8080/actuator/health/readiness
+
+### 상품 목록 조회
+GET http://localhost:8080/api/products
+
+### 재고 조회
+GET http://localhost:8080/api/inventories/SKU-001
+
+### 주문 생성
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "CUST-001",
+  "items": [
+    {
+      "sku": "SKU-001",
+      "quantity": 1,
+      "unitPrice": 129000
+    }
+  ],
+  "paymentMethod": "CARD"
+}
+
+### 결제 실패 주문 생성
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "CUST-001",
+  "items": [
+    {
+      "sku": "SKU-001",
+      "quantity": 1,
+      "unitPrice": 1000001
+    }
+  ],
+  "paymentMethod": "CARD"
+}

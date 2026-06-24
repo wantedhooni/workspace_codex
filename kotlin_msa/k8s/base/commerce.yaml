@@ -1,0 +1,381 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: commerce
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: commerce-app
+  namespace: commerce
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: commerce-app-reader
+  namespace: commerce
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: commerce-app-reader
+  namespace: commerce
+subjects:
+  - kind: ServiceAccount
+    name: commerce-app
+    namespace: commerce
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: commerce-app-reader
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: commerce-runtime-config
+  namespace: commerce
+data:
+  SERVER_PORT: "8080"
+  PRODUCT_SERVICE_URL: "http://product-service:8080"
+  INVENTORY_SERVICE_URL: "http://inventory-service:8080"
+  PAYMENT_SERVICE_URL: "http://payment-service:8080"
+  ORDER_SERVICE_URL: "http://order-service:8080"
+  SPRING_CONFIG_IMPORT: "optional:kubernetes:"
+  SPRING_CLOUD_KUBERNETES_CONFIG_ENABLED: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: commerce
+  labels:
+    app: product-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: product-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: product-service
+        version: v1
+    spec:
+      serviceAccountName: commerce-app
+      containers:
+        - name: product-service
+          image: commerce/product-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: commerce-runtime-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: commerce
+  labels:
+    app: product-service
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: product-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: commerce
+  labels:
+    app: inventory-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inventory-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+        version: v1
+    spec:
+      serviceAccountName: commerce-app
+      containers:
+        - name: inventory-service
+          image: commerce/inventory-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: commerce-runtime-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: commerce
+  labels:
+    app: inventory-service
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: inventory-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: commerce
+  labels:
+    app: payment-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        version: v1
+    spec:
+      serviceAccountName: commerce-app
+      containers:
+        - name: payment-service
+          image: commerce/payment-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: commerce-runtime-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: commerce
+  labels:
+    app: payment-service
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: payment-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: commerce
+  labels:
+    app: order-service
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: order-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: order-service
+        version: v1
+    spec:
+      serviceAccountName: commerce-app
+      containers:
+        - name: order-service
+          image: commerce/order-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: commerce-runtime-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: commerce
+  labels:
+    app: order-service
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: order-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: commerce
+  labels:
+    app: api-gateway
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        version: v1
+    spec:
+      serviceAccountName: commerce-app
+      containers:
+        - name: api-gateway
+          image: commerce/api-gateway:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: commerce-runtime-config
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: commerce
+  labels:
+    app: api-gateway
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+  selector:
+    app: api-gateway

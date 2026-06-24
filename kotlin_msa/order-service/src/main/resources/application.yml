@@ -1,0 +1,22 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: order-service
+
+commerce:
+  clients:
+    inventory-url: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+    payment-url: ${PAYMENT_SERVICE_URL:http://localhost:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+

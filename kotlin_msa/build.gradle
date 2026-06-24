@@ -1,0 +1,87 @@
+plugins {
+    id 'java-library'
+    id 'org.jetbrains.kotlin.jvm' version '2.2.20' apply false
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.2.20' apply false
+    id 'org.springframework.boot' version '4.0.7' apply false
+    id 'com.google.cloud.tools.jib' version '3.5.3' apply false
+}
+
+ext {
+    springBootVersion = '4.0.7'
+    springCloudVersion = '2025.1.2'
+    cucumberVersion = '7.34.3'
+}
+
+subprojects {
+    group = 'com.example.commerce'
+    version = '0.1.0'
+
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'org.jetbrains.kotlin.plugin.spring'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+    dependencies {
+        implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+        implementation platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+        implementation 'org.jetbrains.kotlin:kotlin-reflect'
+        implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-fabric8-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-fabric8'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation platform("io.cucumber:cucumber-bom:${cucumberVersion}")
+        testImplementation 'io.cucumber:cucumber-java'
+        testImplementation 'io.cucumber:cucumber-junit-platform-engine'
+        testImplementation 'org.junit.platform:junit-platform-suite'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    kotlin {
+        jvmToolchain(21)
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        compilerOptions {
+            freeCompilerArgs.add('-Xjsr305=strict')
+        }
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+
+    jib {
+        def imageRegistry = providers.environmentVariable('IMAGE_REGISTRY').orElse('commerce').get()
+        def imageArchitecture = providers.environmentVariable('IMAGE_ARCH')
+            .orElse(System.getProperty('os.arch') == 'aarch64' ? 'arm64' : 'amd64')
+            .get()
+
+        from {
+            image = 'eclipse-temurin:21-jre'
+            platforms {
+                platform {
+                    architecture = imageArchitecture
+                    os = 'linux'
+                }
+            }
+        }
+        to {
+            image = "${imageRegistry}/${project.name}:${project.version}"
+        }
+        container {
+            ports = ['8080']
+            environment = [
+                'TZ': 'Asia/Seoul',
+                'JAVA_TOOL_OPTIONS': '-XX:MaxRAMPercentage=75.0'
+            ]
+            creationTime = 'USE_CURRENT_TIMESTAMP'
+            labels = [
+                'org.opencontainers.image.title': project.name,
+                'org.opencontainers.image.version': project.version.toString(),
+                'org.opencontainers.image.description': 'Kotlin Spring Boot commerce MSA service'
+            ]
+        }
+    }
+}
