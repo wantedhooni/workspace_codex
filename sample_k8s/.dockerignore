@@ -1,0 +1,17 @@
+.git
+.gitignore
+
+.gradle
+build
+**/build
+
+.idea
+.vscode
+*.iml
+
+.DS_Store
+
+logs
+tmp
+
+.dockerignore

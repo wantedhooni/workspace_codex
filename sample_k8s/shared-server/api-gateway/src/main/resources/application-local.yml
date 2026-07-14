@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  config:
+    import:
+      - "optional:classpath:application_otel.yaml"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: DEBUG
+    org.springframework.web.reactive: DEBUG

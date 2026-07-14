@@ -1,0 +1,48 @@
+services:
+  discovery-server:
+    container_name: discovery-server
+    image: sample_m8s/discovery-server
+    pull_policy: never
+    ports:
+      - "8761:8761"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka/
+    restart: unless-stopped
+
+  api-gateway:
+    container_name: api-gateway
+    image: sample_m8s/api-gateway
+    build:
+      context: .
+      dockerfile: shared-server/api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka/
+    restart: unless-stopped
+
+  app-1:
+    container_name: app-1
+    image: sample_m8s/app-1
+    build:
+      context: .
+      dockerfile: application/app-1/Dockerfile
+    pull_policy: never
+    ports:
+      - "10000:10000"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka/
+    restart: unless-stopped
+
+  app-2:
+    container_name: app-2
+    image: sample_m8s/app-2
+    build:
+      context: .
+      dockerfile: application/app-2/Dockerfile
+    pull_policy: never
+    ports:
+      - "11000:11000"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka/
+    restart: unless-stopped

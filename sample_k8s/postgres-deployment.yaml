@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose-Infra.yml
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose-Infra.yml
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: postgres
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: appdb
+            - name: POSTGRES_PASSWORD
+              value: app
+            - name: POSTGRES_USER
+              value: appuser
+          image: postgres:17.4
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
+            failureThreshold: 5
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: postgres
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d/init.sql
+              name: postgres-cm0
+              subPath: init.sql
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: init.sql
+                path: init.sql
+            name: postgres-cm0
+          name: postgres-cm0

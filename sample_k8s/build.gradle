@@ -1,0 +1,112 @@
+plugins {
+    id 'org.springframework.boot' version "${springBootVersion}" apply false
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}" apply false
+    id 'com.google.cloud.tools.jib' version "${jibVersion}" apply false
+
+    id 'jacoco'
+    id 'org.eclipse.jkube.kubernetes' version "${jkubeVersion}" apply false
+}
+
+ext {
+    javaVersion = JavaVersion.VERSION_21
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaVersion.majorVersion)
+        }
+    }
+
+
+    dependencyManagement {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+        }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'io.projectreactor:reactor-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-parameters']
+    }
+
+    plugins.withId('org.springframework.boot') {
+        dependencies{
+            // developmentOnly 'org.springframework.boot:spring-boot-devtools'
+        }
+
+        afterEvaluate {
+            tasks.named("bootBuildImage") {
+                def name = "${rootProject.name}/${project.name}"
+                println "bootBuildImage imageName = ${name}"
+                imageName = name
+                tags = ["${name}:latest", "${name}:${project.version}"]
+            }
+        }
+    }
+
+   /* plugins.withId('org.eclipse.jkube.kubernetes') {
+        afterEvaluate {
+            def imageName = "${rootProject.name}/${project.name}"
+            kubernetes {
+                generator {
+                    config {
+                        'spring-boot' {
+                            name = imageName
+                        }
+                    }
+                }
+            }
+
+            println "JKube generator config: ${imageName}"
+        }
+    }*/
+
+    /*plugins.withId('com.google.cloud.tools.jib'){
+        afterEvaluate {
+            // def imageName = "${rootProject.name}/${project.name}:${project.version}"
+            def imageName = "maa_k8s/${project.name}"
+            jib {
+                to {
+                    println "Jib image = ${imageName}"
+                    image = imageName
+                    tags = ["${project.version}","latest"]
+                }
+                dockerClient {
+                    // Homebrew로 설치된 docker 실행 파일 경로를 직접 지정
+                    executable = '/usr/local/bin/docker'
+                }
+            }
+        }
+    }*/
+
+}

@@ -1,0 +1,4 @@
+spring:
+  config:
+    import:
+      - "optional:classpath:application_otel.yaml"

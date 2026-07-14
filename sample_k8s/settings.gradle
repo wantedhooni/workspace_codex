@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+
+
+// Core modules
+include(":core:common-webmvc")
+// shared server
+include(":shared-server:api-gateway")
+include(":shared-server:discovery-server")
+
+// service server
+include(":application:app-1")
+include(":application:app-2")

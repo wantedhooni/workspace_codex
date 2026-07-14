@@ -1,0 +1,32 @@
+apiVersion: skaffold/v4beta14
+kind: Config
+metadata:
+  name: sample-m-s
+build:
+  artifacts:
+    - image: sample_m8s/api-gateway
+      context: .
+      docker:
+        dockerfile: shared-server/api-gateway/Dockerfile
+    - image: sample_m8s/discovery-server
+      context: .
+      docker:
+        dockerfile: shared-server/discovery-server/Dockerfile
+    - image: sample_m8s/app-1
+      context: .
+      docker:
+        dockerfile: application/app-1/Dockerfile
+    - image: sample_m8s/app-2
+      context: .
+      docker:
+        dockerfile: application/app-2/Dockerfile
+manifests:
+  rawYaml:
+    - k8s/*.yaml
+
+portForward:
+  - resourceType: service
+    resourceName: api-gateway
+    namespace:
+    port: 8080
+    localPort: 8080

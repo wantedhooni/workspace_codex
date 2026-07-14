@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose-Infra.yml
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: otel-lgtm
+  name: otel-lgtm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: otel-lgtm
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose-Infra.yml
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: otel-lgtm
+    spec:
+      containers:
+        - image: grafana/otel-lgtm:0.28.0
+          name: otel-lgtm
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+            - containerPort: 4317
+              protocol: TCP
+            - containerPort: 4318
+              protocol: TCP
+      restartPolicy: Always

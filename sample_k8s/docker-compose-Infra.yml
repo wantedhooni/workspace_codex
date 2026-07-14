@@ -1,0 +1,40 @@
+services:
+  # https://github.com/grafana/docker-otel-lgtm/
+  # https://grafana.com/blog/an-opentelemetry-backend-in-a-docker-image-introducing-grafana-otel-lgtm/
+  otel-lgtm:
+    container_name: otel-lgtm
+    image: grafana/otel-lgtm:0.28.0
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    # environment:
+      # ENABLE_LOGS_ALL: true
+    restart: unless-stopped
+
+  postgres:
+    container_name: "postgres"
+    image: "postgres:17.4"
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=appuser
+      - POSTGRES_PASSWORD=app
+      - POSTGRES_DB=appdb
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./docker/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+#  jaeger:
+#    container_name: jaeger
+#    image: jaegertracing/all-in-one:1.76.0
+#    environment:
+#      COLLECTOR_OTLP_ENABLED: "true"
+#    ports:
+#      - "16686:16686"     # Jaeger UI
+#    restart: unless-stopped

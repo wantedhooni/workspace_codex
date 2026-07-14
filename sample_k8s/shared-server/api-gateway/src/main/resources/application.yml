@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: gateway
+  profiles:
+    default: local
+  reactor:
+    context-propagation: auto
+  cloud:
+    gateway:
+      server:
+        webflux:
+#          default-filters:
+#            - name: CircuitBreaker
+#              args:
+#                name: defaultCircuitBreaker
+#                fallbackUri: forward:/fallback
+#            - name: Retry
+#              args:
+#                retries: 1
+#                statuses: SERVICE_UNAVAILABLE
+#                methods: POST
+          routes:
+            - id: app-1
+              uri: lb://APP-1
+              predicates:
+                - Path=/api/app-1/**
+              filters:
+                - StripPrefix=0
+            - id: app-2
+              uri: lb://APP-2
+              predicates:
+                - Path=/api/app-2/**
+              filters:
+                - StripPrefix=0
+#            - id: vets-service
+#              uri: lb://vets-service
+#              predicates:
+#                - Path=/api/vet/**
+#              filters:
+#                - StripPrefix=2
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVER_URL:http://localhost:8761/eureka/}
