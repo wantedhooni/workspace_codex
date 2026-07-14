@@ -1,0 +1,148 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+commerce:
+  security:
+    oauth2:
+      enabled: ${OAUTH2_ENABLED:false}
+      client-enabled: ${OAUTH2_CLIENT_ENABLED:false}
+      client-id: ${OAUTH2_RESOURCE_CLIENT_ID:commerce-api}
+
+spring:
+  application:
+    name: api-gateway
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:commerce-local}
+      connect-timeout: 2s
+      timeout: 1s
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: false
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 5s
+          routes:
+            - id: user-service
+              uri: ${USER_SERVICE_URI:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/users/**
+              filters:
+                - PreserveHostHeader
+                - name: CircuitBreaker
+                  args:
+                    name: userServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/users
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@requestKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${USER_RATE_LIMIT_REPLENISH_RATE:20}
+                    redis-rate-limiter.burstCapacity: ${USER_RATE_LIMIT_BURST_CAPACITY:40}
+                    redis-rate-limiter.requestedTokens: 1
+            - id: account-service
+              uri: ${ACCOUNT_SERVICE_URI:http://localhost:8082}
+              predicates:
+                - Path=/api/v1/accounts/**
+              filters:
+                - PreserveHostHeader
+                - name: CircuitBreaker
+                  args:
+                    name: accountServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/accounts
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@requestKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${ACCOUNT_RATE_LIMIT_REPLENISH_RATE:10}
+                    redis-rate-limiter.burstCapacity: ${ACCOUNT_RATE_LIMIT_BURST_CAPACITY:20}
+                    redis-rate-limiter.requestedTokens: 1
+            - id: contents-service
+              uri: ${CONTENTS_SERVICE_URI:http://localhost:8083}
+              predicates:
+                - Path=/api/v1/contents/**
+              filters:
+                - PreserveHostHeader
+                - name: CircuitBreaker
+                  args:
+                    name: contentsServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/contents
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@requestKeyResolver}"
+                    redis-rate-limiter.replenishRate: ${CONTENTS_RATE_LIMIT_REPLENISH_RATE:30}
+                    redis-rate-limiter.burstCapacity: ${CONTENTS_RATE_LIMIT_BURST_CAPACITY:60}
+                    redis-rate-limiter.requestedTokens: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+      group:
+        readiness:
+          include: readinessState,redis
+  tracing:
+    enabled: ${TRACING_ENABLED:false}
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    root: INFO
+    org.springframework.cloud.kubernetes: INFO
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCircuitBreaker:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+      accountServiceCircuitBreaker:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+      contentsServiceCircuitBreaker:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 5
+  timelimiter:
+    instances:
+      userServiceCircuitBreaker:
+        timeout-duration: 5s
+      accountServiceCircuitBreaker:
+        timeout-duration: 5s
+      contentsServiceCircuitBreaker:
+        timeout-duration: 5s

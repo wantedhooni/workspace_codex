@@ -1,0 +1,17 @@
+spring:
+  config:
+    import: optional:kubernetes:
+  cloud:
+    kubernetes:
+      client:
+        namespace: ${POD_NAMESPACE:commerce}
+      config:
+        enabled: true
+        fail-fast: true
+      discovery:
+        enabled: true
+        namespaces:
+          - ${POD_NAMESPACE:commerce}
+      reload:
+        enabled: false
+
