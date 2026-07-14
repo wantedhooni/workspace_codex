@@ -1,0 +1,13 @@
+.git
+.gradle
+.idea
+**/build
+deploy
+docs
+.env
+*.iml
+*.log
+.DS_Store
+AGENTS.md
+PLANS.md
+README.md

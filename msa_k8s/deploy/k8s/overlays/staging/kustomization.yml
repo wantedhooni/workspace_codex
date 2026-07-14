@@ -1,0 +1,160 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: commerce/api-gateway
+    newName: registry.example.com/commerce-staging/api-gateway
+    newTag: 0.1.0-rc
+  - name: commerce/user-service
+    newName: registry.example.com/commerce-staging/user-service
+    newTag: 0.1.0-rc
+  - name: commerce/account-service
+    newName: registry.example.com/commerce-staging/account-service
+    newTag: 0.1.0-rc
+  - name: commerce/contents-service
+    newName: registry.example.com/commerce-staging/contents-service
+    newTag: 0.1.0-rc
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: COMMERCE_OBSERVABILITY_METRICS_ENVIRONMENT
+          value: staging
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_RESOURCE_CLIENT_ID
+          value: commerce-api
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_CLIENT_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: https://identity.staging.example.com/realms/commerce
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_ID
+          value: commerce-gateway
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: commerce-auth-credentials
+              key: OAUTH2_GATEWAY_CLIENT_SECRET
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_AUTHORIZATION_GRANT_TYPE
+          value: authorization_code
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_REDIRECT_URI
+          value: "{baseUrl}/login/oauth2/code/{registrationId}"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_SCOPE
+          value: openid,profile,email
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+          value: https://identity.staging.example.com/realms/commerce
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: REDIS_PORT
+          value: "6380"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_SSL_ENABLED
+          value: "true"
+      - op: replace
+        path: /spec/template/spec/containers/0/env/7/value
+        value: redis.staging.example.internal
+  - target:
+      kind: Deployment
+      name: user-service
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: https://identity.staging.example.com/realms/commerce
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: jdbc:postgresql://postgresql.staging.example.internal:5432/commerce?sslmode=require
+      - op: replace
+        path: /spec/template/spec/containers/0/env/7/value
+        value: redis.staging.example.internal
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: REDIS_PORT
+          value: "6380"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_DATA_REDIS_SSL_ENABLED
+          value: "true"
+  - target:
+      kind: Deployment
+      name: account-service
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: https://identity.staging.example.com/realms/commerce
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: jdbc:postgresql://account-db.staging.example.internal:5432/account?sslmode=require
+  - target:
+      kind: Deployment
+      name: contents-service
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: https://identity.staging.example.com/realms/commerce
+      - op: replace
+        path: /spec/template/spec/containers/0/env/4/value
+        value: jdbc:postgresql://contents-db.staging.example.internal:5432/contents?sslmode=require

@@ -1,0 +1,127 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ../../data
+  - ../../auth
+generatorOptions:
+  disableNameSuffixHash: true
+secretGenerator:
+  - name: commerce-data-credentials
+    namespace: commerce
+    literals:
+      - POSTGRES_DB=commerce
+      - POSTGRES_USER=commerce
+      - POSTGRES_PASSWORD=commerce-dev-change-me
+      - USER_DB_USERNAME=commerce
+      - USER_DB_PASSWORD=commerce-dev-change-me
+      - ACCOUNT_DB_USERNAME=commerce
+      - ACCOUNT_DB_PASSWORD=commerce-dev-change-me
+      - CONTENTS_DB_USERNAME=commerce
+      - CONTENTS_DB_PASSWORD=commerce-dev-change-me
+      - REDIS_PASSWORD=commerce-dev-change-me
+images:
+  - name: commerce/api-gateway
+    newName: commerce-dev/api-gateway
+    newTag: 0.1.0-dev
+  - name: commerce/user-service
+    newName: commerce-dev/user-service
+    newTag: 0.1.0-dev
+  - name: commerce/account-service
+    newName: commerce-dev/account-service
+    newTag: 0.1.0-dev
+  - name: commerce/contents-service
+    newName: commerce-dev/contents-service
+    newTag: 0.1.0-dev
+patches:
+  - target:
+      kind: Deployment
+      labelSelector: app.kubernetes.io/part-of=commerce-msa
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: COMMERCE_OBSERVABILITY_METRICS_ENVIRONMENT
+          value: dev
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_RESOURCE_CLIENT_ID
+          value: commerce-api
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: http://localhost:8090/realms/commerce
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+          value: http://keycloak:8080/realms/commerce/protocol/openid-connect/certs
+  - target:
+      kind: Deployment
+      name: api-gateway
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: OAUTH2_CLIENT_ENABLED
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_ID
+          value: commerce-gateway
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: commerce-keycloak-credentials
+              key: OAUTH2_GATEWAY_CLIENT_SECRET
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_AUTHORIZATION_GRANT_TYPE
+          value: authorization_code
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_REDIRECT_URI
+          value: "{baseUrl}/login/oauth2/code/{registrationId}"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_SCOPE
+          value: openid,profile,email
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI
+          value: http://localhost:8090/realms/commerce/protocol/openid-connect/auth
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+          value: http://keycloak:8080/realms/commerce/protocol/openid-connect/token
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI
+          value: http://keycloak:8080/realms/commerce/protocol/openid-connect/certs
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI
+          value: http://keycloak:8080/realms/commerce/protocol/openid-connect/userinfo
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE
+          value: preferred_username

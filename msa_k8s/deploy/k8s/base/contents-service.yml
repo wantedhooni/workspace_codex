@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contents-service
+  namespace: commerce
+  labels:
+    app.kubernetes.io/name: contents-service
+    app.kubernetes.io/part-of: commerce-msa
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: contents-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: contents-service
+        app.kubernetes.io/part-of: commerce-msa
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: "8083"
+    spec:
+      serviceAccountName: commerce-app
+      terminationGracePeriodSeconds: 30
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: contents-service
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: contents-service
+          image: commerce/contents-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kubernetes
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: TRACING_ENABLED
+              value: "true"
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: http://otel-collector.observability.svc.cluster.local:4318/v1/traces
+            - name: DB_URL
+              value: jdbc:postgresql://postgresql:5432/commerce
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: commerce-data-credentials
+                  key: CONTENTS_DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: commerce-data-credentials
+                  key: CONTENTS_DB_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: contents-service
+  namespace: commerce
+  labels:
+    app.kubernetes.io/name: contents-service
+spec:
+  selector:
+    app.kubernetes.io/name: contents-service
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP

@@ -1,0 +1,8 @@
+rootProject.name = 'commerce-msa'
+
+include 'api-gateway'
+include 'user-service'
+include 'account-service'
+include 'contents-service'
+include 'common-metrics'
+include 'common-security'

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: commerce-api
+  namespace: commerce
+  labels:
+    app.kubernetes.io/part-of: commerce-msa
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: commerce.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  name: http
+

@@ -1,0 +1,147 @@
+{
+  "realm": "commerce",
+  "enabled": true,
+  "displayName": "Commerce MSA",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "commerce-user",
+        "description": "회원 서비스 접근 권한"
+      },
+      {
+        "name": "commerce-account",
+        "description": "계좌 서비스 접근 권한"
+      },
+      {
+        "name": "commerce-contents",
+        "description": "콘텐츠 조회 권한"
+      },
+      {
+        "name": "commerce-contents-editor",
+        "description": "콘텐츠 작성과 상태 변경 권한"
+      },
+      {
+        "name": "commerce-admin",
+        "description": "커머스 운영 관리자 권한"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "commerce-gateway",
+      "name": "Commerce API Gateway",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "commerce-gateway-local-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/login/oauth2/code/keycloak",
+        "http://127.0.0.1:8080/login/oauth2/code/keycloak",
+        "http://commerce.local/login/oauth2/code/keycloak",
+        "https://api.commerce.example.com/login/oauth2/code/keycloak",
+        "https://api.staging.commerce.example.com/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://commerce.local",
+        "https://api.commerce.example.com",
+        "https://api.staging.commerce.example.com"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "clientId": "commerce-cli",
+      "name": "Commerce Local CLI",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "defaultClientScopes": [
+        "profile",
+        "roles",
+        "email"
+      ]
+    },
+    {
+      "clientId": "commerce-api",
+      "name": "Commerce Resource Server",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "username": "alice",
+      "email": "alice@example.com",
+      "firstName": "Alice",
+      "lastName": "Commerce",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "commerce-user",
+        "commerce-account",
+        "commerce-contents",
+        "commerce-contents-editor"
+      ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000099",
+      "username": "commerce-admin",
+      "email": "admin@example.com",
+      "firstName": "Commerce",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "commerce-admin",
+        "commerce-user",
+        "commerce-account",
+        "commerce-contents",
+        "commerce-contents-editor"
+      ]
+    }
+  ]
+}

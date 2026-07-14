@@ -1,0 +1,117 @@
+def supportedEnvironments = ['local', 'dev', 'staging', 'production']
+def targetEnvironment = providers.gradleProperty('targetEnvironment').getOrElse('local')
+def osArchitecture = System.getProperty('os.arch').toLowerCase()
+def hostArchitecture = osArchitecture in ['aarch64', 'arm64'] ? 'arm64' :
+        osArchitecture in ['amd64', 'x86_64'] ? 'amd64' : osArchitecture
+
+if (!supportedEnvironments.contains(targetEnvironment)) {
+    throw new GradleException(
+            "지원하지 않는 targetEnvironment입니다: ${targetEnvironment}. " +
+                    "허용값: ${supportedEnvironments.join(', ')}")
+}
+
+def modulePropertyPrefix = [
+        'api-gateway': 'apiGateway',
+        'user-service': 'userService',
+        'account-service': 'accountService',
+        'contents-service': 'contentsService'
+][project.name]
+
+def modulePort = [
+        'api-gateway': '8080',
+        'user-service': '8081',
+        'account-service': '8082',
+        'contents-service': '8083'
+][project.name]
+
+def environmentRegistryProperty = "${targetEnvironment}ImageRegistry"
+def environmentRegistryVariable = "${targetEnvironment.toUpperCase()}_IMAGE_REGISTRY"
+
+def imageRegistry = providers.gradleProperty("${modulePropertyPrefix}ImageRegistry")
+        .orElse(providers.gradleProperty('imageRegistry'))
+        .orElse(providers.environmentVariable(environmentRegistryVariable))
+        .orElse(providers.gradleProperty(environmentRegistryProperty))
+        .get()
+
+def defaultImageTags = [
+        local: "${project.version}-local",
+        dev: "${project.version}-dev",
+        staging: "${project.version}-rc",
+        production: project.version.toString()
+]
+
+def imageTag = providers.gradleProperty("${modulePropertyPrefix}ImageTag")
+        .orElse(providers.gradleProperty('imageTag'))
+        .orElse(providers.environmentVariable('IMAGE_TAG'))
+        .getOrElse(defaultImageTags[targetEnvironment])
+
+def targetImage = "${imageRegistry}/${project.name}:${imageTag}"
+def dockerArchitecture = providers.gradleProperty('dockerArchitecture').getOrElse(hostArchitecture)
+def buildImage = providers.gradleProperty('dockerBuildImage').get()
+def runtimeImage = providers.gradleProperty('dockerRuntimeImage').get()
+def explicitPushRegistry = providers.gradleProperty("${modulePropertyPrefix}ImageRegistry").isPresent()
+        || providers.gradleProperty('imageRegistry').isPresent()
+        || providers.environmentVariable(environmentRegistryVariable).isPresent()
+
+def commonBuildArguments = {
+    [
+            '--platform', "linux/${dockerArchitecture}",
+            '--file', rootProject.file('Dockerfile').absolutePath,
+            '--build-arg', "MODULE=${project.name}",
+            '--build-arg', "APP_PORT=${modulePort}",
+            '--build-arg', "APP_VERSION=${project.version}",
+            '--build-arg', "BUILD_IMAGE=${buildImage}",
+            '--build-arg', "RUNTIME_IMAGE=${runtimeImage}",
+            '--label', "org.opencontainers.image.title=${project.name}",
+            '--label', "org.opencontainers.image.version=${project.version}",
+            '--label', 'org.opencontainers.image.vendor=commerce',
+            '--label', "com.example.commerce.environment=${targetEnvironment}",
+            '--tag', targetImage
+    ]
+}
+
+tasks.register('printImageCoordinate') {
+    group = 'container'
+    description = '현재 모듈의 선택 환경 이미지 좌표를 출력한다.'
+    doLast {
+        println "${project.name}[${targetEnvironment}]=${targetImage}"
+    }
+}
+
+tasks.register('dockerBuild', Exec) {
+    group = 'container'
+    description = '공통 Dockerfile로 이미지를 빌드해 로컬 Docker daemon에 적재한다.'
+    workingDir rootProject.projectDir
+    doFirst {
+        commandLine(
+                ['docker', 'buildx', 'build', '--load', '--provenance=false']
+                        + commonBuildArguments()
+                        + ['.'])
+    }
+}
+
+tasks.register('validateDockerPushTarget') {
+    group = 'verification'
+    description = 'Registry 업로드 전에 명시적인 Registry 설정을 검증한다.'
+    doLast {
+        if (!explicitPushRegistry) {
+            throw new GradleException(
+                    "${project.name} 이미지 업로드에는 명시적인 Registry가 필요합니다. " +
+                            "-PimageRegistry, -P${modulePropertyPrefix}ImageRegistry 또는 " +
+                            "${environmentRegistryVariable}를 설정하세요.")
+        }
+    }
+}
+
+tasks.register('dockerPush', Exec) {
+    group = 'container'
+    description = '공통 Dockerfile로 이미지를 빌드하고 Registry에 직접 전송한다.'
+    dependsOn tasks.named('validateDockerPushTarget')
+    workingDir rootProject.projectDir
+    doFirst {
+        commandLine(
+                ['docker', 'buildx', 'build', '--push', '--provenance=mode=max', '--sbom=true']
+                        + commonBuildArguments()
+                        + ['.'])
+    }
+}
